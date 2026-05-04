@@ -1,0 +1,130 @@
+version: 1
+name: Cujana Architecture
+platform:
+  product: iOS app
+  strategy: iOS-only
+  ui: SwiftUI-first
+  native_bridge_policy: UIKit only through Platform or explicit adapters
+
+style:
+  architecture: modular-monolith
+  priority:
+    - maintainability
+    - understandability
+    - testability
+    - native_iOS_fit
+
+layers:
+  App:
+    path: Cujana/App
+    purpose: Composition root, app lifecycle, navigation, dependency wiring
+    may_depend_on:
+      - Features
+      - Infrastructure
+      - Domain
+      - DesignSystem
+      - Platform
+
+  Features:
+    path: Cujana/Features
+    purpose: User-facing feature slices with SwiftUI views and view models
+    may_depend_on:
+      - Domain
+      - DesignSystem
+    must_not_depend_on:
+      - Infrastructure
+      - concrete persistence
+      - concrete networking
+
+  Domain:
+    path: Cujana/Domain
+    purpose: Business rules, entities, value objects, use cases, repository protocols
+    may_depend_on:
+      - Foundation
+    must_not_depend_on:
+      - SwiftUI
+      - UIKit
+      - SwiftData
+      - CoreData
+      - URLSession
+      - Features
+      - Infrastructure
+
+  Infrastructure:
+    path: Cujana/Infrastructure
+    purpose: Network, persistence, DTOs, repository implementations
+    may_depend_on:
+      - Domain
+      - Foundation
+      - Apple technical frameworks
+    must_not_depend_on:
+      - Features
+      - SwiftUI views
+
+  DesignSystem:
+    path: Cujana/DesignSystem
+    purpose: Reusable SwiftUI visual components, tokens, modifiers
+    may_depend_on:
+      - SwiftUI
+      - Foundation
+    must_not_depend_on:
+      - Infrastructure
+      - concrete networking
+      - concrete persistence
+
+  Platform:
+    path: Cujana/Platform
+    purpose: iOS and Apple framework adapters such as UIKit bridges
+    may_depend_on:
+      - Foundation
+      - Apple frameworks
+      - Domain protocols
+    must_not_depend_on:
+      - Features
+
+forbidden_patterns:
+  - id: domain_ui_imports
+    description: Domain must not import UI or persistence frameworks
+    paths:
+      - Cujana/Domain
+    patterns:
+      - import SwiftUI
+      - import UIKit
+      - import SwiftData
+      - import CoreData
+
+  - id: feature_direct_infrastructure
+    description: Features must not directly use network or persistence APIs
+    paths:
+      - Cujana/Features
+    patterns:
+      - URLSession
+      - UserDefaults
+      - ModelContext
+      - '@Query'
+      - NSManagedObjectContext
+      - FileManager.default
+
+  - id: global_singletons
+    description: App services must be injected, not accessed as global singletons
+    paths:
+      - Cujana
+    patterns:
+      - static let shared
+
+  - id: manager_suffix
+    description: Manager classes hide responsibility; use precise names
+    paths:
+      - Cujana
+    patterns:
+      - class .*Manager
+      - struct .*Manager
+      - actor .*Manager
+
+enforcement:
+  local_command: make architecture-check
+  script: scripts/check_architecture.sh
+  lint: .swiftlint.yml
+  ci: .github/workflows/architecture-guardrails.yml
+  adr_path: docs/architecture/adr
+  pr_template: .github/pull_request_template.md

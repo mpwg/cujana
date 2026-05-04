@@ -1,0 +1,61 @@
+name: Architecture Guardrails
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  architecture:
+    name: Architecture, lint, tests
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run architecture checks
+        run: ./scripts/check_architecture.sh
+
+      - name: Install SwiftLint
+        run: |
+          if ! command -v swiftlint >/dev/null 2>&1; then
+            brew install swiftlint
+          fi
+
+      - name: Run SwiftLint
+        run: swiftlint lint --strict
+
+      - name: Run Swift Package tests if present
+        run: |
+          if [ -f Package.swift ]; then
+            swift test
+          else
+            echo "No Package.swift found; skipping swift test."
+          fi
+
+      - name: Run Xcode tests if project and scheme are present
+        run: |
+          set -euo pipefail
+          project_count=$(find . -maxdepth 2 -name '*.xcodeproj' | wc -l | tr -d ' ')
+          if [ "$project_count" = "0" ]; then
+            echo "No Xcode project found; skipping xcodebuild test."
+            exit 0
+          fi
+
+          project=$(find . -maxdepth 2 -name '*.xcodeproj' | head -n 1)
+          scheme=$(xcodebuild -list -json -project "$project" | python3 -c 'import json,sys; data=json.load(sys.stdin); schemes=data.get("project",{}).get("schemes",[]); print(schemes[0] if schemes else "")')
+
+          if [ -z "$scheme" ]; then
+            echo "No shared Xcode scheme found; skipping xcodebuild test."
+            exit 0
+          fi
+
+          xcodebuild test \
+            -project "$project" \
+            -scheme "$scheme" \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            CODE_SIGNING_ALLOWED=NO

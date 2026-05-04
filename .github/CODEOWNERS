@@ -1,0 +1,7 @@
+# Architecture-critical files require owner review.
+/docs/architecture/** @mpwg
+/.cujana/** @mpwg
+/scripts/check_architecture.sh @mpwg
+/.swiftlint.yml @mpwg
+/.github/workflows/** @mpwg
+/Configuration/** @mpwg

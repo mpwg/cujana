@@ -1,0 +1,43 @@
+# Cujana
+
+Cujana ist eine **iOS-only App**. Das Repository startet bewusst mit einer klaren Architektur, bevor Implementierungsdetails wachsen.
+
+## Architektur
+
+Das verbindliche Architekturkonzept liegt hier:
+
+- [docs/architecture/README.md](docs/architecture/README.md) – Architektur, Schichten, Abhängigkeiten, Teststrategie
+- [docs/architecture/enforcement.md](docs/architecture/enforcement.md) – automatische Regeln, CI, Review-Gates
+- [docs/architecture/adr](docs/architecture/adr) – Architecture Decision Records
+
+## Grundsatz
+
+> Einfachheit vor Framework-Sammlung. Jede neue Abstraktion braucht einen sichtbaren Nutzen.
+
+Cujana verwendet eine **SwiftUI-first, iOS-only, modular-monolithische Architektur**:
+
+- ein Produkt, eine Plattform: iOS
+- klare Feature-Slices statt technischer Monsterordner
+- Domain-Logik ohne UI-, Netzwerk- oder Persistenz-Abhängigkeit
+- Infrastruktur nur hinter Protokollen
+- automatische Architekturprüfungen in CI
+
+## Lokale Checks
+
+```bash
+make architecture-check
+```
+
+oder direkt:
+
+```bash
+./scripts/check_architecture.sh
+```
+
+## Neue Architekturentscheidungen
+
+Für Änderungen an Plattform, Schichten, Persistenz, Navigation, externen Dependencies oder Build-Regeln wird ein ADR angelegt:
+
+```bash
+cp docs/architecture/adr/template.md docs/architecture/adr/000X-kurzer-titel.md
+```

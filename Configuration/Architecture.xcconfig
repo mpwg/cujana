@@ -1,0 +1,9 @@
+// Cujana architecture-related Xcode defaults.
+// Include this xcconfig from app/test configurations once the Xcode project exists.
+
+SWIFT_VERSION = 6.0
+SWIFT_STRICT_CONCURRENCY = complete
+SWIFT_TREAT_WARNINGS_AS_ERRORS = YES
+CLANG_TREAT_WARNINGS_AS_ERRORS = YES
+ENABLE_USER_SCRIPT_SANDBOXING = YES
+DEAD_CODE_STRIPPING = YES
