@@ -61,7 +61,10 @@ scan_pattern() {
   done < <(grep -nE "$pattern" "$file" || true)
 }
 
-mapfile -t swift_files < <(
+swift_files=()
+while IFS= read -r file; do
+  swift_files+=("$file")
+done < <(
   find . -type f -name '*.swift' \
     ! -path './.build/*' \
     ! -path './DerivedData/*' \

@@ -58,7 +58,7 @@ struct ContentView: View {
     }
 }
 
-fileprivate struct NavigationViewWrapper<Content: View>: View {
+private struct NavigationViewWrapper<Content: View>: View {
     let content: () -> Content
 
     var body: some View {
