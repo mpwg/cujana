@@ -71,6 +71,11 @@ identifier_name:
     - x
     - y
     - ok
+    - xs
+    - sm
+    - md
+    - lg
+    - xl
 
 custom_rules:
   no_swiftui_in_domain:
@@ -119,4 +124,40 @@ custom_rules:
       - "Cujana/.*\\.swift"
     regex: "(try!|as!)"
     message: "Avoid try! and as!. Handle errors and casting explicitly."
+    severity: error
+
+  no_direct_color:
+    included:
+      - "Cujana/.*\\.swift"
+    excluded:
+      - "Cujana/DesignSystem/.*"
+    regex: "Color\\.(red|blue|green|black|white|gray)|Color\\("
+    message: "Use ColorToken"
+    severity: error
+
+  no_magic_padding:
+    included:
+      - "Cujana/.*\\.swift"
+    excluded:
+      - "Cujana/DesignSystem/.*"
+    regex: "\\.padding\\((?!\\.)([0-9]+)"
+    message: "Use SpacingToken"
+    severity: error
+
+  no_magic_radius:
+    included:
+      - "Cujana/.*\\.swift"
+    excluded:
+      - "Cujana/DesignSystem/.*"
+    regex: "cornerRadius\\(([0-9]+)"
+    message: "Use RadiusToken"
+    severity: error
+
+  no_direct_shadow:
+    included:
+      - "Cujana/.*\\.swift"
+    excluded:
+      - "Cujana/DesignSystem/.*"
+    regex: "\\.shadow\\("
+    message: "Use ShadowToken"
     severity: error
