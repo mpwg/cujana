@@ -10,34 +10,75 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @Query(sort: \Item.timestamp, order: .reverse) private var items: [Item]
 
     var body: some View {
-        NavigationViewWrapper {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: SpacingToken.section) {
+                    header
+
+                    VStack(alignment: .leading, spacing: SpacingToken.lg) {
+                        if items.isEmpty {
+                            EmptyJournalView(addItem: addItem)
+                        } else {
+                            ForEach(items) { item in
+                                JournalEntryRow(item: item) {
+                                    modelContext.delete(item)
+                                }
+                            }
+                        }
                     }
                 }
-                .onDelete(perform: deleteItems)
+                .padding(.horizontal, SpacingToken.xl)
+                .padding(.vertical, SpacingToken.xl)
             }
-#if os(macOS)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
+            .background(ColorToken.backgroundPrimary)
+#if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(ColorToken.backgroundPrimary, for: .navigationBar)
 #endif
             .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-#endif
-                ToolbarItem {
+                ToolbarItem(placement: addButtonPlacement) {
                     Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                        Image(systemName: "plus")
+                            .font(TypographyToken.bodyEmphasized)
+                            .foregroundStyle(ColorToken.brandPrimary)
+                            .padding(SpacingToken.sm)
+                            .background(ColorToken.fillSubtle)
+                            .clipShape(Circle())
                     }
+                    .accessibilityLabel("Eintrag hinzufügen")
                 }
+            }
+        }
+    }
+
+    private var addButtonPlacement: ToolbarItemPlacement {
+#if os(iOS)
+        .topBarTrailing
+#else
+        .automatic
+#endif
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
+            Text("Cujana")
+                .font(TypographyToken.largeTitle)
+                .foregroundStyle(ColorToken.textPrimary)
+
+            Text("Ruhige Tagesnotizen für Symptome, Energie und Kontext.")
+                .font(TypographyToken.body)
+                .foregroundStyle(ColorToken.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: SpacingToken.sm) {
+                Text("Heute")
+                    .cujanaChip(isSelected: true)
+
+                Text("\(items.count) Einträge")
+                    .cujanaChip()
             }
         }
     }
@@ -49,32 +90,71 @@ struct ContentView: View {
         }
     }
 
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
-        }
-    }
-}
-
-private struct NavigationViewWrapper<Content: View>: View {
-    let content: () -> Content
-
-    var body: some View {
-#if os(macOS)
-        NavigationSplitView {
-            content()
-        } detail: {
-            Text("Select an item")
-        }
-#else
-        content()
-#endif
-    }
 }
 
 #Preview {
     ContentView()
         .modelContainer(for: Item.self, inMemory: true)
+}
+
+private struct EmptyJournalView: View {
+    let addItem: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SpacingToken.lg) {
+            VStack(alignment: .leading, spacing: SpacingToken.sm) {
+                Text("Noch kein Eintrag")
+                    .font(TypographyToken.headline)
+                    .foregroundStyle(ColorToken.textPrimary)
+
+                Text("Starte mit einem sanften Check-in und halte fest, was heute relevant ist.")
+                    .font(TypographyToken.body)
+                    .foregroundStyle(ColorToken.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Button(action: addItem) {
+                Label("Ersten Eintrag erstellen", systemImage: "plus")
+            }
+            .buttonStyle(PrimaryButtonStyle())
+        }
+        .cujanaCard()
+    }
+}
+
+private struct JournalEntryRow: View {
+    let item: Item
+    let delete: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: SpacingToken.md) {
+            Circle()
+                .fill(ColorToken.brandAccent)
+                .frame(width: SpacingToken.sm, height: SpacingToken.sm)
+                .padding(.top, SpacingToken.sm)
+
+            VStack(alignment: .leading, spacing: SpacingToken.xs) {
+                Text(item.timestamp, format: Date.FormatStyle(date: .abbreviated, time: .shortened))
+                    .font(TypographyToken.bodyEmphasized)
+                    .foregroundStyle(ColorToken.textPrimary)
+
+                Text("Kurzer Check-in gespeichert")
+                    .font(TypographyToken.footnote)
+                    .foregroundStyle(ColorToken.textSecondary)
+            }
+
+            Spacer(minLength: SpacingToken.md)
+
+            Button(action: delete) {
+                Image(systemName: "trash")
+                    .font(TypographyToken.footnote)
+                    .foregroundStyle(ColorToken.feedbackError)
+                    .padding(SpacingToken.sm)
+                    .background(ColorToken.fillSubtle)
+                    .clipShape(Circle())
+            }
+            .accessibilityLabel("Eintrag löschen")
+        }
+        .cujanaCard()
+    }
 }
