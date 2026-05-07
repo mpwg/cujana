@@ -3,13 +3,17 @@ import Foundation
 struct AppDependencies {
     let pollenRepository: any PollenRepository
     let symptomEntryRepository: any SymptomEntryRepository
+    let locationProvider: any LocationCoordinateProviding
     let defaultCoordinate: LocationCoordinate
 
     static func production() -> AppDependencies {
-        AppDependencies(
+        let fallbackCoordinate = viennaCoordinate()
+
+        return AppDependencies(
             pollenRepository: OpenMeteoPollenRepository(),
             symptomEntryRepository: makeSymptomEntryRepository(),
-            defaultCoordinate: viennaCoordinate()
+            locationProvider: CoreLocationCoordinateProvider(),
+            defaultCoordinate: fallbackCoordinate
         )
     }
 

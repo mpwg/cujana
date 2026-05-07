@@ -122,6 +122,35 @@ struct OpenMeteoPollenTests {
         ])
     }
 
+    @Test func sdkClientAggregatesHourlyPollenValuesToDailyMaximums() throws {
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let generatedAt = Date(timeIntervalSince1970: 500)
+        let firstDay = Date(timeIntervalSince1970: 0)
+        let secondDay = Date(timeIntervalSince1970: 86_400)
+        let dto = try OpenMeteoPollenSDKClient.aggregateHourlyResponse(
+            coordinate: coordinate,
+            generatedAt: generatedAt,
+            hourlyDates: [
+                firstDay,
+                firstDay.addingTimeInterval(3_600),
+                secondDay,
+                secondDay.addingTimeInterval(3_600)
+            ],
+            hourlyVariables: [
+                (pollenType: .birch, values: [1, 11, 7, 20]),
+                (pollenType: .grass, values: [3, 4, 40, 18])
+            ]
+        )
+
+        #expect(dto.coordinate == coordinate)
+        #expect(dto.generatedAt == generatedAt)
+        #expect(dto.daily.dates == [firstDay, secondDay])
+        #expect(dto.daily.variables == [
+            OpenMeteoPollenResponseDTO.DailyVariable(pollenType: .birch, values: [11, 20]),
+            OpenMeteoPollenResponseDTO.DailyVariable(pollenType: .grass, values: [4, 40])
+        ])
+    }
+
     @Test func repositoryLoadsForecastsThroughInjectedAPIClient() async throws {
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let date = Date(timeIntervalSince1970: 0)

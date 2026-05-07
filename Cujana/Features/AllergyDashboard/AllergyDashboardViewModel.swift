@@ -14,17 +14,20 @@ final class AllergyDashboardViewModel {
     }
 
     private let loadUseCase: LoadAllergyOverviewUseCase
+    private let locationProvider: (any LocationCoordinateProviding)?
     private let coordinate: LocationCoordinate
     private let calendar: Calendar
     private let now: () -> Date
 
     init(
         loadUseCase: LoadAllergyOverviewUseCase,
+        locationProvider: (any LocationCoordinateProviding)? = nil,
         coordinate: LocationCoordinate,
         calendar: Calendar = .current,
         now: @escaping () -> Date = Date.init
     ) {
         self.loadUseCase = loadUseCase
+        self.locationProvider = locationProvider
         self.coordinate = coordinate
         self.calendar = calendar
         self.now = now
@@ -37,8 +40,9 @@ final class AllergyDashboardViewModel {
             let currentDate = now()
             let startDate = startOfHistory(for: currentDate)
             let endDate = forecastEndDate(from: currentDate)
+            let currentCoordinate = await locationProvider?.currentCoordinate() ?? coordinate
             let overview = try await loadUseCase.execute(
-                for: coordinate,
+                for: currentCoordinate,
                 from: startDate,
                 to: endDate
             )
