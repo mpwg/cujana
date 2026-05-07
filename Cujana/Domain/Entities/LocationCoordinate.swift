@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated public struct LocationCoordinate: Equatable, Hashable, Sendable {
+nonisolated public struct LocationCoordinate: Codable, Equatable, Hashable, Sendable {
     public let latitude: Double
     public let longitude: Double
 

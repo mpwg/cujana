@@ -54,6 +54,32 @@ struct AllergyDashboardViewModelTests {
 
     @Test
     @MainActor
+    func loadShowsLoadingStateBeforeUseCaseFinishes() async throws {
+        let date = Date(timeIntervalSince1970: 1_800)
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let pollenRepository = SuspendedPollenRepository()
+        let viewModel = AllergyDashboardViewModel(
+            loadUseCase: LoadAllergyOverviewUseCase(
+                pollenRepository: pollenRepository,
+                symptomEntryRepository: StubSymptomEntryRepository(entries: [])
+            ),
+            coordinate: coordinate,
+            calendar: calendar,
+            now: { date }
+        )
+
+        let loadTask = Task {
+            await viewModel.load()
+        }
+
+        await pollenRepository.waitUntilRequested()
+        #expect(viewModel.state == .loading)
+        await pollenRepository.resume(returning: [])
+        await loadTask.value
+    }
+
+    @Test
+    @MainActor
     func loadShowsEmptyStateWhenOverviewHasNoVisibleItems() async throws {
         let date = Date(timeIntervalSince1970: 1_800)
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
@@ -76,6 +102,54 @@ struct AllergyDashboardViewModelTests {
 
         #expect(content.pollenItems.isEmpty)
         #expect(content.symptomItems.isEmpty)
+    }
+
+    @Test
+    @MainActor
+    func loadKeepsOnlyTodaysTopPollenAndMostRecentSymptoms() async throws {
+        let date = Date(timeIntervalSince1970: 86_400)
+        let yesterday = Date(timeIntervalSince1970: 0)
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let forecast = try PollenForecast(
+            coordinate: coordinate,
+            sourceKind: .forecast,
+            generatedAt: date,
+            validFrom: yesterday,
+            validUntil: date,
+            dailyLevels: [
+                PollenForecast.DailyLevel(date: yesterday, pollenType: .ragweed, level: .extreme),
+                PollenForecast.DailyLevel(date: date, pollenType: .birch, level: .high),
+                PollenForecast.DailyLevel(date: date, pollenType: .alder, level: .high),
+                PollenForecast.DailyLevel(date: date, pollenType: .grass, level: .moderate),
+                PollenForecast.DailyLevel(date: date, pollenType: .mugwort, level: .low),
+                PollenForecast.DailyLevel(date: date, pollenType: .oak, level: .extreme)
+            ]
+        )
+        let symptoms = try [
+            symptom(date: date.addingTimeInterval(-60), type: .sneezing),
+            symptom(date: date.addingTimeInterval(-120), type: .runnyNose),
+            symptom(date: date.addingTimeInterval(-180), type: .blockedNose),
+            symptom(date: date.addingTimeInterval(-240), type: .fatigue)
+        ]
+        let viewModel = AllergyDashboardViewModel(
+            loadUseCase: LoadAllergyOverviewUseCase(
+                pollenRepository: StubPollenRepository(forecasts: [forecast]),
+                symptomEntryRepository: StubSymptomEntryRepository(entries: symptoms)
+            ),
+            coordinate: coordinate,
+            calendar: calendar,
+            now: { date }
+        )
+
+        await viewModel.load()
+
+        guard case .loaded(let content) = viewModel.state else {
+            Issue.record("Expected loaded state.")
+            return
+        }
+
+        #expect(content.pollenItems.map(\.title) == ["Eiche", "Birke", "Erle", "Gräser"])
+        #expect(content.symptomItems.map(\.title) == ["Niesen", "Laufende Nase", "Verstopfte Nase"])
     }
 
     @Test
@@ -104,6 +178,14 @@ struct AllergyDashboardViewModelTests {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .current
         return calendar
+    }
+
+    private func symptom(date: Date, type: SymptomType) throws -> AllergySymptomEntry {
+        try AllergySymptomEntry(
+            date: date,
+            symptomType: type,
+            severity: .moderate
+        )
     }
 }
 
@@ -136,5 +218,39 @@ private struct StubSymptomEntryRepository: SymptomEntryRepository {
 
     func symptomEntries(from startDate: Date, to endDate: Date) async throws -> [AllergySymptomEntry] {
         entries
+    }
+}
+
+private actor SuspendedPollenRepository: PollenRepository {
+    private var didReceiveRequest = false
+    private var requestContinuation: CheckedContinuation<Void, Never>?
+    private var responseContinuation: CheckedContinuation<[PollenForecast], Never>?
+
+    func pollenForecast(
+        for coordinate: LocationCoordinate,
+        from startDate: Date,
+        to endDate: Date
+    ) async throws -> [PollenForecast] {
+        return await withCheckedContinuation { continuation in
+            didReceiveRequest = true
+            responseContinuation = continuation
+            requestContinuation?.resume()
+            requestContinuation = nil
+        }
+    }
+
+    func waitUntilRequested() async {
+        if didReceiveRequest {
+            return
+        }
+
+        await withCheckedContinuation { continuation in
+            requestContinuation = continuation
+        }
+    }
+
+    func resume(returning forecasts: [PollenForecast]) {
+        responseContinuation?.resume(returning: forecasts)
+        responseContinuation = nil
     }
 }

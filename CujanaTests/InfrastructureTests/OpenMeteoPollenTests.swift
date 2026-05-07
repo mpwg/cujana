@@ -4,6 +4,41 @@ import Testing
 
 struct OpenMeteoPollenTests {
 
+    @Test func dtoDecodesFromJSONPayload() throws {
+        let json = """
+        {
+          "coordinate": {
+            "latitude": 48.2082,
+            "longitude": 16.3738
+          },
+          "generatedAt": "2026-05-07T08:00:00Z",
+          "daily": {
+            "dates": [
+              "2026-05-07T00:00:00Z"
+            ],
+            "variables": [
+              {
+                "pollenType": 3,
+                "values": [
+                  12.5
+                ]
+              }
+            ]
+          }
+        }
+        """
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let dto = try decoder.decode(OpenMeteoPollenResponseDTO.self, from: Data(json.utf8))
+
+        #expect(dto.coordinate == (try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)))
+        #expect(dto.daily.dates == [try #require(isoDate("2026-05-07T00:00:00Z"))])
+        #expect(dto.daily.variables == [
+            OpenMeteoPollenResponseDTO.DailyVariable(pollenType: .birch, values: [12.5])
+        ])
+    }
+
     @Test func mapperCreatesDomainForecastFromDailyPollenValues() throws {
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let generatedAt = Date(timeIntervalSince1970: 500)
@@ -42,6 +77,51 @@ struct OpenMeteoPollenTests {
         ])
     }
 
+    @Test func mapperReturnsNoForecastWhenDailyDatesAreEmpty() throws {
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let dto = OpenMeteoPollenResponseDTO(
+            coordinate: coordinate,
+            generatedAt: Date(timeIntervalSince1970: 0),
+            daily: OpenMeteoPollenResponseDTO.Daily(
+                dates: [],
+                variables: [
+                    OpenMeteoPollenResponseDTO.DailyVariable(
+                        pollenType: .birch,
+                        values: [42]
+                    )
+                ]
+            )
+        )
+
+        let forecasts = try OpenMeteoPollenMapper.map(dto)
+
+        #expect(forecasts.isEmpty)
+    }
+
+    @Test func mapperIgnoresPollenValuesWithoutMatchingDate() throws {
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let date = Date(timeIntervalSince1970: 0)
+        let dto = OpenMeteoPollenResponseDTO(
+            coordinate: coordinate,
+            generatedAt: date,
+            daily: OpenMeteoPollenResponseDTO.Daily(
+                dates: [date],
+                variables: [
+                    OpenMeteoPollenResponseDTO.DailyVariable(
+                        pollenType: .grass,
+                        values: [12, 75]
+                    )
+                ]
+            )
+        )
+
+        let forecasts = try OpenMeteoPollenMapper.map(dto)
+
+        #expect(forecasts.first?.dailyLevels == [
+            PollenForecast.DailyLevel(date: date, pollenType: .grass, level: .moderate)
+        ])
+    }
+
     @Test func repositoryLoadsForecastsThroughInjectedAPIClient() async throws {
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let date = Date(timeIntervalSince1970: 0)
@@ -71,6 +151,10 @@ struct OpenMeteoPollenTests {
         #expect(forecasts.first?.dailyLevels == [
             PollenForecast.DailyLevel(date: date, pollenType: .ragweed, level: .moderate)
         ])
+    }
+
+    private func isoDate(_ string: String) -> Date? {
+        ISO8601DateFormatter().date(from: string)
     }
 }
 

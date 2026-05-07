@@ -1,7 +1,7 @@
 import Foundation
 
-nonisolated public struct OpenMeteoPollenResponseDTO: Equatable, Sendable {
-    public struct Daily: Equatable, Sendable {
+nonisolated public struct OpenMeteoPollenResponseDTO: Codable, Equatable, Sendable {
+    public struct Daily: Codable, Equatable, Sendable {
         public let dates: [Date]
         public let variables: [DailyVariable]
 
@@ -11,7 +11,7 @@ nonisolated public struct OpenMeteoPollenResponseDTO: Equatable, Sendable {
         }
     }
 
-    public struct DailyVariable: Equatable, Sendable {
+    public struct DailyVariable: Codable, Equatable, Sendable {
         public let pollenType: PollenType
         public let values: [Float]
 
