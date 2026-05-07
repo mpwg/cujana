@@ -77,16 +77,6 @@ jobs:
           restore-keys: |
             xcodebuild-${{ runner.os }}-xcode-${{ env.XCODE_VERSION }}-
 
-      - name: Resolve Swift packages
-        run: |
-          set -euo pipefail
-          xcodebuild -resolvePackageDependencies \
-            -project Cujana.xcodeproj \
-            -scheme Cujana-UnitTests \
-            -derivedDataPath "$DERIVED_DATA_PATH" \
-            -onlyUsePackageVersionsFromResolvedFile \
-            -skipPackageUpdates
-
       - name: Run Xcode tests
         run: |
           set -euo pipefail
@@ -109,6 +99,13 @@ jobs:
             wait "$simulator_boot_pid" >/dev/null 2>&1 || true
           }
           trap cleanup EXIT
+
+          xcodebuild -resolvePackageDependencies \
+            -project Cujana.xcodeproj \
+            -scheme Cujana-UnitTests \
+            -derivedDataPath "$DERIVED_DATA_PATH" \
+            -onlyUsePackageVersionsFromResolvedFile \
+            -skipPackageUpdates
 
           xcodebuild test -quiet -showBuildTimingSummary \
             -project Cujana.xcodeproj \

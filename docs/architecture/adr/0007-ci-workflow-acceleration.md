@@ -25,7 +25,7 @@ SwiftLint wird aus dem Xcode-Build entfernt und nur noch im CI-Workflow sowie ü
 
 Der Xcode-Job verwendet einen festen DerivedData-Pfad. GitHub Actions cached Xcodes `SourcePackages`, Build-Produkte, Modul-Caches und SDK-Stat-Caches. Paketversionen kommen ausschließlich aus `Package.resolved`, und Xcode-Tests laufen mit parallelen Test-Workern sowie deaktiviertem Index Store.
 
-Der Simulator-Start läuft im Hintergrund parallel zum direkten `xcodebuild test`. Dadurch kann Xcode Build und Testplanung selbst optimieren, während Simulator-Startzeit mit Kompilierung überlappt. Der Boot-Prozess wird am Ende des Schritts aufgeräumt, damit er den Job nicht blockiert.
+Der Simulator-Start läuft im Hintergrund parallel zur Paketauflösung und zum direkten `xcodebuild test`. Dadurch kann Xcode Build und Testplanung selbst optimieren, während Simulator-Startzeit mit Resolve und Kompilierung überlappt. Der Boot-Prozess wird am Ende des Schritts aufgeräumt, damit er den Job nicht blockiert.
 
 ## Konsequenzen
 
