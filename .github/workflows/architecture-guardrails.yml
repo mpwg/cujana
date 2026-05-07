@@ -47,11 +47,11 @@ jobs:
     name: Xcode tests
     runs-on: macos-26
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_26.0.1.app/Contents/Developer
       DERIVED_DATA_PATH: .xcode-derived-data
       DESTINATION: platform=macOS,variant=Mac Catalyst
-      MACOSX_DEPLOYMENT_TARGET: 26.2
-      XCODE_VERSION: 26.3
+      MACOSX_DEPLOYMENT_TARGET: 26.0
+      XCODE_VERSION: 26.0.1
 
     steps:
       - name: Checkout
