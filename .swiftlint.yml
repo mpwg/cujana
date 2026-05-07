@@ -42,8 +42,10 @@ opt_in_rules:
   - sorted_first_last
   - toggle_bool
   - unneeded_parentheses_in_closure_argument
-  - unused_declaration
   - vertical_parameter_alignment_on_call
+
+analyzer_rules:
+  - unused_declaration
 
 line_length:
   warning: 120
