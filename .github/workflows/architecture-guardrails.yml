@@ -91,12 +91,6 @@ jobs:
             -onlyUsePackageVersionsFromResolvedFile \
             -skipPackageUpdates
 
-      - name: Boot simulator
-        run: |
-          set -euo pipefail
-          xcrun simctl boot "iPhone 17" || true
-          xcrun simctl bootstatus "iPhone 17" -b
-
       - name: Run Xcode tests
         run: |
           set -euo pipefail
@@ -104,6 +98,7 @@ jobs:
             -project Cujana.xcodeproj \
             -scheme Cujana-UnitTests \
             -destination 'platform=iOS Simulator,name=iPhone 17' \
+            -destination-timeout 30 \
             -derivedDataPath "$DERIVED_DATA_PATH" \
             -clonedSourcePackagesDirPath "$SPM_CLONES_PATH" \
             -packageCachePath "$PACKAGE_CACHE_PATH" \
