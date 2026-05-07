@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		411F91F42FAD6B6A00CB9009 /* OpenMeteoSdk in Frameworks */ = {isa = PBXBuildFile; productRef = 411F91F32FAD6B6A00CB9009 /* OpenMeteoSdk */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		404862FE2FA904E900F82D13 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -22,10 +26,6 @@
 			remoteInfo = Cujana;
 		};
 /* End PBXContainerItemProxy section */
-
-/* Begin PBXBuildFile section */
-		411F91F42FAD6B6A00CB9009 /* OpenMeteoSdk in Frameworks */ = {isa = PBXBuildFile; productRef = 411F91F32FAD6B6A00CB9009 /* OpenMeteoSdk */; };
-/* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		404862EC2FA904E800F82D13 /* Cujana.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cujana.app; sourceTree = BUILT_PRODUCTS_DIR; };
