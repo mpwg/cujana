@@ -9,7 +9,13 @@ import SwiftUI
 
 @main
 struct CujanaApp: App {
-    private let symptomEntryRepository = InMemorySymptomEntryRepository()
+    private let symptomEntryRepository: any SymptomEntryRepository = {
+        do {
+            return LocalSymptomEntryRepository(store: try FileSymptomEntryStore.applicationSupportStore())
+        } catch {
+            return InMemorySymptomEntryRepository()
+        }
+    }()
 
     var body: some Scene {
         WindowGroup {
