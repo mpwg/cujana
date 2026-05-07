@@ -101,7 +101,7 @@ jobs:
           xcodebuild build-for-testing -quiet -showBuildTimingSummary \
             -project Cujana.xcodeproj \
             -scheme Cujana-UnitTests \
-            -destination "$DESTINATION" \
+            -destination 'generic/platform=macOS,variant=Mac Catalyst' \
             -derivedDataPath "$DERIVED_DATA_PATH" \
             -onlyUsePackageVersionsFromResolvedFile \
             -skipPackageUpdates \
@@ -111,11 +111,15 @@ jobs:
             MACOSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET" \
             CODE_SIGNING_ALLOWED=NO
 
+          xctestrun_path="$(find "$DERIVED_DATA_PATH/Build/Products" -maxdepth 1 -name '*.xctestrun' -print -quit)"
+          if [ -z "$xctestrun_path" ]; then
+            echo "::error::No xctestrun file was produced by build-for-testing."
+            exit 1
+          fi
+
           xcodebuild test-without-building -quiet -showBuildTimingSummary \
-            -project Cujana.xcodeproj \
-            -scheme Cujana-UnitTests \
-            -destination "$DESTINATION" \
-            -derivedDataPath "$DERIVED_DATA_PATH" \
+            -xctestrun "$xctestrun_path" \
+            -destination 'platform=macOS,name=My Mac' \
             -parallel-testing-enabled YES \
             -maximum-parallel-testing-workers 4 \
             -collect-test-diagnostics never \
