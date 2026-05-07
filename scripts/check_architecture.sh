@@ -67,6 +67,9 @@ while IFS= read -r file; do
 done < <(
   find . -type f -name '*.swift' \
     ! -path './.build/*' \
+    ! -path './.swiftpm-package-cache/*' \
+    ! -path './.xcode-derived-data/*' \
+    ! -path './.xcode-source-packages/*' \
     ! -path './DerivedData/*' \
     ! -path './Carthage/*' \
     ! -path './Pods/*' \

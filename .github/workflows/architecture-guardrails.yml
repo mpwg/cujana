@@ -6,10 +6,17 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   architecture:
-    name: Architecture, lint, tests
-    runs-on: macos-26
+    name: Architecture
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -20,46 +27,104 @@ jobs:
       - name: Run architecture checks
         run: ./scripts/check_architecture.sh
 
-      - name: Install SwiftLint
-        run: |
-          if ! command -v swiftlint >/dev/null 2>&1; then
-            brew install swiftlint
-          fi
+  swiftlint:
+    name: SwiftLint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Run SwiftLint
-        run: swiftlint lint --strict
-
-      - name: Run Swift Package tests if present
         run: |
-          if [ -f Package.swift ]; then
-            swift test
-          else
-            echo "No Package.swift found; skipping swift test."
-          fi
+          docker run --rm \
+            -v "$PWD:$PWD" \
+            -w "$PWD" \
+            ghcr.io/realm/swiftlint:0.63.2 \
+            lint --strict
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_26.4.1.app
+  xcode-tests:
+    name: Xcode tests
+    runs-on: macos-26
+    env:
+      ARCHS: arm64
+      DERIVED_DATA_PATH: .xcode-derived-data
+      DESTINATION: platform=macOS,arch=arm64,variant=Mac Catalyst
+      IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+      MACOSX_DEPLOYMENT_TARGET: "26.0"
 
-      - name: Run Xcode tests if project and scheme are present
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Select Xcode 26.4
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.4"
+
+      - name: Show Xcode version
+        id: xcode-version
         run: |
           set -euo pipefail
-          project_count=$(find . -maxdepth 2 -name '*.xcodeproj' | wc -l | tr -d ' ')
-          if [ "$project_count" = "0" ]; then
-            echo "No Xcode project found; skipping xcodebuild test."
-            exit 0
+          xcodebuild -version
+          cache_version="$(xcodebuild -version | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
+          echo "xcode-cache-version=$cache_version" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Swift packages
+        uses: actions/cache@v5
+        with:
+          path: .xcode-derived-data/SourcePackages
+          key: swiftpm-${{ runner.os }}-xcode-${{ steps.xcode-version.outputs.xcode-cache-version }}-${{ hashFiles('Cujana.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            swiftpm-${{ runner.os }}-xcode-${{ steps.xcode-version.outputs.xcode-cache-version }}-
+
+      - name: Cache Xcode build products
+        uses: actions/cache@v5
+        with:
+          path: |
+            .xcode-derived-data/Build
+            .xcode-derived-data/ModuleCache.noindex
+            .xcode-derived-data/SDKStatCaches.noindex
+          key: xcodebuild-maccatalyst-${{ runner.os }}-xcode-${{ steps.xcode-version.outputs.xcode-cache-version }}-${{ hashFiles('Cujana.xcodeproj/project.pbxproj', 'Cujana.xcodeproj/xcshareddata/xcschemes/*.xcscheme', 'Cujana.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'Cujana/**/*.swift', 'CujanaTests/**/*.swift') }}
+          restore-keys: |
+            xcodebuild-maccatalyst-${{ runner.os }}-xcode-${{ steps.xcode-version.outputs.xcode-cache-version }}-
+
+      - name: Run Xcode tests
+        run: |
+          set -euo pipefail
+
+          xcodebuild -resolvePackageDependencies \
+            -project Cujana.xcodeproj \
+            -scheme Cujana-UnitTests \
+            -derivedDataPath "$DERIVED_DATA_PATH" \
+            -onlyUsePackageVersionsFromResolvedFile \
+            -skipPackageUpdates
+
+          xcodebuild build-for-testing -quiet -showBuildTimingSummary \
+            -project Cujana.xcodeproj \
+            -scheme Cujana-UnitTests \
+            -destination 'generic/platform=macOS,variant=Mac Catalyst' \
+            -derivedDataPath "$DERIVED_DATA_PATH" \
+            -onlyUsePackageVersionsFromResolvedFile \
+            -skipPackageUpdates \
+            -parallelizeTargets \
+            -jobs "$(sysctl -n hw.ncpu)" \
+            ARCHS="$ARCHS" \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            IPHONEOS_DEPLOYMENT_TARGET="$IPHONEOS_DEPLOYMENT_TARGET" \
+            MACOSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET" \
+            CODE_SIGNING_ALLOWED=NO
+
+          xctestrun_path="$(find "$DERIVED_DATA_PATH/Build/Products" -maxdepth 1 -name '*.xctestrun' -print -quit)"
+          if [ -z "$xctestrun_path" ]; then
+            echo "::error::No xctestrun file was produced by build-for-testing."
+            exit 1
           fi
 
-          project=$(find . -maxdepth 2 -name '*.xcodeproj' | head -n 1)
-          scheme=$(xcodebuild -list -json -project "$project" | python3 -c 'import json,sys; data=json.load(sys.stdin); schemes=data.get("project",{}).get("schemes",[]); print(schemes[0] if schemes else "")')
-
-          if [ -z "$scheme" ]; then
-            echo "No shared Xcode scheme found; skipping xcodebuild test."
-            exit 0
-          fi
-
-          xcodebuild test \
-            -project "$project" \
-            -scheme "$scheme" \
-            -only-testing:CujanaTests \
-            -destination 'platform=iOS Simulator,name=iPhone 17' \
+          xcodebuild test-without-building -quiet -showBuildTimingSummary \
+            -xctestrun "$xctestrun_path" \
+            -destination 'platform=macOS,name=My Mac' \
+            -parallel-testing-enabled YES \
+            -maximum-parallel-testing-workers 4 \
+            -collect-test-diagnostics never \
             CODE_SIGNING_ALLOWED=NO
