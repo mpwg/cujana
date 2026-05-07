@@ -9,6 +9,7 @@ Das verbindliche Architekturkonzept liegt hier:
 - [docs/architecture/README.md](docs/architecture/README.md) – Architektur, Schichten, Abhängigkeiten, Teststrategie
 - [docs/architecture/enforcement.md](docs/architecture/enforcement.md) – automatische Regeln, CI, Review-Gates
 - [docs/architecture/adr](docs/architecture/adr) – Architecture Decision Records
+- [docs/mvp-quality-gate.md](docs/mvp-quality-gate.md) – Abschlussprüfung für MVP-Flow, Architektur und Qualität
 
 ## Grundsatz
 
@@ -26,6 +27,12 @@ Cujana verwendet eine **SwiftUI-first, iOS-only, modular-monolithische Architekt
 
 ```bash
 make architecture-check
+```
+
+Tests laufen lokal über dasselbe Unit-Test-Scheme wie im CI-Guardrail:
+
+```bash
+make test
 ```
 
 oder direkt:

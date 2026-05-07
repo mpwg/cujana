@@ -17,8 +17,4 @@ lint:
 	fi
 
 test:
-	@if [ -f Package.swift ]; then \
-		swift test; \
-	else \
-		echo "No Package.swift found; add Xcode test command once the project exists."; \
-	fi
+	./scripts/run_xcode_tests.sh
