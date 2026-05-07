@@ -62,12 +62,74 @@ struct SymptomEntryViewModelTests {
         #expect(entries.isEmpty)
         #expect(viewModel.saveStatus == .failure("Bitte wähle aus, wie stark du das Symptom spürst."))
     }
+
+    @Test
+    @MainActor
+    func changingSelectionClearsValidationFailure() async {
+        let repository = CapturingSymptomEntryRepository()
+        let viewModel = SymptomEntryViewModel(
+            saveUseCase: SaveAllergySymptomEntryUseCase(repository: repository)
+        )
+
+        await viewModel.submit()
+        viewModel.selectSymptom(.sneezing)
+
+        #expect(viewModel.saveStatus == .idle)
+    }
+
+    @Test
+    @MainActor
+    func submitShowsFriendlyFailureWhenNoteIsTooLong() async {
+        let repository = CapturingSymptomEntryRepository()
+        let viewModel = SymptomEntryViewModel(
+            saveUseCase: SaveAllergySymptomEntryUseCase(repository: repository)
+        )
+
+        viewModel.selectSymptom(.fatigue)
+        viewModel.selectSeverity(level: 2)
+        viewModel.note = String(repeating: "a", count: AllergySymptomEntry.maximumNoteLength + 1)
+
+        await viewModel.submit()
+
+        let entries = await repository.savedEntries()
+        #expect(entries.isEmpty)
+        #expect(viewModel.saveStatus == .failure("Die Notiz ist zu lang. Bitte kürze sie etwas."))
+    }
+
+    @Test
+    @MainActor
+    func submitShowsFriendlyFailureWhenRepositoryThrows() async {
+        let repository = CapturingSymptomEntryRepository(saveError: SymptomEntryError.storageUnavailable)
+        let viewModel = SymptomEntryViewModel(
+            saveUseCase: SaveAllergySymptomEntryUseCase(repository: repository)
+        )
+
+        viewModel.selectSymptom(.coughing)
+        viewModel.selectSeverity(level: 4)
+
+        await viewModel.submit()
+
+        #expect(
+            viewModel.saveStatus == .failure(
+                "Der Eintrag konnte gerade nicht gespeichert werden. Bitte versuche es erneut."
+            )
+        )
+    }
 }
 
 private actor CapturingSymptomEntryRepository: SymptomEntryRepository {
     private var entries: [AllergySymptomEntry] = []
+    private let saveError: Error?
+
+    init(saveError: Error? = nil) {
+        self.saveError = saveError
+    }
 
     func save(_ entry: AllergySymptomEntry) async throws {
+        if let saveError {
+            throw saveError
+        }
+
         entries.append(entry)
     }
 

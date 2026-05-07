@@ -103,6 +103,34 @@ struct LocalSymptomEntryRepositoryTests {
             try await repository.save(entry)
         }
     }
+
+    @Test func inMemoryRepositoryFiltersEntriesByInclusiveDateRange() async throws {
+        let earlyEntry = try AllergySymptomEntry(
+            date: Date(timeIntervalSince1970: 500),
+            symptomType: .itchyEyes,
+            severity: .mild
+        )
+        let startEntry = try AllergySymptomEntry(
+            date: Date(timeIntervalSince1970: 1_000),
+            symptomType: .runnyNose,
+            severity: .moderate
+        )
+        let endEntry = try AllergySymptomEntry(
+            date: Date(timeIntervalSince1970: 2_000),
+            symptomType: .sneezing,
+            severity: .severe
+        )
+        let repository = InMemorySymptomEntryRepository(
+            entries: [earlyEntry, startEntry, endEntry]
+        )
+
+        let entries = try await repository.symptomEntries(
+            from: Date(timeIntervalSince1970: 1_000),
+            to: Date(timeIntervalSince1970: 2_000)
+        )
+
+        #expect(entries == [startEntry, endEntry])
+    }
 }
 
 private actor FakeSymptomEntryStore: SymptomEntryStore {
