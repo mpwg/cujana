@@ -1,0 +1,1 @@
+Allergie,Pollen,Tagebuch,Symptome,Heuschnupfen,Atemwege,Wetter,Luftqualität

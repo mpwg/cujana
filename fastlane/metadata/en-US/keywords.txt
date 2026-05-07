@@ -1,0 +1,1 @@
+allergy,pollen,journal,symptoms,hay fever,air quality,weather,diary
