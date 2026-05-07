@@ -94,7 +94,6 @@ jobs:
           xcodebuild -resolvePackageDependencies \
             -project Cujana.xcodeproj \
             -scheme Cujana-UnitTests \
-            -destination "$DESTINATION" \
             -derivedDataPath "$DERIVED_DATA_PATH" \
             -onlyUsePackageVersionsFromResolvedFile \
             -skipPackageUpdates
