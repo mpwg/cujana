@@ -87,26 +87,9 @@ jobs:
             -onlyUsePackageVersionsFromResolvedFile \
             -skipPackageUpdates
 
-      - name: Build for testing while simulator boots
+      - name: Run Xcode tests
         run: |
           set -euo pipefail
-
-          wait_for_simulator_boot() {
-            local status_file="$1"
-            local timeout_seconds="$2"
-            local elapsed=0
-
-            while [ ! -f "$status_file" ]; do
-              [ "$elapsed" -lt "$timeout_seconds" ] || return 124
-              sleep 1
-              elapsed=$((elapsed + 1))
-            done
-
-            [ "$(cat "$status_file")" = "0" ]
-          }
-
-          simulator_boot_status="$RUNNER_TEMP/simulator-boot-status"
-          rm -f "$simulator_boot_status"
 
           (
             set +e
@@ -116,7 +99,6 @@ jobs:
               echo "::warning::Simulator boot returned $boot_result; xcodebuild destination resolution may still recover."
             fi
             xcrun simctl bootstatus "iPhone 17" -b
-            echo "$?" > "$simulator_boot_status"
           ) &
           simulator_boot_pid=$!
 
@@ -124,10 +106,11 @@ jobs:
             if kill -0 "$simulator_boot_pid" >/dev/null 2>&1; then
               kill "$simulator_boot_pid" >/dev/null 2>&1 || true
             fi
+            wait "$simulator_boot_pid" >/dev/null 2>&1 || true
           }
           trap cleanup EXIT
 
-          xcodebuild build-for-testing -quiet -showBuildTimingSummary \
+          xcodebuild test -quiet -showBuildTimingSummary \
             -project Cujana.xcodeproj \
             -scheme Cujana-UnitTests \
             -destination 'platform=iOS Simulator,name=iPhone 17' \
@@ -142,26 +125,5 @@ jobs:
             -collect-test-diagnostics never \
             COMPILER_INDEX_STORE_ENABLE=NO \
             CODE_SIGNING_ALLOWED=NO
-
-          if ! wait_for_simulator_boot "$simulator_boot_status" 60; then
-            echo "::warning::Simulator boot did not finish within 60 seconds after build; continuing with xcodebuild destination resolution."
-            kill "$simulator_boot_pid" >/dev/null 2>&1 || true
-          fi
-          wait "$simulator_boot_pid" >/dev/null 2>&1 || true
+          cleanup
           trap - EXIT
-
-      - name: Run tests without building
-        run: |
-          set -euo pipefail
-          xcodebuild test-without-building -quiet \
-            -project Cujana.xcodeproj \
-            -scheme Cujana-UnitTests \
-            -destination 'platform=iOS Simulator,name=iPhone 17' \
-            -destination-timeout 30 \
-            -derivedDataPath "$DERIVED_DATA_PATH" \
-            -onlyUsePackageVersionsFromResolvedFile \
-            -skipPackageUpdates \
-            -parallel-testing-enabled YES \
-            -maximum-parallel-testing-workers 4 \
-            -collect-test-diagnostics never \
-            CODE_SIGNING_ALLOWED=NO
