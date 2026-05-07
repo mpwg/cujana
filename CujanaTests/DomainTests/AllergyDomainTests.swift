@@ -1,0 +1,168 @@
+import Foundation
+import Testing
+@testable import Cujana
+
+struct AllergyDomainTests {
+
+    @Test func locationCoordinateRejectsOutOfRangeValues() {
+        #expect(throws: PollenDataError.invalidCoordinate(latitude: 91, longitude: 16)) {
+            _ = try LocationCoordinate(latitude: 91, longitude: 16)
+        }
+    }
+
+    @Test func pollenForecastRejectsInvalidDateRange() throws {
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let startDate = Date(timeIntervalSince1970: 1_800)
+        let endDate = Date(timeIntervalSince1970: 900)
+
+        #expect(throws: PollenDataError.invalidForecastPeriod(start: startDate, end: endDate)) {
+            _ = try PollenForecast(
+                coordinate: coordinate,
+                sourceKind: .forecast,
+                generatedAt: Date(timeIntervalSince1970: 0),
+                validFrom: startDate,
+                validUntil: endDate,
+                dailyLevels: []
+            )
+        }
+    }
+
+    @Test func symptomEntryNormalizesBlankNote() throws {
+        let entry = try AllergySymptomEntry(
+            date: Date(timeIntervalSince1970: 0),
+            symptomType: .itchyEyes,
+            severity: .moderate,
+            note: "   \n  "
+        )
+
+        #expect(entry.note == nil)
+    }
+
+    @Test func symptomEntryRejectsTooLongNote() {
+        let note = String(repeating: "a", count: AllergySymptomEntry.maximumNoteLength + 1)
+
+        #expect(throws: SymptomEntryError.noteTooLong(maxLength: AllergySymptomEntry.maximumNoteLength)) {
+            _ = try AllergySymptomEntry(
+                date: Date(timeIntervalSince1970: 0),
+                symptomType: .sneezing,
+                severity: .mild,
+                note: note
+            )
+        }
+    }
+
+    @Test func loadPollenForecastUseCaseDelegatesToRepository() async throws {
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let forecast = try sampleForecast(coordinate: coordinate)
+        let repository = StubPollenRepository(forecasts: [forecast])
+        let useCase = LoadPollenForecastUseCase(repository: repository)
+
+        let result = try await useCase.execute(
+            for: coordinate,
+            from: forecast.validFrom,
+            to: forecast.validUntil
+        )
+
+        #expect(result == [forecast])
+    }
+
+    @Test func saveAndLoadSymptomEntriesUseCasesUseRepositoryBoundary() async throws {
+        let repository = InMemorySymptomEntryRepository()
+        let saveUseCase = SaveAllergySymptomEntryUseCase(repository: repository)
+        let loadUseCase = LoadAllergySymptomEntriesUseCase(repository: repository)
+        let entry = try AllergySymptomEntry(
+            date: Date(timeIntervalSince1970: 1_000),
+            symptomType: .runnyNose,
+            severity: .mild
+        )
+
+        try await saveUseCase.execute(entry)
+        let entries = try await loadUseCase.execute(
+            from: Date(timeIntervalSince1970: 0),
+            to: Date(timeIntervalSince1970: 2_000)
+        )
+
+        #expect(entries == [entry])
+    }
+
+    @Test func loadAllergyOverviewCombinesForecastAndSymptoms() async throws {
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let forecast = try sampleForecast(coordinate: coordinate)
+        let symptomEntry = try AllergySymptomEntry(
+            date: forecast.validFrom,
+            symptomType: .wateryEyes,
+            severity: .severe,
+            coordinate: coordinate
+        )
+        let pollenRepository = StubPollenRepository(forecasts: [forecast])
+        let symptomRepository = InMemorySymptomEntryRepository(entries: [symptomEntry])
+        let useCase = LoadAllergyOverviewUseCase(
+            pollenRepository: pollenRepository,
+            symptomEntryRepository: symptomRepository
+        )
+
+        let overview = try await useCase.execute(
+            for: coordinate,
+            from: forecast.validFrom,
+            to: forecast.validUntil
+        )
+
+        #expect(overview.coordinate == coordinate)
+        #expect(overview.pollenForecasts == [forecast])
+        #expect(overview.symptomEntries == [symptomEntry])
+    }
+
+    private func sampleForecast(coordinate: LocationCoordinate) throws -> PollenForecast {
+        let validFrom = Date(timeIntervalSince1970: 0)
+        let validUntil = Date(timeIntervalSince1970: 86_400)
+
+        return try PollenForecast(
+            coordinate: coordinate,
+            sourceKind: .forecast,
+            generatedAt: validFrom,
+            validFrom: validFrom,
+            validUntil: validUntil,
+            dailyLevels: [
+                PollenForecast.DailyLevel(
+                    date: validFrom,
+                    pollenType: .birch,
+                    level: .high
+                )
+            ]
+        )
+    }
+}
+
+private struct StubPollenRepository: PollenRepository {
+    let forecasts: [PollenForecast]
+
+    func pollenForecast(
+        for coordinate: LocationCoordinate,
+        from startDate: Date,
+        to endDate: Date
+    ) async throws -> [PollenForecast] {
+        forecasts.filter { forecast in
+            forecast.coordinate == coordinate
+                && forecast.validFrom >= startDate
+                && forecast.validUntil <= endDate
+        }
+    }
+}
+
+private actor InMemorySymptomEntryRepository: SymptomEntryRepository {
+    private var entries: [AllergySymptomEntry]
+
+    init(entries: [AllergySymptomEntry] = []) {
+        self.entries = entries
+    }
+
+    func save(_ entry: AllergySymptomEntry) async throws {
+        entries.append(entry)
+    }
+
+    func symptomEntries(from startDate: Date, to endDate: Date) async throws -> [AllergySymptomEntry] {
+        entries.filter { entry in
+            entry.date >= startDate && entry.date <= endDate
+        }
+    }
+}
