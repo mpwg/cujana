@@ -6,10 +6,17 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   architecture:
-    name: Architecture, lint, tests
-    runs-on: macos-26
+    name: Architecture
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -20,46 +27,38 @@ jobs:
       - name: Run architecture checks
         run: ./scripts/check_architecture.sh
 
-      - name: Install SwiftLint
-        run: |
-          if ! command -v swiftlint >/dev/null 2>&1; then
-            brew install swiftlint
-          fi
+  swiftlint:
+    name: SwiftLint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Run SwiftLint
-        run: swiftlint lint --strict
-
-      - name: Run Swift Package tests if present
         run: |
-          if [ -f Package.swift ]; then
-            swift test
-          else
-            echo "No Package.swift found; skipping swift test."
-          fi
+          docker run --rm \
+            -v "$PWD:$PWD" \
+            -w "$PWD" \
+            ghcr.io/realm/swiftlint:0.63.2 \
+            lint --strict
+
+  xcode-tests:
+    name: Xcode tests
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_26.4.1.app
 
-      - name: Run Xcode tests if project and scheme are present
+      - name: Run Xcode tests
         run: |
           set -euo pipefail
-          project_count=$(find . -maxdepth 2 -name '*.xcodeproj' | wc -l | tr -d ' ')
-          if [ "$project_count" = "0" ]; then
-            echo "No Xcode project found; skipping xcodebuild test."
-            exit 0
-          fi
-
-          project=$(find . -maxdepth 2 -name '*.xcodeproj' | head -n 1)
-          scheme=$(xcodebuild -list -json -project "$project" | python3 -c 'import json,sys; data=json.load(sys.stdin); schemes=data.get("project",{}).get("schemes",[]); print(schemes[0] if schemes else "")')
-
-          if [ -z "$scheme" ]; then
-            echo "No shared Xcode scheme found; skipping xcodebuild test."
-            exit 0
-          fi
-
           xcodebuild test \
-            -project "$project" \
-            -scheme "$scheme" \
-            -only-testing:CujanaTests \
+            -project Cujana.xcodeproj \
+            -scheme Cujana-UnitTests \
             -destination 'platform=iOS Simulator,name=iPhone 17' \
             CODE_SIGNING_ALLOWED=NO
