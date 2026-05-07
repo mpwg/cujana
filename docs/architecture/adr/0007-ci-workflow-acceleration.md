@@ -23,7 +23,9 @@ Für den CI-Unit-Test gibt es ein shared Scheme `Cujana-UnitTests`, das nur App 
 
 SwiftLint wird aus dem Xcode-Build entfernt und nur noch im CI-Workflow sowie über explizite lokale Befehle wie `make lint` ausgeführt.
 
-Der Xcode-Job verwendet feste Workspace-Pfade für SwiftPM-Pakete und DerivedData. GitHub Actions cached SwiftPM-Repositorys, Paket-Artefakte, Build-Produkte, Modul-Caches und SDK-Stat-Caches. Paketversionen kommen ausschließlich aus `Package.resolved`, und Xcode-Tests laufen mit parallelen Test-Workern sowie deaktiviertem Index Store.
+Der Xcode-Job verwendet einen festen DerivedData-Pfad. GitHub Actions cached Xcodes `SourcePackages`, Build-Produkte, Modul-Caches und SDK-Stat-Caches. Paketversionen kommen ausschließlich aus `Package.resolved`, und Xcode-Tests laufen mit parallelen Test-Workern sowie deaktiviertem Index Store.
+
+Der Simulator-Start läuft im Hintergrund parallel zu `xcodebuild build-for-testing`. Nach dem Build wartet der Workflow kurz auf den Boot-Prozess und führt dann `test-without-building` aus. Dadurch überlappt Simulator-Startzeit mit Kompilierung, ohne dass ein hängender Boot-Prozess den Job unbegrenzt blockiert.
 
 ## Konsequenzen
 
@@ -32,6 +34,8 @@ Architekturcheck und SwiftLint können parallel zum macOS-Test starten und beleg
 SwiftLint ist durch den Container an Version 0.63.2 gebunden. Updates erfolgen bewusst über eine Workflow-Änderung.
 
 Xcode-Caches können bei Build-System-Änderungen stale werden. Die Cache-Keys enthalten deshalb Xcode-Version, `Package.resolved`, Projektdatei, shared Schemes und Swift-Quellen; ältere Caches werden nur als Restore-Fallback genutzt und von Xcode inkrementell validiert.
+
+Lokale Cache-Verzeichnisse sind in `.gitignore` eingetragen und werden vom Architekturcheck ausgeschlossen.
 
 ## Alternativen
 

@@ -68,6 +68,11 @@ xcuserdata/
 ## Obj-C/Swift specific
 *.hmap
 
+## Local CI/Xcode cache paths
+.xcode-derived-data/
+.xcode-source-packages/
+.swiftpm-package-cache/
+
 ## App packaging
 *.ipa
 *.dSYM.zip

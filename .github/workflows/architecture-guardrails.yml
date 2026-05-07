@@ -49,8 +49,6 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.4.1.app/Contents/Developer
       DERIVED_DATA_PATH: .xcode-derived-data
-      PACKAGE_CACHE_PATH: .swiftpm-package-cache
-      SPM_CLONES_PATH: .xcode-source-packages
       XCODE_VERSION: 26.4.1
 
     steps:
@@ -63,9 +61,7 @@ jobs:
       - name: Cache Swift packages
         uses: actions/cache@v4
         with:
-          path: |
-            .swiftpm-package-cache
-            .xcode-source-packages
+          path: .xcode-derived-data/SourcePackages
           key: swiftpm-${{ runner.os }}-xcode-${{ env.XCODE_VERSION }}-${{ hashFiles('Cujana.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
             swiftpm-${{ runner.os }}-xcode-${{ env.XCODE_VERSION }}-
@@ -86,22 +82,57 @@ jobs:
           set -euo pipefail
           xcodebuild -resolvePackageDependencies \
             -project Cujana.xcodeproj \
-            -clonedSourcePackagesDirPath "$SPM_CLONES_PATH" \
-            -packageCachePath "$PACKAGE_CACHE_PATH" \
+            -scheme Cujana-UnitTests \
+            -derivedDataPath "$DERIVED_DATA_PATH" \
             -onlyUsePackageVersionsFromResolvedFile \
             -skipPackageUpdates
 
-      - name: Run Xcode tests
+      - name: Build for testing while simulator boots
         run: |
           set -euo pipefail
-          xcodebuild test -quiet -showBuildTimingSummary \
+
+          wait_for_simulator_boot() {
+            local status_file="$1"
+            local timeout_seconds="$2"
+            local elapsed=0
+
+            while [ ! -f "$status_file" ]; do
+              [ "$elapsed" -lt "$timeout_seconds" ] || return 124
+              sleep 1
+              elapsed=$((elapsed + 1))
+            done
+
+            [ "$(cat "$status_file")" = "0" ]
+          }
+
+          simulator_boot_status="$RUNNER_TEMP/simulator-boot-status"
+          rm -f "$simulator_boot_status"
+
+          (
+            set +e
+            xcrun simctl boot "iPhone 17"
+            boot_result=$?
+            if [ "$boot_result" -ne 0 ] && [ "$boot_result" -ne 149 ]; then
+              echo "::warning::Simulator boot returned $boot_result; xcodebuild destination resolution may still recover."
+            fi
+            xcrun simctl bootstatus "iPhone 17" -b
+            echo "$?" > "$simulator_boot_status"
+          ) &
+          simulator_boot_pid=$!
+
+          cleanup() {
+            if kill -0 "$simulator_boot_pid" >/dev/null 2>&1; then
+              kill "$simulator_boot_pid" >/dev/null 2>&1 || true
+            fi
+          }
+          trap cleanup EXIT
+
+          xcodebuild build-for-testing -quiet -showBuildTimingSummary \
             -project Cujana.xcodeproj \
             -scheme Cujana-UnitTests \
             -destination 'platform=iOS Simulator,name=iPhone 17' \
             -destination-timeout 30 \
             -derivedDataPath "$DERIVED_DATA_PATH" \
-            -clonedSourcePackagesDirPath "$SPM_CLONES_PATH" \
-            -packageCachePath "$PACKAGE_CACHE_PATH" \
             -onlyUsePackageVersionsFromResolvedFile \
             -skipPackageUpdates \
             -parallelizeTargets \
@@ -110,4 +141,27 @@ jobs:
             -maximum-parallel-testing-workers 4 \
             -collect-test-diagnostics never \
             COMPILER_INDEX_STORE_ENABLE=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+          if ! wait_for_simulator_boot "$simulator_boot_status" 60; then
+            echo "::warning::Simulator boot did not finish within 60 seconds after build; continuing with xcodebuild destination resolution."
+            kill "$simulator_boot_pid" >/dev/null 2>&1 || true
+          fi
+          wait "$simulator_boot_pid" >/dev/null 2>&1 || true
+          trap - EXIT
+
+      - name: Run tests without building
+        run: |
+          set -euo pipefail
+          xcodebuild test-without-building -quiet \
+            -project Cujana.xcodeproj \
+            -scheme Cujana-UnitTests \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            -destination-timeout 30 \
+            -derivedDataPath "$DERIVED_DATA_PATH" \
+            -onlyUsePackageVersionsFromResolvedFile \
+            -skipPackageUpdates \
+            -parallel-testing-enabled YES \
+            -maximum-parallel-testing-workers 4 \
+            -collect-test-diagnostics never \
             CODE_SIGNING_ALLOWED=NO
