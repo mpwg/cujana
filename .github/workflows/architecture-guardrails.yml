@@ -49,6 +49,7 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.4.1.app/Contents/Developer
       DERIVED_DATA_PATH: .xcode-derived-data
+      DESTINATION: platform=macOS,variant=Mac Catalyst
       XCODE_VERSION: 26.4.1
 
     steps:
@@ -73,36 +74,18 @@ jobs:
             .xcode-derived-data/Build
             .xcode-derived-data/ModuleCache.noindex
             .xcode-derived-data/SDKStatCaches.noindex
-          key: xcodebuild-${{ runner.os }}-xcode-${{ env.XCODE_VERSION }}-${{ hashFiles('Cujana.xcodeproj/project.pbxproj', 'Cujana.xcodeproj/xcshareddata/xcschemes/*.xcscheme', 'Cujana.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'Cujana/**/*.swift', 'CujanaTests/**/*.swift') }}
+          key: xcodebuild-maccatalyst-${{ runner.os }}-xcode-${{ env.XCODE_VERSION }}-${{ hashFiles('Cujana.xcodeproj/project.pbxproj', 'Cujana.xcodeproj/xcshareddata/xcschemes/*.xcscheme', 'Cujana.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'Cujana/**/*.swift', 'CujanaTests/**/*.swift') }}
           restore-keys: |
-            xcodebuild-${{ runner.os }}-xcode-${{ env.XCODE_VERSION }}-
+            xcodebuild-maccatalyst-${{ runner.os }}-xcode-${{ env.XCODE_VERSION }}-
 
       - name: Run Xcode tests
         run: |
           set -euo pipefail
 
-          (
-            set +e
-            xcrun simctl boot "iPhone 17"
-            boot_result=$?
-            if [ "$boot_result" -ne 0 ] && [ "$boot_result" -ne 149 ]; then
-              echo "::warning::Simulator boot returned $boot_result; xcodebuild destination resolution may still recover."
-            fi
-            xcrun simctl bootstatus "iPhone 17" -b
-          ) &
-          simulator_boot_pid=$!
-
-          cleanup() {
-            if kill -0 "$simulator_boot_pid" >/dev/null 2>&1; then
-              kill "$simulator_boot_pid" >/dev/null 2>&1 || true
-            fi
-            wait "$simulator_boot_pid" >/dev/null 2>&1 || true
-          }
-          trap cleanup EXIT
-
           xcodebuild -resolvePackageDependencies \
             -project Cujana.xcodeproj \
             -scheme Cujana-UnitTests \
+            -destination "$DESTINATION" \
             -derivedDataPath "$DERIVED_DATA_PATH" \
             -onlyUsePackageVersionsFromResolvedFile \
             -skipPackageUpdates
@@ -110,8 +93,7 @@ jobs:
           xcodebuild test -quiet -showBuildTimingSummary \
             -project Cujana.xcodeproj \
             -scheme Cujana-UnitTests \
-            -destination 'platform=iOS Simulator,name=iPhone 17' \
-            -destination-timeout 30 \
+            -destination "$DESTINATION" \
             -derivedDataPath "$DERIVED_DATA_PATH" \
             -onlyUsePackageVersionsFromResolvedFile \
             -skipPackageUpdates \
@@ -122,5 +104,3 @@ jobs:
             -collect-test-diagnostics never \
             COMPILER_INDEX_STORE_ENABLE=NO \
             CODE_SIGNING_ALLOWED=NO
-          cleanup
-          trap - EXIT

@@ -7,7 +7,7 @@ Datum: 2026-05-07
 
 Der Architektur-Workflow führte Architekturcheck, SwiftLint und Xcode-Tests in einem einzigen `macos-26`-Job aus. Dadurch warteten schnelle, plattformunabhängige Checks auf einen macOS-Runner und blockierten sich gegenseitig.
 
-Das Projekt benötigt macOS weiterhin für `xcodebuild test`, weil der iOS-Simulator und Xcode 26.4.1 erforderlich sind. Architekturregeln und SwiftLint benötigen dagegen keinen Simulator.
+Das Projekt benötigt macOS weiterhin für `xcodebuild test`, weil Xcode 26.4.1 erforderlich ist. Architekturregeln und SwiftLint benötigen dagegen weder Xcode noch macOS.
 
 ## Entscheidung
 
@@ -15,7 +15,7 @@ Der Workflow wird in drei unabhängige Jobs aufgeteilt:
 
 - Architekturcheck auf `ubuntu-latest`
 - SwiftLint auf `ubuntu-latest` mit dem SwiftLint-Container `ghcr.io/realm/swiftlint:0.63.2`
-- Xcode-Tests auf `macos-26`
+- Xcode-Tests auf `macos-26` mit Mac Catalyst
 
 Außerdem bricht GitHub Actions ältere Läufe derselben Branch per `concurrency.cancel-in-progress` ab. Der Xcode-Job nutzt das bekannte Projekt und Scheme direkt, statt sie zur Laufzeit zu suchen.
 
@@ -23,9 +23,9 @@ Für den CI-Unit-Test gibt es ein shared Scheme `Cujana-UnitTests`, das nur App 
 
 SwiftLint wird aus dem Xcode-Build entfernt und nur noch im CI-Workflow sowie über explizite lokale Befehle wie `make lint` ausgeführt.
 
-Der Xcode-Job verwendet einen festen DerivedData-Pfad. GitHub Actions cached Xcodes `SourcePackages`, Build-Produkte, Modul-Caches und SDK-Stat-Caches. Paketversionen kommen ausschließlich aus `Package.resolved`, und Xcode-Tests laufen mit parallelen Test-Workern sowie deaktiviertem Index Store.
+Der Xcode-Job verwendet einen festen DerivedData-Pfad. GitHub Actions cached Xcodes `SourcePackages`, Build-Produkte, Modul-Caches und SDK-Stat-Caches. Paketversionen kommen ausschließlich aus `Package.resolved`, und Xcode-Tests laufen als Mac-Catalyst-Tests mit parallelen Test-Workern sowie deaktiviertem Index Store.
 
-Der Simulator-Start läuft im Hintergrund parallel zur Paketauflösung und zum direkten `xcodebuild test`. Dadurch kann Xcode Build und Testplanung selbst optimieren, während Simulator-Startzeit mit Resolve und Kompilierung überlappt. Der Boot-Prozess wird am Ende des Schritts aufgeräumt, damit er den Job nicht blockiert.
+`CujanaTests` unterstützt Mac Catalyst explizit, damit App und Testbundle in denselben Catalyst-Build-Produkten landen. Dadurch entfällt der Simulator-Start vollständig.
 
 ## Konsequenzen
 
@@ -45,4 +45,4 @@ SwiftLint per Homebrew auf macOS zu installieren wurde verworfen, weil Installat
 
 ## Enforcement
 
-GitHub Actions führt Architekturcheck und SwiftLint auf Ubuntu aus. Nur der Simulator-Test mit `Cujana-UnitTests` bleibt auf `macos-26`.
+GitHub Actions führt Architekturcheck und SwiftLint auf Ubuntu aus. Nur der Xcode-Test mit `Cujana-UnitTests` bleibt auf `macos-26` und läuft dort ohne Simulator als Mac-Catalyst-Test.

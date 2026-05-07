@@ -72,6 +72,8 @@ xcuserdata/
 .xcode-derived-data/
 .xcode-source-packages/
 .swiftpm-package-cache/
+*.xcresult
+*.xctestrun
 
 ## App packaging
 *.ipa
