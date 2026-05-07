@@ -23,9 +23,9 @@ Für den CI-Unit-Test gibt es ein shared Scheme `Cujana-UnitTests`, das nur App 
 
 SwiftLint wird aus dem Xcode-Build entfernt und nur noch im CI-Workflow sowie über explizite lokale Befehle wie `make lint` ausgeführt.
 
-Der Xcode-Job verwendet einen festen DerivedData-Pfad, Xcode 26.3, eine Mac-Catalyst-Destination und Deployment Target 26.0. GitHub Actions cached Xcodes `SourcePackages`, Build-Produkte, Modul-Caches und SDK-Stat-Caches; die Xcode-Version wird zur Laufzeit für den Cache-Key ermittelt. Paketversionen kommen ausschließlich aus `Package.resolved`, und Xcode-Tests laufen als Mac-Catalyst-Tests mit parallelen Test-Workern sowie deaktiviertem Index Store.
+Der Xcode-Job verwendet einen festen DerivedData-Pfad, Xcode 26.4, eine arm64-Mac-Catalyst-Destination und Deployment Target 26.0. GitHub Actions cached Xcodes `SourcePackages`, Build-Produkte, Modul-Caches und SDK-Stat-Caches; die Xcode-Version wird zur Laufzeit für den Cache-Key ermittelt. Paketversionen kommen ausschließlich aus `Package.resolved`, und Xcode-Tests laufen als Mac-Catalyst-Tests mit parallelen Test-Workern sowie deaktiviertem Index Store.
 
-Der CI-Step baut zuerst generisch für Mac Catalyst mit `build-for-testing` und führt danach die erzeugte `.xctestrun` mit `test-without-building` gegen `My Mac` aus. Das vermeidet die fehlerhafte direkte Auflösung einer konkreten Catalyst-Destination auf dem GitHub-Arm-Runner.
+Der CI-Step folgt dem Symi-Workflow-Muster: Xcode 26.4 wird über `setup-xcode` ausgewählt, danach wird mit `build-for-testing` gebaut und mit `test-without-building` gegen dieselbe arm64-Catalyst-Destination getestet.
 
 `CujanaTests` unterstützt Mac Catalyst explizit, damit App und Testbundle in denselben Catalyst-Build-Produkten landen. Der CI-Job setzt das Catalyst-Deployment-Target passend zum Runner-SDK. Dadurch entfällt der Simulator-Start vollständig.
 
