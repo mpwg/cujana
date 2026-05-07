@@ -10,7 +10,7 @@ nonisolated public protocol OpenMeteoPollenAPIClient: Sendable {
 }
 
 nonisolated public struct OpenMeteoPollenSDKClient: OpenMeteoPollenAPIClient {
-    private static let dailyVariables: [(queryName: String, pollenType: PollenType)] = [
+    private static let pollenVariables: [(queryName: String, pollenType: PollenType)] = [
         ("alder_pollen", .alder),
         ("birch_pollen", .birch),
         ("grass_pollen", .grass),
@@ -43,26 +43,21 @@ nonisolated public struct OpenMeteoPollenSDKClient: OpenMeteoPollenAPIClient {
                 session: session
             )
 
-            guard let response = responses.first, let daily = response.daily else {
+            guard let response = responses.first, let hourly = response.hourly else {
                 throw PollenDataError.decodingFailed
             }
 
-            return try OpenMeteoPollenResponseDTO(
+            return try Self.aggregateHourlyResponse(
                 coordinate: coordinate,
                 generatedAt: now(),
-                daily: OpenMeteoPollenResponseDTO.Daily(
-                    dates: daily.getDateTime(offset: response.utcOffsetSeconds),
-                    variables: Self.dailyVariables.enumerated().map { index, variable in
-                        guard let values = daily.variables(at: Int32(index))?.values else {
-                            throw PollenDataError.decodingFailed
-                        }
-
-                        return OpenMeteoPollenResponseDTO.DailyVariable(
-                            pollenType: variable.pollenType,
-                            values: values
-                        )
+                hourlyDates: hourly.getDateTime(offset: response.utcOffsetSeconds),
+                hourlyVariables: Self.pollenVariables.enumerated().map { index, variable in
+                    guard let values = hourly.variables(at: Int32(index))?.values else {
+                        throw PollenDataError.decodingFailed
                     }
-                )
+
+                    return (pollenType: variable.pollenType, values: values)
+                }
             )
         } catch let error as PollenDataError {
             throw error
@@ -86,8 +81,8 @@ nonisolated public struct OpenMeteoPollenSDKClient: OpenMeteoPollenAPIClient {
             URLQueryItem(name: "latitude", value: String(coordinate.latitude)),
             URLQueryItem(name: "longitude", value: String(coordinate.longitude)),
             URLQueryItem(
-                name: "daily",
-                value: Self.dailyVariables.map(\.queryName).joined(separator: ",")
+                name: "hourly",
+                value: Self.pollenVariables.map(\.queryName).joined(separator: ",")
             ),
             URLQueryItem(name: "timezone", value: "auto"),
             URLQueryItem(name: "start_date", value: Self.apiDateString(from: startDate)),
@@ -100,6 +95,43 @@ nonisolated public struct OpenMeteoPollenSDKClient: OpenMeteoPollenAPIClient {
         }
 
         return URLRequest(url: url)
+    }
+
+    static func aggregateHourlyResponse(
+        coordinate: LocationCoordinate,
+        generatedAt: Date,
+        hourlyDates: [Date],
+        hourlyVariables: [(pollenType: PollenType, values: [Float])]
+    ) throws -> OpenMeteoPollenResponseDTO {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? calendar.timeZone
+
+        let startOfDays = hourlyDates.map { calendar.startOfDay(for: $0) }
+        let dailyDates = Array(Set(startOfDays)).sorted()
+        let dailyVariables = hourlyVariables.map { variable in
+            let dailyValues = dailyDates.map { day in
+                zip(startOfDays, variable.values)
+                    .filter { date, value in
+                        date == day && value.isFinite
+                    }
+                    .map(\.1)
+                    .max() ?? 0
+            }
+
+            return OpenMeteoPollenResponseDTO.DailyVariable(
+                pollenType: variable.pollenType,
+                values: dailyValues
+            )
+        }
+
+        return OpenMeteoPollenResponseDTO(
+            coordinate: coordinate,
+            generatedAt: generatedAt,
+            daily: OpenMeteoPollenResponseDTO.Daily(
+                dates: dailyDates,
+                variables: dailyVariables
+            )
+        )
     }
 
     private static func apiDateString(from date: Date) -> String {

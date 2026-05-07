@@ -5,6 +5,13 @@ import Testing
 struct AllergyDashboardViewModelTests {
 
     @Test
+    func locationCoordinateCoarsensForPrivacy() throws {
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+
+        #expect(coordinate.coarsenedForPrivacy() == (try LocationCoordinate(latitude: 48.2, longitude: 16.35)))
+    }
+
+    @Test
     @MainActor
     func loadMapsPollenAndSymptomsIntoDashboardContent() async throws {
         let date = Date(timeIntervalSince1970: 1_800)
@@ -106,6 +113,51 @@ struct AllergyDashboardViewModelTests {
 
     @Test
     @MainActor
+    func loadUsesCurrentLocationWhenAvailable() async throws {
+        let date = Date(timeIntervalSince1970: 1_800)
+        let fallbackCoordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let currentCoordinate = try LocationCoordinate(latitude: 47.0707, longitude: 15.4395)
+        let pollenRepository = CapturingPollenRepository()
+        let viewModel = AllergyDashboardViewModel(
+            loadUseCase: LoadAllergyOverviewUseCase(
+                pollenRepository: pollenRepository,
+                symptomEntryRepository: StubSymptomEntryRepository(entries: [])
+            ),
+            locationProvider: StubLocationCoordinateProvider(coordinate: currentCoordinate),
+            coordinate: fallbackCoordinate,
+            calendar: calendar,
+            now: { date }
+        )
+
+        await viewModel.load()
+
+        #expect(await pollenRepository.requestedCoordinates() == [currentCoordinate])
+    }
+
+    @Test
+    @MainActor
+    func loadFallsBackToDefaultLocationWhenCurrentLocationIsUnavailable() async throws {
+        let date = Date(timeIntervalSince1970: 1_800)
+        let fallbackCoordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let pollenRepository = CapturingPollenRepository()
+        let viewModel = AllergyDashboardViewModel(
+            loadUseCase: LoadAllergyOverviewUseCase(
+                pollenRepository: pollenRepository,
+                symptomEntryRepository: StubSymptomEntryRepository(entries: [])
+            ),
+            locationProvider: StubLocationCoordinateProvider(coordinate: nil),
+            coordinate: fallbackCoordinate,
+            calendar: calendar,
+            now: { date }
+        )
+
+        await viewModel.load()
+
+        #expect(await pollenRepository.requestedCoordinates() == [fallbackCoordinate])
+    }
+
+    @Test
+    @MainActor
     func loadKeepsOnlyTodaysTopPollenAndMostRecentSymptoms() async throws {
         let date = Date(timeIntervalSince1970: 86_400)
         let yesterday = Date(timeIntervalSince1970: 0)
@@ -201,6 +253,23 @@ private struct StubPollenRepository: PollenRepository {
     }
 }
 
+private actor CapturingPollenRepository: PollenRepository {
+    private var coordinates: [LocationCoordinate] = []
+
+    func pollenForecast(
+        for coordinate: LocationCoordinate,
+        from startDate: Date,
+        to endDate: Date
+    ) async throws -> [PollenForecast] {
+        coordinates.append(coordinate)
+        return []
+    }
+
+    func requestedCoordinates() -> [LocationCoordinate] {
+        coordinates
+    }
+}
+
 private struct FailingPollenRepository: PollenRepository {
     func pollenForecast(
         for coordinate: LocationCoordinate,
@@ -218,6 +287,19 @@ private struct StubSymptomEntryRepository: SymptomEntryRepository {
 
     func symptomEntries(from startDate: Date, to endDate: Date) async throws -> [AllergySymptomEntry] {
         entries
+    }
+}
+
+@MainActor
+private final class StubLocationCoordinateProvider: LocationCoordinateProviding {
+    private let coordinate: LocationCoordinate?
+
+    init(coordinate: LocationCoordinate?) {
+        self.coordinate = coordinate
+    }
+
+    func currentCoordinate() async -> LocationCoordinate? {
+        coordinate
     }
 }
 

@@ -22,6 +22,7 @@ struct AppCompositionRoot {
     private func makeAllergyDashboardViewModel() -> AllergyDashboardViewModel {
         AllergyDashboardViewModel(
             loadUseCase: makeLoadAllergyOverviewUseCase(),
+            locationProvider: dependencies.locationProvider,
             coordinate: dependencies.defaultCoordinate
         )
     }
