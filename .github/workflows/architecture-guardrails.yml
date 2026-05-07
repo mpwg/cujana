@@ -47,26 +47,29 @@ jobs:
     name: Xcode tests
     runs-on: macos-26
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
       DERIVED_DATA_PATH: .xcode-derived-data
       DESTINATION: platform=macOS,variant=Mac Catalyst,name=Any Mac
       MACOSX_DEPLOYMENT_TARGET: "26.0"
-      XCODE_VERSION: "26.3"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: Show Xcode version
-        run: xcodebuild -version
+        id: xcode-version
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          cache_version="$(xcodebuild -version | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
+          echo "xcode-cache-version=$cache_version" >> "$GITHUB_OUTPUT"
 
       - name: Cache Swift packages
         uses: actions/cache@v4
         with:
           path: .xcode-derived-data/SourcePackages
-          key: swiftpm-${{ runner.os }}-xcode-${{ env.XCODE_VERSION }}-${{ hashFiles('Cujana.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: swiftpm-${{ runner.os }}-xcode-${{ steps.xcode-version.outputs.xcode-cache-version }}-${{ hashFiles('Cujana.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
-            swiftpm-${{ runner.os }}-xcode-${{ env.XCODE_VERSION }}-
+            swiftpm-${{ runner.os }}-xcode-${{ steps.xcode-version.outputs.xcode-cache-version }}-
 
       - name: Cache Xcode build products
         uses: actions/cache@v4
@@ -75,9 +78,9 @@ jobs:
             .xcode-derived-data/Build
             .xcode-derived-data/ModuleCache.noindex
             .xcode-derived-data/SDKStatCaches.noindex
-          key: xcodebuild-maccatalyst-${{ runner.os }}-xcode-${{ env.XCODE_VERSION }}-${{ hashFiles('Cujana.xcodeproj/project.pbxproj', 'Cujana.xcodeproj/xcshareddata/xcschemes/*.xcscheme', 'Cujana.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'Cujana/**/*.swift', 'CujanaTests/**/*.swift') }}
+          key: xcodebuild-maccatalyst-${{ runner.os }}-xcode-${{ steps.xcode-version.outputs.xcode-cache-version }}-${{ hashFiles('Cujana.xcodeproj/project.pbxproj', 'Cujana.xcodeproj/xcshareddata/xcschemes/*.xcscheme', 'Cujana.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'Cujana/**/*.swift', 'CujanaTests/**/*.swift') }}
           restore-keys: |
-            xcodebuild-maccatalyst-${{ runner.os }}-xcode-${{ env.XCODE_VERSION }}-
+            xcodebuild-maccatalyst-${{ runner.os }}-xcode-${{ steps.xcode-version.outputs.xcode-cache-version }}-
 
       - name: Run Xcode tests
         run: |
