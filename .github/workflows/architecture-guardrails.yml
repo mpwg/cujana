@@ -47,8 +47,10 @@ jobs:
     name: Xcode tests
     runs-on: macos-26
     env:
+      ARCHS: arm64
       DERIVED_DATA_PATH: .xcode-derived-data
       DESTINATION: platform=macOS,arch=arm64,variant=Mac Catalyst
+      IPHONEOS_DEPLOYMENT_TARGET: "26.0"
       MACOSX_DEPLOYMENT_TARGET: "26.0"
 
     steps:
@@ -107,7 +109,9 @@ jobs:
             -skipPackageUpdates \
             -parallelizeTargets \
             -jobs "$(sysctl -n hw.ncpu)" \
+            ARCHS="$ARCHS" \
             COMPILER_INDEX_STORE_ENABLE=NO \
+            IPHONEOS_DEPLOYMENT_TARGET="$IPHONEOS_DEPLOYMENT_TARGET" \
             MACOSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET" \
             CODE_SIGNING_ALLOWED=NO
 
