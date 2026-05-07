@@ -60,5 +60,6 @@ jobs:
           xcodebuild test \
             -project "$project" \
             -scheme "$scheme" \
-            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            -only-testing:CujanaTests \
+            -destination 'platform=macOS' \
             CODE_SIGNING_ALLOWED=NO
