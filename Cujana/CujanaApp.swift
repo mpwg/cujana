@@ -16,16 +16,40 @@ struct CujanaApp: App {
             return InMemorySymptomEntryRepository()
         }
     }()
+    private let pollenRepository: any PollenRepository = OpenMeteoPollenRepository()
 
     var body: some Scene {
         WindowGroup {
-            ContentView(viewModel: makeSymptomEntryViewModel())
+            ContentView(
+                dashboardViewModel: makeAllergyDashboardViewModel(),
+                symptomEntryViewModel: makeSymptomEntryViewModel()
+            )
         }
+    }
+
+    private func makeAllergyDashboardViewModel() -> AllergyDashboardViewModel {
+        let loadUseCase = LoadAllergyOverviewUseCase(
+            pollenRepository: pollenRepository,
+            symptomEntryRepository: symptomEntryRepository
+        )
+
+        return AllergyDashboardViewModel(
+            loadUseCase: loadUseCase,
+            coordinate: defaultCoordinate()
+        )
     }
 
     private func makeSymptomEntryViewModel() -> SymptomEntryViewModel {
         let saveUseCase = SaveAllergySymptomEntryUseCase(repository: symptomEntryRepository)
 
         return SymptomEntryViewModel(saveUseCase: saveUseCase)
+    }
+
+    private func defaultCoordinate() -> LocationCoordinate {
+        guard let coordinate = try? LocationCoordinate(latitude: 48.2082, longitude: 16.3738) else {
+            fatalError("Default coordinate must be valid.")
+        }
+
+        return coordinate
     }
 }
