@@ -47,10 +47,11 @@ jobs:
     name: Xcode tests
     runs-on: macos-26
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.4.1.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
       DERIVED_DATA_PATH: .xcode-derived-data
       DESTINATION: platform=macOS,variant=Mac Catalyst
-      XCODE_VERSION: 26.4.1
+      MACOSX_DEPLOYMENT_TARGET: 26.2
+      XCODE_VERSION: 26.3
 
     steps:
       - name: Checkout
@@ -103,4 +104,5 @@ jobs:
             -maximum-parallel-testing-workers 4 \
             -collect-test-diagnostics never \
             COMPILER_INDEX_STORE_ENABLE=NO \
+            MACOSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET" \
             CODE_SIGNING_ALLOWED=NO
