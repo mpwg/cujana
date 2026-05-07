@@ -31,4 +31,4 @@ Das Package `open-meteo/open-meteo` wurde verworfen, weil es der API-Server ist 
 
 `OpenMeteoSdk` wird nur in `Infrastructure/Network/OpenMeteo` importiert. Feature-Code greift weiterhin nur auf Use Cases oder Repository-Protokolle zu. `make architecture-check`, SwiftLint und Unit-Tests sichern die Schichtgrenzen und Mapper-Logik ab.
 
-Der Architektur-Guardrail-Workflow führt Xcode-Unit-Tests auf macOS aus und begrenzt `xcodebuild test` auf `CujanaTests`. UI-Tests bleiben von dieser Dependency- und Architekturprüfung getrennt, weil sie auf GitHub-Hosted-Simulatoren anfälliger für Accessibility-Initialisierungs-Timeouts sind.
+Der Architektur-Guardrail-Workflow begrenzt `xcodebuild test` auf `CujanaTests`. UI-Tests bleiben von dieser Dependency- und Architekturprüfung getrennt, weil sie auf GitHub-Hosted-Simulatoren anfälliger für Accessibility-Initialisierungs-Timeouts sind.

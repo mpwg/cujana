@@ -61,5 +61,5 @@ jobs:
             -project "$project" \
             -scheme "$scheme" \
             -only-testing:CujanaTests \
-            -destination 'platform=macOS' \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
             CODE_SIGNING_ALLOWED=NO
