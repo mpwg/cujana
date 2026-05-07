@@ -189,9 +189,9 @@ struct AllergyDashboardView: View {
 #Preview {
     let coordinate = try? LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
     let fallbackCoordinate = coordinate ?? LocationCoordinate.preview
-    let repository = InMemorySymptomEntryRepository()
+    let repository = PreviewSymptomEntryRepository()
     let useCase = LoadAllergyOverviewUseCase(
-        pollenRepository: EmptyPollenRepository(),
+        pollenRepository: PreviewPollenRepository(),
         symptomEntryRepository: repository
     )
 
@@ -335,7 +335,15 @@ private extension LocationCoordinate {
     }
 }
 
-private struct EmptyPollenRepository: PollenRepository {
+private actor PreviewSymptomEntryRepository: SymptomEntryRepository {
+    func save(_ entry: AllergySymptomEntry) async throws {}
+
+    func symptomEntries(from startDate: Date, to endDate: Date) async throws -> [AllergySymptomEntry] {
+        []
+    }
+}
+
+private struct PreviewPollenRepository: PollenRepository {
     func pollenForecast(
         for coordinate: LocationCoordinate,
         from startDate: Date,
