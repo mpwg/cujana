@@ -1,5 +1,6 @@
 import Foundation
 
+#if DEBUG
 enum AppDemoData {
     static let now = makeDate(year: 2026, month: 5, day: 8, hour: 9, minute: 41)
     static let calendar = Calendar(identifier: .gregorian)
@@ -187,3 +188,4 @@ struct DemoPollenRepository: PollenRepository {
         forecasts
     }
 }
+#endif

@@ -1,5 +1,6 @@
 import Foundation
 
+#if DEBUG
 enum AppLaunchConfiguration {
     case standard
     case screenshot(AppScreenshotScreen)
@@ -26,3 +27,4 @@ enum AppScreenshotScreen: String, CaseIterable {
         self.init(rawValue: arguments[arguments.index(after: index)])
     }
 }
+#endif

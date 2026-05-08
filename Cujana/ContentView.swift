@@ -33,11 +33,3 @@ struct ContentView: View {
         )
     }
 }
-
-#Preview("Allergien im Blick") {
-    AppCompositionRoot.demo().makeRootView(launchConfiguration: .screenshot(.dashboard))
-}
-
-#Preview("Symptom erfassen") {
-    AppCompositionRoot.demo().makeRootView(launchConfiguration: .screenshot(.entry))
-}

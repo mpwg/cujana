@@ -5,7 +5,6 @@ struct AppDependencies {
     let symptomEntryRepository: any SymptomEntryRepository
     let locationProvider: any LocationCoordinateProviding
     let defaultCoordinate: LocationCoordinate
-    let usesDemoData: Bool
 
     static func production() -> AppDependencies {
         let fallbackCoordinate = viennaCoordinate()
@@ -14,18 +13,7 @@ struct AppDependencies {
             pollenRepository: OpenMeteoPollenRepository(),
             symptomEntryRepository: makeSymptomEntryRepository(),
             locationProvider: CoreLocationCoordinateProvider(),
-            defaultCoordinate: fallbackCoordinate,
-            usesDemoData: false
-        )
-    }
-
-    static func demo() -> AppDependencies {
-        AppDependencies(
-            pollenRepository: DemoPollenRepository(forecasts: AppDemoData.pollenForecasts),
-            symptomEntryRepository: DemoSymptomEntryRepository(entries: AppDemoData.symptomEntries),
-            locationProvider: FixedLocationCoordinateProvider(coordinate: AppDemoData.coordinate),
-            defaultCoordinate: AppDemoData.coordinate,
-            usesDemoData: true
+            defaultCoordinate: fallbackCoordinate
         )
     }
 

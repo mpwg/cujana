@@ -186,13 +186,6 @@ struct AllergyDashboardView: View {
     }
 }
 
-#Preview {
-    AllergyDashboardView(
-        viewModel: AppDemoData.makeDashboardViewModel(),
-        onStartSymptomEntry: {}
-    )
-}
-
 private struct DashboardSectionHeader: View {
     let title: String
     let subtitle: String

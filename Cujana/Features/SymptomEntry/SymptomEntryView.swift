@@ -156,10 +156,6 @@ struct SymptomEntryView: View {
     }
 }
 
-#Preview {
-    SymptomEntryView(viewModel: AppDemoData.makeSymptomEntryViewModel())
-}
-
 private struct SectionHeader: View {
     let title: String
     let subtitle: String
