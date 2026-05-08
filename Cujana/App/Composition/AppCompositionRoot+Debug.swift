@@ -8,27 +8,34 @@ extension AppCompositionRoot {
     }
 
     @ViewBuilder
-    func makeRootView(launchConfiguration: AppLaunchConfiguration) -> some View {
+    func makeRootView(
+        launchConfiguration: AppLaunchConfiguration,
+        telemetryService: AppTelemetryService
+    ) -> some View {
         switch launchConfiguration {
         case .standard:
-            makeContentView()
+            makeContentView(telemetryService: telemetryService)
         case .screenshot(let screen):
-            makeScreenshotView(screen: screen)
+            makeScreenshotView(screen: screen, telemetryService: telemetryService)
         }
     }
 
-    private func makeDemoContentView() -> ContentView {
+    private func makeDemoContentView(telemetryService: AppTelemetryService) -> ContentView {
         ContentView(
             dashboardViewModel: AppDemoData.makeDashboardViewModel(),
-            symptomEntryViewModel: AppDemoData.makeSymptomEntryViewModel()
+            symptomEntryViewModel: AppDemoData.makeSymptomEntryViewModel(),
+            telemetryService: telemetryService
         )
     }
 
     @ViewBuilder
-    private func makeScreenshotView(screen: AppScreenshotScreen) -> some View {
+    private func makeScreenshotView(
+        screen: AppScreenshotScreen,
+        telemetryService: AppTelemetryService
+    ) -> some View {
         switch screen {
         case .dashboard:
-            makeDemoContentView()
+            makeDemoContentView(telemetryService: telemetryService)
         case .entry:
             SymptomEntryView(viewModel: AppDemoData.makeSymptomEntryViewModel())
         }

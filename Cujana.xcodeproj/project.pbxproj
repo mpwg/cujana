@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		09A941B6F1414DAA960D68DD /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = DB3AB0D0FAFD4335A5E3 /* TelemetryDeck */; };
 		411F91F42FAD6B6A00CB9009 /* OpenMeteoSdk in Frameworks */ = {isa = PBXBuildFile; productRef = 411F91F32FAD6B6A00CB9009 /* OpenMeteoSdk */; };
+		95683B03164E4D24A95AF319 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 503898F35A414F31828DCC6E /* Sentry */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,6 +72,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				411F91F42FAD6B6A00CB9009 /* OpenMeteoSdk in Frameworks */,
+				95683B03164E4D24A95AF319 /* Sentry in Frameworks */,
+				09A941B6F1414DAA960D68DD /* TelemetryDeck in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,6 +135,8 @@
 			name = Cujana;
 			packageProductDependencies = (
 				411F91F32FAD6B6A00CB9009 /* OpenMeteoSdk */,
+				503898F35A414F31828DCC6E /* Sentry */,
+				DB3AB0D0FAFD4335A5E3 /* TelemetryDeck */,
 			);
 			productName = Cujana;
 			productReference = 404862EC2FA904E800F82D13 /* Cujana.app */;
@@ -216,6 +222,8 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				411F91F22FAD6B6A00CB9009 /* XCRemoteSwiftPackageReference "sdk" */,
+				85D581FB19214C38B289D2B3 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
+				1DAA4BCAB6F143559EE0A982 /* XCRemoteSwiftPackageReference "SwiftSDK" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 404862ED2FA904E800F82D13 /* Products */;
@@ -651,12 +659,28 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		1DAA4BCAB6F143559EE0A982 /* XCRemoteSwiftPackageReference "SwiftSDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/TelemetryDeck/SwiftSDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.12.0;
+			};
+		};
 		411F91F22FAD6B6A00CB9009 /* XCRemoteSwiftPackageReference "sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/open-meteo/sdk.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.26.0;
+			};
+		};
+		85D581FB19214C38B289D2B3 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa/";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.12.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -666,6 +690,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 411F91F22FAD6B6A00CB9009 /* XCRemoteSwiftPackageReference "sdk" */;
 			productName = OpenMeteoSdk;
+		};
+		503898F35A414F31828DCC6E /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 85D581FB19214C38B289D2B3 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
+		};
+		DB3AB0D0FAFD4335A5E3 /* TelemetryDeck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1DAA4BCAB6F143559EE0A982 /* XCRemoteSwiftPackageReference "SwiftSDK" */;
+			productName = TelemetryDeck;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

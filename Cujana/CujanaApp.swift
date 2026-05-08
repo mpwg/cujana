@@ -10,10 +10,13 @@ import SwiftUI
 @main
 struct CujanaApp: App {
     private let launchComposition = AppLaunchComposition.current()
+    @State private var telemetryService = AppTelemetryService()
 
     var body: some Scene {
         WindowGroup {
-            launchComposition.makeRootView()
+            UsageDataConsentRootView(telemetryService: telemetryService) {
+                launchComposition.makeRootView(telemetryService: telemetryService)
+            }
         }
     }
 }
