@@ -23,6 +23,7 @@ extension AppCompositionRoot {
     private func makeDemoContentView(telemetryService: AppTelemetryService) -> ContentView {
         ContentView(
             dashboardViewModel: AppDemoData.makeDashboardViewModel(),
+            entryListViewModel: AppDemoData.makeEntryListViewModel(),
             symptomEntryViewModel: AppDemoData.makeSymptomEntryViewModel(),
             telemetryService: telemetryService
         )

@@ -91,6 +91,20 @@ enum AppDemoData {
         )
     }
 
+    static func makeEntryListViewModel() -> EntryListViewModel {
+        EntryListViewModel(
+            loadEntriesUseCase: LoadAllergySymptomEntriesUseCase(
+                repository: DemoSymptomEntryRepository(entries: symptomEntries)
+            ),
+            loadPollenUseCase: LoadPollenForecastUseCase(
+                repository: DemoPollenRepository(forecasts: pollenForecasts)
+            ),
+            coordinate: coordinate,
+            calendar: calendar,
+            now: { now }
+        )
+    }
+
     private static func makePollenForecast(
         id: String,
         levels: [(PollenType, PollenLevel)]
