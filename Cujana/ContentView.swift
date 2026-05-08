@@ -111,7 +111,7 @@ private struct FloatingTabBar: View {
         }
         .padding(.horizontal, SpacingToken.sm)
         .padding(.vertical, SpacingToken.xs)
-        .background(ColorToken.cardBackground.opacity(0.78))
+        .background(ColorToken.cardBackground.opacity(0.7))
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusXLarge, style: .continuous))
         .softShadow(ShadowToken.floating)
         .accessibilityElement(children: .contain)
@@ -141,7 +141,8 @@ private struct FloatingTabBarItem: View {
                 if isSelected {
                     OrganicTabSelection()
                         .fill(ColorToken.accentSoft)
-                        .scaleEffect(x: 0.92, y: 0.78)
+                        .opacity(0.78)
+                        .scaleEffect(x: 0.86, y: 0.7)
                 }
             }
         }

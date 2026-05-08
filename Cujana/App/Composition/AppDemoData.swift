@@ -66,6 +66,23 @@ enum AppDemoData {
         ]
     }
 
+    static var weatherForecasts: [WeatherForecast] {
+        [
+            WeatherForecast(
+                coordinate: coordinate,
+                generatedAt: now,
+                dailyConditions: [
+                    WeatherForecast.DailyCondition(date: now, temperature: 22, conditionCode: 3),
+                    WeatherForecast.DailyCondition(
+                        date: makeRelativeDate(daysOffset: 1, hour: 9, minute: 41),
+                        temperature: 19,
+                        conditionCode: 61
+                    )
+                ]
+            )
+        ]
+    }
+
     static func makeSymptomEntryViewModel() -> SymptomEntryViewModel {
         let viewModel = SymptomEntryViewModel(
             saveUseCase: SaveAllergySymptomEntryUseCase(
@@ -83,6 +100,7 @@ enum AppDemoData {
         AllergyDashboardViewModel(
             loadUseCase: LoadAllergyOverviewUseCase(
                 pollenRepository: DemoPollenRepository(forecasts: pollenForecasts),
+                weatherRepository: DemoWeatherRepository(forecasts: weatherForecasts),
                 symptomEntryRepository: DemoSymptomEntryRepository(entries: symptomEntries)
             ),
             coordinate: coordinate,
@@ -207,6 +225,22 @@ struct DemoPollenRepository: PollenRepository {
         from startDate: Date,
         to endDate: Date
     ) async throws -> [PollenForecast] {
+        forecasts
+    }
+}
+
+struct DemoWeatherRepository: WeatherRepository {
+    private let forecasts: [WeatherForecast]
+
+    init(forecasts: [WeatherForecast]) {
+        self.forecasts = forecasts
+    }
+
+    func weatherForecast(
+        for coordinate: LocationCoordinate,
+        from startDate: Date,
+        to endDate: Date
+    ) async throws -> [WeatherForecast] {
         forecasts
     }
 }

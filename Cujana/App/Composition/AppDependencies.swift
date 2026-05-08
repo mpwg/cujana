@@ -2,12 +2,14 @@ import Foundation
 
 struct AppDependencies {
     let pollenRepository: any PollenRepository
+    let weatherRepository: any WeatherRepository
     let symptomEntryRepository: any SymptomEntryRepository
     let locationProvider: any LocationCoordinateProviding
 
     static func production() -> AppDependencies {
         return AppDependencies(
             pollenRepository: OpenMeteoPollenRepository(),
+            weatherRepository: OpenMeteoWeatherRepository(),
             symptomEntryRepository: makeSymptomEntryRepository(),
             locationProvider: CoreLocationCoordinateProvider()
         )

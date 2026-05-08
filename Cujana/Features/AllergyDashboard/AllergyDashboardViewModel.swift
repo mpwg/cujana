@@ -11,6 +11,7 @@ final class AllergyDashboardViewModel {
         static let symptomHistoryDays = 7
         static let visiblePollenCount = 4
         static let visibleSymptomCount = 3
+        static let visibleHomeForecastDays = 2
     }
 
     private let loadUseCase: LoadAllergyOverviewUseCase
@@ -52,7 +53,7 @@ final class AllergyDashboardViewModel {
             )
             let content = makeContent(from: overview, currentDate: currentDate)
 
-            state = content.pollenItems.isEmpty && content.symptomItems.isEmpty ? .empty(content) : .loaded(content)
+            state = content.forecastDays.isEmpty ? .empty(content) : .loaded(content)
         } catch {
             state = .failure("Die Übersicht konnte gerade nicht geladen werden. Bitte versuche es erneut.")
         }
@@ -70,10 +71,147 @@ final class AllergyDashboardViewModel {
         AllergyDashboardContent(
             title: "Deine Allergie-Übersicht",
             subtitle: "Pollenlage und Symptome für Wien, ruhig zusammengefasst.",
+            forecastDays: makeForecastDays(
+                weatherForecasts: overview.weatherForecasts,
+                pollenForecasts: overview.pollenForecasts,
+                currentDate: currentDate
+            ),
             pollenItems: makePollenItems(from: overview.pollenForecasts, currentDate: currentDate),
             symptomItems: makeSymptomItems(from: overview.symptomEntries),
             generatedAtText: "Aktualisiert \(relativeText(for: overview.generatedAt, currentDate: currentDate))"
         )
+    }
+
+    private func makeForecastDays(
+        weatherForecasts: [WeatherForecast],
+        pollenForecasts: [PollenForecast],
+        currentDate: Date
+    ) -> [ForecastDaySummaryItem] {
+        let days = (0..<Constant.visibleHomeForecastDays).compactMap { dayOffset -> ForecastDaySummaryItem? in
+            guard let date = calendar.date(byAdding: .day, value: dayOffset, to: currentDate) else {
+                return nil
+            }
+
+            let weather = weatherCondition(from: weatherForecasts, for: date)
+            let topPollen = topPollenLevel(from: pollenForecasts, for: date)
+            guard weather != nil || topPollen != nil else {
+                return nil
+            }
+
+            let dayTitle = dayOffset == 0 ? "Heute" : "Morgen"
+            let pollenText = topPollen.map { level in
+                "\(AllergyDashboardPresentationState.title(for: level.pollenType)): \(shortLevelText(for: level.level))"
+            } ?? "Pollen: nicht verfügbar"
+            let weatherText = weather.map { weatherDescription(for: $0.conditionCode) } ?? "Wetter aktuell nicht verfügbar"
+            let temperatureText = weather.map { formattedTemperatureText(for: $0.temperature) } ?? "--"
+            let weatherSystemImageName = weather.map { systemImageName(forWeatherCode: $0.conditionCode) } ?? "cloud.sun"
+
+            return ForecastDaySummaryItem(
+                id: dayTitle,
+                title: dayTitle,
+                temperatureText: temperatureText,
+                weatherText: weatherText,
+                weatherSystemImageName: weatherSystemImageName,
+                pollenText: pollenText,
+                accessibilityText: "\(dayTitle), \(temperatureText), \(weatherText), \(pollenText)"
+            )
+        }
+
+        return days.count == Constant.visibleHomeForecastDays ? days : []
+    }
+
+    private func weatherCondition(
+        from forecasts: [WeatherForecast],
+        for date: Date
+    ) -> WeatherForecast.DailyCondition? {
+        forecasts
+            .flatMap(\.dailyConditions)
+            .first { calendar.isDate($0.date, inSameDayAs: date) }
+    }
+
+    private func topPollenLevel(
+        from forecasts: [PollenForecast],
+        for date: Date
+    ) -> PollenForecast.DailyLevel? {
+        forecasts
+            .flatMap(\.dailyLevels)
+            .filter { calendar.isDate($0.date, inSameDayAs: date) }
+            .sorted { first, second in
+                if first.level == second.level {
+                    return AllergyDashboardPresentationState.title(for: first.pollenType)
+                        < AllergyDashboardPresentationState.title(for: second.pollenType)
+                }
+
+                return first.level > second.level
+            }
+            .first
+    }
+
+    private func shortLevelText(for level: PollenLevel) -> String {
+        switch level.rawValue {
+        case 0:
+            "niedrig"
+        case 1:
+            "niedrig"
+        case 2:
+            "mittel"
+        case 3:
+            "hoch"
+        default:
+            "sehr hoch"
+        }
+    }
+
+    private func formattedTemperatureText(for temperature: Double) -> String {
+        "\(Int(temperature.rounded()))°"
+    }
+
+    private func weatherDescription(for code: Int) -> String {
+        switch code {
+        case 0:
+            "klar"
+        case 1:
+            "überwiegend klar"
+        case 2:
+            "leicht bewölkt"
+        case 3:
+            "bewölkt"
+        case 45, 48:
+            "neblig"
+        case 51, 53, 55, 56, 57:
+            "leichter Nieselregen"
+        case 61, 63, 65, 66, 67, 80, 81, 82:
+            "regnerisch"
+        case 71, 73, 75, 77, 85, 86:
+            "Schnee"
+        case 95, 96, 99:
+            "Gewitter möglich"
+        default:
+            "mild"
+        }
+    }
+
+    private func systemImageName(forWeatherCode code: Int) -> String {
+        switch code {
+        case 0, 1:
+            "sun.max"
+        case 2:
+            "cloud.sun"
+        case 3:
+            "cloud"
+        case 45, 48:
+            "cloud.fog"
+        case 51, 53, 55, 56, 57:
+            "cloud.drizzle"
+        case 61, 63, 65, 66, 67, 80, 81, 82:
+            "cloud.rain"
+        case 71, 73, 75, 77, 85, 86:
+            "cloud.snow"
+        case 95, 96, 99:
+            "cloud.bolt.rain"
+        default:
+            "cloud.sun"
+        }
     }
 
     private func makePollenItems(

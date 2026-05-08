@@ -43,6 +43,7 @@ struct AppCompositionRoot {
     private func makeLoadAllergyOverviewUseCase() -> LoadAllergyOverviewUseCase {
         LoadAllergyOverviewUseCase(
             pollenRepository: dependencies.pollenRepository,
+            weatherRepository: dependencies.weatherRepository,
             symptomEntryRepository: dependencies.symptomEntryRepository
         )
     }

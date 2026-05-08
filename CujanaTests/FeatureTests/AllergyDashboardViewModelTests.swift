@@ -21,10 +21,27 @@ struct AllergyDashboardViewModelTests {
             sourceKind: .forecast,
             generatedAt: date,
             validFrom: date,
-            validUntil: date,
+            validUntil: date.addingTimeInterval(86_400),
             dailyLevels: [
                 PollenForecast.DailyLevel(date: date, pollenType: .birch, level: .high),
-                PollenForecast.DailyLevel(date: date, pollenType: .grass, level: .moderate)
+                PollenForecast.DailyLevel(date: date, pollenType: .grass, level: .moderate),
+                PollenForecast.DailyLevel(
+                    date: date.addingTimeInterval(86_400),
+                    pollenType: .grass,
+                    level: .moderate
+                )
+            ]
+        )
+        let weather = WeatherForecast(
+            coordinate: coordinate,
+            generatedAt: date,
+            dailyConditions: [
+                WeatherForecast.DailyCondition(date: date, temperature: 18.4, conditionCode: 2),
+                WeatherForecast.DailyCondition(
+                    date: date.addingTimeInterval(86_400),
+                    temperature: 21.2,
+                    conditionCode: 61
+                )
             ]
         )
         let symptom = try AllergySymptomEntry(
@@ -38,6 +55,7 @@ struct AllergyDashboardViewModelTests {
         let viewModel = AllergyDashboardViewModel(
             loadUseCase: LoadAllergyOverviewUseCase(
                 pollenRepository: StubPollenRepository(forecasts: [forecast]),
+                weatherRepository: StubWeatherRepository(forecasts: [weather]),
                 symptomEntryRepository: StubSymptomEntryRepository(entries: [symptom])
             ),
             coordinate: coordinate,
@@ -52,6 +70,13 @@ struct AllergyDashboardViewModelTests {
             return
         }
 
+        #expect(content.forecastDays.map(\.title) == ["Heute", "Morgen"])
+        #expect(content.forecastDays.first?.temperatureText == "18°")
+        #expect(content.forecastDays.first?.weatherText == "leicht bewölkt")
+        #expect(content.forecastDays.first?.pollenText == "Birke: hoch")
+        #expect(content.forecastDays.last?.temperatureText == "21°")
+        #expect(content.forecastDays.last?.weatherText == "regnerisch")
+        #expect(content.forecastDays.last?.pollenText == "Gräser: mittel")
         #expect(content.pollenItems.map(\.title) == ["Birke", "Gräser"])
         #expect(content.pollenItems.first?.levelText == "Hoch")
         #expect(content.symptomItems.first?.title == "Juckende Augen")
@@ -158,20 +183,22 @@ struct AllergyDashboardViewModelTests {
     func loadKeepsOnlyTodaysTopPollenAndMostRecentSymptoms() async throws {
         let date = Date(timeIntervalSince1970: 86_400)
         let yesterday = Date(timeIntervalSince1970: 0)
+        let tomorrow = Date(timeIntervalSince1970: 172_800)
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let forecast = try PollenForecast(
             coordinate: coordinate,
             sourceKind: .forecast,
             generatedAt: date,
             validFrom: yesterday,
-            validUntil: date,
+            validUntil: tomorrow,
             dailyLevels: [
                 PollenForecast.DailyLevel(date: yesterday, pollenType: .ragweed, level: .extreme),
                 PollenForecast.DailyLevel(date: date, pollenType: .birch, level: .high),
                 PollenForecast.DailyLevel(date: date, pollenType: .alder, level: .high),
                 PollenForecast.DailyLevel(date: date, pollenType: .grass, level: .moderate),
                 PollenForecast.DailyLevel(date: date, pollenType: .mugwort, level: .low),
-                PollenForecast.DailyLevel(date: date, pollenType: .oak, level: .extreme)
+                PollenForecast.DailyLevel(date: date, pollenType: .oak, level: .extreme),
+                PollenForecast.DailyLevel(date: tomorrow, pollenType: .grass, level: .moderate)
             ]
         )
         let symptoms = try [
@@ -246,6 +273,18 @@ private struct StubPollenRepository: PollenRepository {
         from startDate: Date,
         to endDate: Date
     ) async throws -> [PollenForecast] {
+        forecasts
+    }
+}
+
+private struct StubWeatherRepository: WeatherRepository {
+    let forecasts: [WeatherForecast]
+
+    func weatherForecast(
+        for coordinate: LocationCoordinate,
+        from startDate: Date,
+        to endDate: Date
+    ) async throws -> [WeatherForecast] {
         forecasts
     }
 }
