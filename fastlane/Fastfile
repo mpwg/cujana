@@ -538,6 +538,7 @@ def build_release_ipa!(build_number:, profile_mapping:)
     scheme: SCHEME,
     configuration: CONFIGURATION,
     clean: true,
+    destination: "generic/platform=iOS",
     export_method: "app-store",
     output_directory: output_directory,
     output_name: "Cujana.ipa",
