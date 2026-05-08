@@ -2,11 +2,17 @@ import SwiftUI
 
 #if DEBUG
 #Preview("Allergien im Blick") {
-    AppCompositionRoot.demo().makeRootView(launchConfiguration: .screenshot(.dashboard))
+    AppCompositionRoot.demo().makeRootView(
+        launchConfiguration: .screenshot(.dashboard),
+        telemetryService: AppTelemetryService()
+    )
 }
 
 #Preview("Symptom erfassen") {
-    AppCompositionRoot.demo().makeRootView(launchConfiguration: .screenshot(.entry))
+    AppCompositionRoot.demo().makeRootView(
+        launchConfiguration: .screenshot(.entry),
+        telemetryService: AppTelemetryService()
+    )
 }
 
 #Preview("Dashboard") {

@@ -24,8 +24,11 @@ struct AppLaunchComposition {
     }
 
     @ViewBuilder
-    func makeRootView() -> some View {
-        compositionRoot.makeRootView(launchConfiguration: launchConfiguration)
+    func makeRootView(telemetryService: AppTelemetryService) -> some View {
+        compositionRoot.makeRootView(
+            launchConfiguration: launchConfiguration,
+            telemetryService: telemetryService
+        )
     }
 }
 #else
@@ -38,8 +41,8 @@ struct AppLaunchComposition {
     }
 
     @ViewBuilder
-    func makeRootView() -> some View {
-        compositionRoot.makeContentView()
+    func makeRootView(telemetryService: AppTelemetryService) -> some View {
+        compositionRoot.makeContentView(telemetryService: telemetryService)
     }
 }
 #endif

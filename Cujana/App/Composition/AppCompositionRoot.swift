@@ -12,10 +12,11 @@ struct AppCompositionRoot {
         AppCompositionRoot(dependencies: .production())
     }
 
-    func makeContentView() -> ContentView {
+    func makeContentView(telemetryService: AppTelemetryService) -> ContentView {
         ContentView(
             dashboardViewModel: makeAllergyDashboardViewModel(),
-            symptomEntryViewModel: makeSymptomEntryViewModel()
+            symptomEntryViewModel: makeSymptomEntryViewModel(),
+            telemetryService: telemetryService
         )
     }
 

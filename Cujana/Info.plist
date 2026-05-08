@@ -2,10 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSLocationDefaultAccuracyReduced</key>
+	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Cujana nutzt deinen ungefähren Standort, um Pollendaten für deine Umgebung zu laden.</string>
+	<key>SENTRY_DSN</key>
+	<string>$(CUJANA_SENTRY_DSN)</string>
+	<key>TELEMETRY_APP_ID</key>
+	<string>$(CUJANA_TELEMETRY_APP_ID)</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
