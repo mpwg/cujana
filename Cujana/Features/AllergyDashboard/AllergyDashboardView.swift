@@ -16,7 +16,8 @@ struct AllergyDashboardView: View {
             .background(HomeBackground())
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbarBackground(ColorToken.backgroundPrimary, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
 #endif
             .toolbar {
                 ToolbarItem(placement: .principal) {
@@ -127,10 +128,10 @@ struct AllergyDashboardView: View {
 
 private enum HomeLayout {
     static let horizontalPadding: CGFloat = SpacingToken.xl
-    static let topPadding: CGFloat = SpacingToken.xxl
-    static let bottomPadding: CGFloat = 116
-    static let sectionSpacing: CGFloat = 30
-    static let cardInnerSpacing: CGFloat = SpacingToken.xl
+    static let topPadding: CGFloat = SpacingToken.xl
+    static let bottomPadding: CGFloat = SpacingToken.xxl
+    static let sectionSpacing: CGFloat = 22
+    static let cardInnerSpacing: CGFloat = SpacingToken.lg
 }
 
 private struct HomeHeroSection: View {
@@ -140,13 +141,13 @@ private struct HomeHeroSection: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             SunriseIllustration()
-                .frame(width: 118, height: 112)
-                .offset(x: SpacingToken.sm, y: SpacingToken.lg)
+                .frame(width: 104, height: 100)
+                .offset(x: SpacingToken.sm, y: SpacingToken.md)
                 .accessibilityHidden(true)
 
             textContent
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.trailing, 92)
+                .padding(.trailing, 82)
         }
         .accessibilityElement(children: .combine)
     }
@@ -154,7 +155,7 @@ private struct HomeHeroSection: View {
     private var textContent: some View {
         VStack(alignment: .leading, spacing: SpacingToken.sm) {
             Text("Guten Morgen,")
-                .font(TypographyToken.body)
+                .font(TypographyToken.footnote)
                 .foregroundStyle(ColorToken.textSecondary)
 
             Text(name)
@@ -164,7 +165,7 @@ private struct HomeHeroSection: View {
                 .minimumScaleFactor(0.82)
 
             Text(subtitle)
-                .font(TypographyToken.body)
+                .font(TypographyToken.footnote)
                 .foregroundStyle(ColorToken.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -198,7 +199,27 @@ private struct DailyOverviewCard: View {
             return "Keine auffällige Pollenbelastung für deinen Tag."
         }
 
-        return "\(topPollen.title) sind \(topPollen.levelText.lowercased()) eingestuft."
+        switch topPollen.levelText {
+        case "Keine Belastung":
+            return "\(topPollen.title) ist heute kaum relevant."
+        case "Niedrig":
+            return "\(topPollen.title) ist heute leicht relevant."
+        case "Mittel":
+            return "\(topPollen.title) kann heute spürbar werden."
+        case "Hoch", "Sehr hoch", "Extrem":
+            return "\(topPollen.title) ist heute deutlich relevant."
+        default:
+            return "\(topPollen.title) bleibt heute im Blick."
+        }
+    }
+
+    private var pollenBadgeText: String {
+        guard let topPollen else {
+            return "Pollen · Ruhig"
+        }
+
+        let levelText = topPollen.levelText == "Keine Belastung" ? "Ruhig" : topPollen.levelText
+        return "\(topPollen.title) · \(levelText)"
     }
 
     var body: some View {
@@ -220,7 +241,7 @@ private struct DailyOverviewCard: View {
 
             FlowPills(
                 pills: [
-                    topPollen.map { "\($0.title) · \($0.levelText)" } ?? "Pollen · Ruhig",
+                    pollenBadgeText,
                     "22°",
                     "Leichter Wind"
                 ]
@@ -250,22 +271,16 @@ private struct QuickCheckInCard: View {
     let onStartSymptomEntry: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: HomeLayout.cardInnerSpacing) {
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .center, spacing: SpacingToken.xl) {
-                    textContent
-                    Spacer(minLength: SpacingToken.md)
-                    BotanicalIllustration()
-                        .frame(width: 106, height: 130)
-                        .accessibilityHidden(true)
-                }
+        VStack(alignment: .leading, spacing: SpacingToken.lg) {
+            ZStack(alignment: .bottomTrailing) {
+                textContent
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.trailing, 84)
 
-                VStack(alignment: .leading, spacing: SpacingToken.lg) {
-                    textContent
-                    BotanicalIllustration()
-                        .frame(width: 106, height: 130)
-                        .accessibilityHidden(true)
-                }
+                BotanicalIllustration()
+                    .frame(width: 124, height: 142)
+                    .offset(x: SpacingToken.md, y: SpacingToken.xl)
+                    .accessibilityHidden(true)
             }
 
             Button(action: onStartSymptomEntry) {
@@ -291,12 +306,12 @@ private struct QuickCheckInCard: View {
             SectionKicker("Check-In")
 
             Text("Wie fühlst du dich heute?")
-                .font(TypographyToken.title)
+                .font(TypographyToken.headline)
                 .foregroundStyle(ColorToken.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text("Ein kurzer Moment reicht, damit Cujana Muster liebevoller einordnen kann.")
-                .font(TypographyToken.body)
+            Text("Ein kurzer Moment hilft Cujana, Muster liebevoller einzuordnen.")
+                .font(TypographyToken.footnote)
                 .foregroundStyle(ColorToken.textSecondary)
                 .lineSpacing(SpacingToken.xs)
                 .fixedSize(horizontal: false, vertical: true)
@@ -327,7 +342,7 @@ private struct PollenHighlightsSection: View {
                     subtitle: "Keine relevante Belastung sichtbar."
                 )
             } else {
-                VStack(spacing: SpacingToken.md) {
+                VStack(spacing: SpacingToken.sm) {
                     ForEach(visibleItems) { item in
                         PollenHighlightRow(item: item)
                     }
@@ -347,11 +362,11 @@ private struct PollenHighlightRow: View {
 
             VStack(alignment: .leading, spacing: SpacingToken.xs) {
                 Text(item.title)
-                    .font(TypographyToken.bodyEmphasized)
+                    .font(TypographyToken.footnote.weight(.semibold))
                     .foregroundStyle(ColorToken.textPrimary)
 
                 Text(rowText)
-                    .font(TypographyToken.footnote)
+                    .font(TypographyToken.caption)
                     .foregroundStyle(ColorToken.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -359,15 +374,16 @@ private struct PollenHighlightRow: View {
             Spacer(minLength: SpacingToken.sm)
 
             Text(item.levelText)
-                .font(TypographyToken.footnote.weight(.medium))
-                .foregroundStyle(ColorToken.accentPrimary)
-                .padding(.horizontal, SpacingToken.md)
-                .padding(.vertical, SpacingToken.sm)
-                .background(ColorToken.accentSoft)
+                .font(TypographyToken.caption.weight(.medium))
+                .foregroundStyle(ColorToken.textTertiary)
+                .padding(.horizontal, SpacingToken.sm)
+                .padding(.vertical, SpacingToken.xs)
+                .background(ColorToken.cardMutedBackground)
                 .clipShape(Capsule())
         }
-        .padding(SpacingToken.md)
-        .background(ColorToken.cardBackground.opacity(0.76))
+        .padding(.horizontal, SpacingToken.md)
+        .padding(.vertical, SpacingToken.sm)
+        .background(ColorToken.cardBackground.opacity(0.68))
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusMedium, style: .continuous))
         .softShadow(ShadowToken.card)
         .accessibilityElement(children: .combine)

@@ -21,7 +21,7 @@ struct ContentView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
+        VStack(spacing: 0) {
             Group {
                 switch selectedTab {
                 case .home:
@@ -37,12 +37,15 @@ struct ContentView: View {
                     SettingsView(telemetryService: telemetryService)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .transition(.opacity)
 
             FloatingTabBar(selectedTab: $selectedTab)
                 .padding(.horizontal, SpacingToken.xl)
+                .padding(.top, SpacingToken.sm)
                 .padding(.bottom, SpacingToken.lg)
         }
+        .background(ColorToken.backgroundPrimary)
         .animation(.easeInOut(duration: 0.18), value: selectedTab)
         .tint(ColorToken.accentPrimary)
         .sheet(

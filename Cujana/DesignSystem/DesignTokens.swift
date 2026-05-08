@@ -84,21 +84,21 @@ struct ShadowTokenValue {
 
 enum ShadowToken {
     static let card = ShadowTokenValue(
-        color: ColorToken.separatorSoft.opacity(0.34),
-        radius: 18,
-        y: 10
+        color: ColorToken.separatorSoft.opacity(0.24),
+        radius: 10,
+        y: 4
     )
 
     static let modal = ShadowTokenValue(
-        color: ColorToken.separatorSoft.opacity(0.42),
-        radius: 26,
-        y: 14
+        color: ColorToken.separatorSoft.opacity(0.32),
+        radius: 18,
+        y: 8
     )
 
     static let floating = ShadowTokenValue(
-        color: ColorToken.accentPrimary.opacity(0.12),
-        radius: 22,
-        y: 12
+        color: ColorToken.accentPrimary.opacity(0.1),
+        radius: 16,
+        y: 8
     )
 }
 
