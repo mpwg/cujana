@@ -9,11 +9,21 @@ import SwiftUI
 
 @main
 struct CujanaApp: App {
-    private let compositionRoot = AppCompositionRoot.production()
+    private let launchConfiguration = AppLaunchConfiguration.current()
+    private let compositionRoot: AppCompositionRoot
+
+    init() {
+        switch launchConfiguration {
+        case .standard:
+            compositionRoot = .production()
+        case .screenshot:
+            compositionRoot = .demo()
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
-            compositionRoot.makeContentView()
+            compositionRoot.makeRootView(launchConfiguration: launchConfiguration)
         }
     }
 }

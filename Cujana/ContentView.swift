@@ -34,47 +34,10 @@ struct ContentView: View {
     }
 }
 
-#Preview {
-    let repository = PreviewSymptomEntryRepository()
-    let saveUseCase = SaveAllergySymptomEntryUseCase(repository: repository)
-    let loadUseCase = LoadAllergyOverviewUseCase(
-        pollenRepository: PreviewPollenRepository(),
-        symptomEntryRepository: repository
-    )
-
-    ContentView(
-        dashboardViewModel: AllergyDashboardViewModel(
-            loadUseCase: loadUseCase,
-            coordinate: .previewVienna
-        ),
-        symptomEntryViewModel: SymptomEntryViewModel(saveUseCase: saveUseCase)
-    )
+#Preview("Allergien im Blick") {
+    AppCompositionRoot.demo().makeRootView(launchConfiguration: .screenshot(.dashboard))
 }
 
-private extension LocationCoordinate {
-    static var previewVienna: LocationCoordinate {
-        guard let coordinate = try? LocationCoordinate(latitude: 48.2082, longitude: 16.3738) else {
-            fatalError("Preview coordinate must be valid.")
-        }
-
-        return coordinate
-    }
-}
-
-private actor PreviewSymptomEntryRepository: SymptomEntryRepository {
-    func save(_ entry: AllergySymptomEntry) async throws {}
-
-    func symptomEntries(from startDate: Date, to endDate: Date) async throws -> [AllergySymptomEntry] {
-        []
-    }
-}
-
-private struct PreviewPollenRepository: PollenRepository {
-    func pollenForecast(
-        for coordinate: LocationCoordinate,
-        from startDate: Date,
-        to endDate: Date
-    ) async throws -> [PollenForecast] {
-        []
-    }
+#Preview("Symptom erfassen") {
+    AppCompositionRoot.demo().makeRootView(launchConfiguration: .screenshot(.entry))
 }

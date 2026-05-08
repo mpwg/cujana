@@ -70,6 +70,7 @@ xcuserdata/
 
 ## Local CI/Xcode cache paths
 .xcode-derived-data/
+.xcode-derived-data-*/
 .xcode-source-packages/
 .swiftpm-package-cache/
 *.xcresult

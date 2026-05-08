@@ -12,6 +12,20 @@ struct AppCompositionRoot {
         AppCompositionRoot(dependencies: .production())
     }
 
+    static func demo() -> AppCompositionRoot {
+        AppCompositionRoot(dependencies: .demo())
+    }
+
+    @ViewBuilder
+    func makeRootView(launchConfiguration: AppLaunchConfiguration) -> some View {
+        switch launchConfiguration {
+        case .standard:
+            makeContentView()
+        case .screenshot(let screen):
+            makeScreenshotView(screen: screen)
+        }
+    }
+
     func makeContentView() -> ContentView {
         ContentView(
             dashboardViewModel: makeAllergyDashboardViewModel(),
@@ -19,8 +33,22 @@ struct AppCompositionRoot {
         )
     }
 
+    @ViewBuilder
+    private func makeScreenshotView(screen: AppScreenshotScreen) -> some View {
+        switch screen {
+        case .dashboard:
+            makeContentView()
+        case .entry:
+            SymptomEntryView(viewModel: makeSymptomEntryViewModel())
+        }
+    }
+
     private func makeAllergyDashboardViewModel() -> AllergyDashboardViewModel {
-        AllergyDashboardViewModel(
+        if dependencies.usesDemoData {
+            return AppDemoData.makeDashboardViewModel()
+        }
+
+        return AllergyDashboardViewModel(
             loadUseCase: makeLoadAllergyOverviewUseCase(),
             locationProvider: dependencies.locationProvider,
             coordinate: dependencies.defaultCoordinate
@@ -28,7 +56,11 @@ struct AppCompositionRoot {
     }
 
     private func makeSymptomEntryViewModel() -> SymptomEntryViewModel {
-        SymptomEntryViewModel(saveUseCase: makeSaveAllergySymptomEntryUseCase())
+        if dependencies.usesDemoData {
+            return AppDemoData.makeSymptomEntryViewModel()
+        }
+
+        return SymptomEntryViewModel(saveUseCase: makeSaveAllergySymptomEntryUseCase())
     }
 
     private func makeLoadAllergyOverviewUseCase() -> LoadAllergyOverviewUseCase {

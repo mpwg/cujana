@@ -157,18 +157,7 @@ struct SymptomEntryView: View {
 }
 
 #Preview {
-    let repository = PreviewSymptomEntryRepository()
-    let useCase = SaveAllergySymptomEntryUseCase(repository: repository)
-
-    SymptomEntryView(viewModel: SymptomEntryViewModel(saveUseCase: useCase))
-}
-
-private actor PreviewSymptomEntryRepository: SymptomEntryRepository {
-    func save(_ entry: AllergySymptomEntry) async throws {}
-
-    func symptomEntries(from startDate: Date, to endDate: Date) async throws -> [AllergySymptomEntry] {
-        []
-    }
+    SymptomEntryView(viewModel: AppDemoData.makeSymptomEntryViewModel())
 }
 
 private struct SectionHeader: View {

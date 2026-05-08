@@ -187,19 +187,8 @@ struct AllergyDashboardView: View {
 }
 
 #Preview {
-    let coordinate = try? LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
-    let fallbackCoordinate = coordinate ?? LocationCoordinate.preview
-    let repository = PreviewSymptomEntryRepository()
-    let useCase = LoadAllergyOverviewUseCase(
-        pollenRepository: PreviewPollenRepository(),
-        symptomEntryRepository: repository
-    )
-
     AllergyDashboardView(
-        viewModel: AllergyDashboardViewModel(
-            loadUseCase: useCase,
-            coordinate: fallbackCoordinate
-        ),
+        viewModel: AppDemoData.makeDashboardViewModel(),
         onStartSymptomEntry: {}
     )
 }
@@ -322,33 +311,5 @@ private struct DashboardIcon: View {
             .frame(width: SelectionToken.size, height: SelectionToken.size)
             .background(background)
             .clipShape(Circle())
-    }
-}
-
-private extension LocationCoordinate {
-    static var preview: LocationCoordinate {
-        guard let coordinate = try? LocationCoordinate(latitude: 48.2082, longitude: 16.3738) else {
-            fatalError("Preview coordinate must be valid.")
-        }
-
-        return coordinate
-    }
-}
-
-private actor PreviewSymptomEntryRepository: SymptomEntryRepository {
-    func save(_ entry: AllergySymptomEntry) async throws {}
-
-    func symptomEntries(from startDate: Date, to endDate: Date) async throws -> [AllergySymptomEntry] {
-        []
-    }
-}
-
-private struct PreviewPollenRepository: PollenRepository {
-    func pollenForecast(
-        for coordinate: LocationCoordinate,
-        from startDate: Date,
-        to endDate: Date
-    ) async throws -> [PollenForecast] {
-        []
     }
 }
