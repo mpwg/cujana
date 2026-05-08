@@ -41,6 +41,10 @@ oder direkt:
 ./scripts/check_architecture.sh
 ```
 
+## Releases
+
+Der manuelle Release-Prozess mit Branch-Regeln, TestFlight- und App-Store-Workflows liegt in [docs/Release-Prozess.md](docs/Release-Prozess.md).
+
 ## Neue Architekturentscheidungen
 
 Für Änderungen an Plattform, Schichten, Persistenz, Navigation, externen Dependencies oder Build-Regeln wird ein ADR angelegt:
