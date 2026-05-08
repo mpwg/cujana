@@ -38,8 +38,6 @@
             ReferencedContainer = "container:Cujana.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
-      <Testables>
-      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
