@@ -1,0 +1,662 @@
+require "fileutils"
+require "open3"
+require "shellwords"
+require "simctl"
+require "snapshot"
+require "tmpdir"
+
+default_platform(:ios)
+
+REPO_ROOT = File.expand_path("..", __dir__)
+PROJECT_PATH = File.join(REPO_ROOT, "Cujana.xcodeproj")
+SCHEME = "Cujana"
+TARGET_NAME = "Cujana"
+CONFIGURATION = "Release"
+APP_IDENTIFIER = "eu.mpwg.Cujana"
+LOCAL_SECRETS_PATH = File.join(REPO_ROOT, "Configuration/LocalSecrets.xcconfig")
+SCREENSHOT_SCHEME = "CujanaScreenshots"
+SCREENSHOT_TEST_TARGET = "CujanaUITests"
+SCREENSHOT_TEST_IDENTIFIER = "CujanaUITests/CujanaScreenshotTests/testCaptureMainStoreScreens"
+SCREENSHOT_SEED_TEST_IDENTIFIER = "CujanaUITests/CujanaScreenshotTests/testLaunchScreenRenders"
+SCREENSHOT_PAGE_SELECTION_ENV = "CUJANA_SCREENSHOT_PAGES"
+SCREENSHOT_LANGUAGES = [
+  { language: "de-DE", locale: "de_DE" },
+  { language: "en-US", locale: "en_US" }
+].freeze
+SCREENSHOT_SEED = "default"
+SCREENSHOT_ROOT = File.join(REPO_ROOT, "fastlane", "screenshots")
+IOS_SCREENSHOT_OUTPUT = File.join(SCREENSHOT_ROOT, "ios")
+MAC_SCREENSHOT_OUTPUT = File.join(SCREENSHOT_ROOT, "macos")
+IOS_SCREENSHOT_DEVICES = [
+  "iPhone 17 Pro Max",
+  "iPad Pro 13-inch (M5)"
+].freeze
+MAC_SCREENSHOT_DEVICES = ["Mac"].freeze
+
+def screenshot_ios_version
+  configured_version = ENV["SCREENSHOT_IOS_VERSION"].to_s.strip
+  configured_version.empty? ? nil : configured_version
+end
+
+def screenshot_page_selection(options = {})
+  configured_pages = options[:pages].to_s.strip unless options.nil?
+  configured_pages = ENV[SCREENSHOT_PAGE_SELECTION_ENV].to_s.strip if configured_pages.to_s.empty?
+  configured_pages = ENV["SCREENSHOT_PAGES"].to_s.strip if configured_pages.to_s.empty?
+  configured_pages.empty? ? "store" : configured_pages
+end
+
+def include_mac_screenshots?
+  truthy_env?("CAPTURE_MAC_SCREENSHOTS", default: false)
+end
+
+def screenshot_cache_directory
+  File.expand_path("~/Library/Caches/tools.fastlane")
+end
+
+def screenshot_image_cache_directory
+  File.join(screenshot_cache_directory, "screenshots")
+end
+
+def screenshot_derived_data_path
+  ENV["CUJANA_SCREENSHOT_DERIVED_DATA_PATH"].to_s.empty? ? File.join(REPO_ROOT, ".xcode-derived-data-screenshots") : File.expand_path(ENV["CUJANA_SCREENSHOT_DERIVED_DATA_PATH"])
+end
+
+def reset_screenshot_simulators?
+  truthy_env?("CUJANA_RESET_SCREENSHOT_SIMULATORS", default: false)
+end
+
+def simulator_booted?(device)
+  output, _error, status = Open3.capture3("xcrun", "simctl", "list", "devices", "booted")
+  status.success? && output.include?(device.udid)
+end
+
+def screenshot_language_directory(output_directory, language:)
+  File.join(output_directory, language)
+end
+
+def screenshot_result_bundle_path(output_directory, device_name, language:)
+  sanitized_name = device_name.gsub(/[^A-Za-z0-9]+/, "-").gsub(/^-|-$/, "")
+  platform_name = File.basename(output_directory)
+  File.join(SCREENSHOT_ROOT, "test_output", platform_name, language, "#{SCREENSHOT_SCHEME}-#{sanitized_name}.xcresult")
+end
+
+def write_snapshot_configuration_files!(language:, locale:, pages: nil)
+  FileUtils.mkdir_p(screenshot_cache_directory)
+  File.write(File.join(screenshot_cache_directory, "language.txt"), "#{language}\n")
+  File.write(File.join(screenshot_cache_directory, "locale.txt"), "#{locale}\n")
+  File.write(File.join(screenshot_cache_directory, "snapshot-launch_arguments.txt"), "-mt_screenshot_seed #{SCREENSHOT_SEED}\n")
+  File.write(File.join(screenshot_cache_directory, "screenshot-pages.txt"), "#{pages}\n") unless pages.to_s.empty?
+end
+
+def clear_screenshot_cache!
+  FileUtils.rm_rf(screenshot_image_cache_directory)
+  FileUtils.mkdir_p(screenshot_image_cache_directory)
+end
+
+def resolve_simulator_for_capture(device_name, requested_version = screenshot_ios_version)
+  candidates = SimCtl.list_devices.where(name: device_name).select(&:available?)
+  candidates.sort_by! do |device|
+    runtime_version = device.runtime.respond_to?(:version) ? device.runtime.version.to_s : "0"
+    Gem::Version.new(runtime_version)
+  end
+  candidates.reverse!
+
+  unless requested_version.to_s.empty?
+    version_prefix = "#{requested_version}."
+    exact_match = candidates.find do |device|
+      runtime_version = device.runtime.respond_to?(:version) ? device.runtime.version.to_s : ""
+      runtime_version == requested_version || runtime_version.start_with?(version_prefix)
+    end
+    return exact_match if exact_match
+  end
+
+  return candidates.first if candidates.first
+
+  UI.user_error!("Kein Simulator mit Namen '#{device_name}' für Screenshot-Läufe gefunden.")
+end
+
+def prepare_ios_simulator!(device, override_status_bar:)
+  status_bar_wait = ENV.fetch("SNAPSHOT_STATUS_BAR_WAIT_SECONDS", "0").to_i
+
+  if reset_screenshot_simulators?
+    sh("xcrun simctl shutdown #{device.udid.shellescape} || true")
+    sh("xcrun simctl erase #{device.udid.shellescape}")
+  end
+
+  sh("xcrun simctl boot #{device.udid.shellescape}") unless simulator_booted?(device)
+  sh("xcrun simctl bootstatus #{device.udid.shellescape} -b")
+
+  return unless override_status_bar
+
+  sleep(status_bar_wait) if status_bar_wait.positive?
+  sh("xcrun simctl status_bar #{device.udid.shellescape} override --time 09:41 --dataNetwork wifi --wifiMode active --wifiBars 3 --cellularMode active --operatorName '' --cellularBars 4 --batteryState charged --batteryLevel 100")
+end
+
+def clear_ios_status_bar!(device)
+  sh("xcrun simctl status_bar #{device.udid.shellescape} clear || true")
+end
+
+def run_screenshot_test!(destination:, result_bundle_path:, language:, pages:)
+  run_ui_test!(
+    destination: destination,
+    result_bundle_path: result_bundle_path,
+    language: language,
+    test_identifier: SCREENSHOT_TEST_IDENTIFIER,
+    pages: pages
+  )
+end
+
+def run_ui_test!(destination:, result_bundle_path:, language:, test_identifier:, pages: "store")
+  FileUtils.rm_rf(result_bundle_path)
+  FileUtils.mkdir_p(File.dirname(result_bundle_path))
+  FileUtils.mkdir_p(screenshot_derived_data_path)
+
+  command = [
+    "xcodebuild",
+    "test",
+    "-scheme", SCREENSHOT_SCHEME.shellescape,
+    "-project", PROJECT_PATH.shellescape,
+    "-derivedDataPath", screenshot_derived_data_path.shellescape,
+    "-resultBundlePath", result_bundle_path.shellescape,
+    "-destination", destination.shellescape,
+    "-only-testing:#{test_identifier.shellescape}"
+  ].join(" ")
+
+  sh(
+    {
+      "FASTLANE_SNAPSHOT" => "YES",
+      "FASTLANE_LANGUAGE" => language,
+      "TEST_TARGET_NAME" => SCREENSHOT_TEST_TARGET,
+      SCREENSHOT_PAGE_SELECTION_ENV => pages
+    },
+    command
+  )
+end
+
+def copy_device_screenshots!(device_name:, output_directory:, language:)
+  destination_directory = screenshot_language_directory(output_directory, language: language)
+  FileUtils.mkdir_p(destination_directory)
+
+  screenshots = Dir.glob(File.join(screenshot_image_cache_directory, "#{device_name}-*.png")).sort
+  UI.user_error!("Es wurden keine Screenshots für '#{device_name}' erzeugt.") if screenshots.empty?
+
+  screenshots.each do |path|
+    FileUtils.cp(path, File.join(destination_directory, File.basename(path)))
+  end
+end
+
+def apply_snapshot_destination_patch!
+  return if defined?($cujana_snapshot_destination_patch_applied) && $cujana_snapshot_destination_patch_applied
+
+  patch = Module.new do
+    def destination(devices)
+      unless verify_devices_share_os(devices)
+        UI.user_error!("All devices provided to snapshot should run the same operating system")
+      end
+
+      return ["-destination 'platform=macOS'"] if devices.first.to_s =~ /^Mac/
+
+      os = case devices.first.to_s
+           when /^Apple TV/
+             "tvOS"
+           when /^Apple Watch/
+             "watchOS"
+           else
+             "iOS"
+           end
+
+      requested_version = ::Snapshot.config[:ios_version]
+      destinations = devices.map do |device_name|
+        simulator = cujana_resolve_simulator(device_name, requested_version)
+        "-destination 'platform=#{os} Simulator,id=#{simulator.udid}'"
+      end
+
+      [destinations.join(" ")]
+    end
+
+    private
+
+    def cujana_resolve_simulator(device_name, requested_version)
+      candidates = SimCtl.list_devices.where(name: device_name).select(&:available?)
+      candidates.sort_by! do |device|
+        runtime_version = device.runtime.respond_to?(:version) ? device.runtime.version.to_s : "0"
+        Gem::Version.new(runtime_version)
+      end
+      candidates.reverse!
+
+      unless requested_version.to_s.empty?
+        version_prefix = "#{requested_version}."
+        exact_match = candidates.find do |device|
+          runtime_version = device.runtime.respond_to?(:version) ? device.runtime.version.to_s : ""
+          runtime_version == requested_version || runtime_version.start_with?(version_prefix)
+        end
+        return exact_match if exact_match
+      end
+
+      fallback = candidates.first
+      return fallback if fallback
+
+      UI.user_error!("Kein Simulator mit Namen '#{device_name}' für Screenshot-Läufe gefunden.")
+    end
+  end
+
+  ::Snapshot::TestCommandGenerator.singleton_class.prepend(patch)
+  $cujana_snapshot_destination_patch_applied = true
+end
+
+def truthy_env?(name, default: false)
+  value = ENV[name]
+  return default if value.to_s.empty?
+
+  %w[1 true yes on].include?(value.downcase)
+end
+
+def require_env_vars!(*names)
+  missing = names.flatten.select { |name| ENV[name].to_s.empty? }
+  return if missing.empty?
+
+  UI.user_error!("Fehlende Umgebungsvariablen: #{missing.join(', ')}")
+end
+
+def release_root
+  if ENV["RUNNER_TEMP"].to_s.empty?
+    File.join(REPO_ROOT, "artifacts/release")
+  else
+    File.join(ENV["RUNNER_TEMP"], "cujana-release")
+  end
+end
+
+def normalized_api_key_content
+  value = ENV.fetch("APP_STORE_CONNECT_PRIVATE_KEY")
+  value = value.gsub("\\n", "\n") if value.include?("\\n") && !value.include?("\n")
+  value.end_with?("\n") ? value : "#{value}\n"
+end
+
+def app_store_api_key
+  require_env_vars!("APP_STORE_CONNECT_KEY_ID", "APP_STORE_CONNECT_ISSUER_ID", "APP_STORE_CONNECT_PRIVATE_KEY")
+
+  @app_store_api_key ||= app_store_connect_api_key(
+    key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+    issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+    key_content: normalized_api_key_content,
+    is_key_content_base64: false,
+    duration: 1200,
+    in_house: false
+  )
+end
+
+def write_local_secrets!
+  return if ENV["APPLE_DEVELOPER_TEAM_ID"].to_s.empty?
+
+  require_env_vars!("APPLE_DEVELOPER_TEAM_ID")
+
+  FileUtils.mkdir_p(File.dirname(LOCAL_SECRETS_PATH))
+  File.write(
+    LOCAL_SECRETS_PATH,
+    <<~XCCONFIG
+      // Von fastlane in CI erzeugt. Nicht committen.
+      APPLE_DEVELOPER_TEAM_ID = #{ENV["APPLE_DEVELOPER_TEAM_ID"]}
+    XCCONFIG
+  )
+end
+
+def current_marketing_version
+  release_build_settings.fetch("MARKETING_VERSION")
+end
+
+def validate_release_version!(version)
+  UI.user_error!("Version fehlt.") if version.to_s.strip.empty?
+  UI.user_error!("Ungültige Version '#{version}'. Erwartet wird das Format X.Y.Z.") unless version.match?(/^\d+\.\d+\.\d+$/)
+
+  app_version = current_marketing_version
+  UI.user_error!("Version '#{version}' passt nicht zu MARKETING_VERSION '#{app_version}'.") unless app_version == version
+end
+
+def validate_release_artifacts!
+  metadata_files = Dir.glob(File.join(REPO_ROOT, "fastlane", "metadata", "**", "*")).select { |path| File.file?(path) }
+  screenshot_files = Dir.glob(File.join(SCREENSHOT_ROOT, "**", "*")).select { |path| File.file?(path) && File.extname(path).casecmp(".png").zero? }
+
+  UI.user_error!("Keine versionierten Metadaten unter fastlane/metadata gefunden.") if metadata_files.empty?
+  UI.user_error!("Keine versionierten Screenshots unter fastlane/screenshots gefunden.") if screenshot_files.empty?
+
+  SCREENSHOT_LANGUAGES.each do |language_config|
+    language = language_config.fetch(:language)
+    directory = screenshot_language_directory(IOS_SCREENSHOT_OUTPUT, language: language)
+    UI.user_error!("Keine Screenshots für #{language} unter #{directory} gefunden.") if Dir.glob(File.join(directory, "*.png")).empty?
+  end
+end
+
+def app_store_version_exists?(api_key:, version:)
+  require "spaceship"
+
+  Spaceship::ConnectAPI.token = api_key
+  app = Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
+  UI.user_error!("App '#{APP_IDENTIFIER}' wurde in App Store Connect nicht gefunden.") unless app
+
+  app.get_app_store_versions(platform: "IOS").any? { |app_store_version| app_store_version.version_string == version }
+end
+
+def ensure_version_not_released!(api_key:, version:)
+  return unless app_store_version_exists?(api_key: api_key, version: version)
+
+  UI.user_error!("Version #{version} existiert bereits in App Store Connect.")
+end
+
+def current_release_tag
+  if ENV["GITHUB_REF_TYPE"] == "tag" && !ENV["GITHUB_REF_NAME"].to_s.empty?
+    ENV["GITHUB_REF_NAME"]
+  else
+    begin
+      sh("git describe --tags --exact-match", log: false).strip
+    rescue StandardError
+      nil
+    end
+  end
+end
+
+def ensure_release_tag_matches_version!
+  tag = current_release_tag
+  version = current_marketing_version
+
+  UI.user_error!("Für den App-Store-Lauf wurde kein Git-Tag gefunden.") if tag.to_s.empty?
+  UI.user_error!("Ungültiges Release-Tag '#{tag}'. Erwartet wird das Format vX.Y.Z.") unless tag.match?(/^v\d+\.\d+\.\d+$/)
+  UI.user_error!("Release-Tag '#{tag}' passt nicht zu MARKETING_VERSION '#{version}'.") unless tag.delete_prefix("v") == version
+end
+
+def sync_release_signing!(api_key:)
+  require_env_vars!("MATCH_GIT_URL", "MATCH_PASSWORD")
+
+  params = {
+    api_key: api_key,
+    type: "appstore",
+    app_identifier: [APP_IDENTIFIER],
+    git_url: ENV["MATCH_GIT_URL"],
+    git_branch: ENV["MATCH_GIT_BRANCH"].to_s.empty? ? "main" : ENV["MATCH_GIT_BRANCH"],
+    readonly: truthy_env?("MATCH_READONLY", default: true),
+    clone_branch_directly: true,
+    shallow_clone: true,
+    keychain_name: ENV["MATCH_KEYCHAIN_NAME"].to_s.empty? ? "fastlane_tmp_keychain" : ENV["MATCH_KEYCHAIN_NAME"],
+    generate_apple_certs: true
+  }
+
+  params[:git_basic_authorization] = ENV["MATCH_GIT_BASIC_AUTHORIZATION"] unless ENV["MATCH_GIT_BASIC_AUTHORIZATION"].to_s.empty?
+
+  match(params)
+end
+
+def release_build_settings
+  @release_build_settings ||= begin
+    settings_output = sh(
+      "xcodebuild -project #{PROJECT_PATH.shellescape} -scheme #{SCHEME.shellescape} -configuration #{CONFIGURATION.shellescape} -showBuildSettings -destination 'generic/platform=iOS'",
+      log: false
+    )
+
+    settings = {}
+    settings_output.each_line do |line|
+      next unless line =~ /^\s*([A-Z0-9_]+)\s=\s(.*)$/
+
+      settings[Regexp.last_match(1)] = Regexp.last_match(2).strip
+    end
+
+    settings
+  end
+end
+
+def shellescape_build_setting(value)
+  value.to_s.shellescape
+end
+
+def release_signing_xcargs(build_number:)
+  [
+    "DEVELOPMENT_TEAM=#{shellescape_build_setting(ENV['APPLE_DEVELOPER_TEAM_ID'])}",
+    "CURRENT_PROJECT_VERSION=#{shellescape_build_setting(build_number)}"
+  ].join(" ")
+end
+
+def plist_value(path, key)
+  output, _error, status = Open3.capture3("/usr/libexec/PlistBuddy", "-c", "Print :#{key}", path)
+  return nil unless status.success?
+
+  output.strip
+end
+
+def plist_key_present?(path, key)
+  _output, _error, status = Open3.capture3("/usr/libexec/PlistBuddy", "-c", "Print :#{key}", path)
+  status.success?
+end
+
+def validate_release_ipa_entitlements!(ipa_path)
+  UI.user_error!("Keine Release-IPA unter #{ipa_path} gefunden.") unless File.file?(ipa_path)
+
+  Dir.mktmpdir("cujana-release-entitlements") do |tmpdir|
+    sh("unzip -q #{ipa_path.shellescape} -d #{tmpdir.shellescape}", log: false)
+
+    app_paths = Dir.glob(File.join(tmpdir, "Payload", "*.app"))
+    UI.user_error!("Die Release-IPA enthält keine eindeutig auffindbare App.") unless app_paths.one?
+
+    entitlements_path = File.join(tmpdir, "release-entitlements.plist")
+    sh("codesign -d --entitlements :- #{app_paths.first.shellescape} > #{entitlements_path.shellescape}", log: false)
+
+    aps_environment = plist_value(entitlements_path, "aps-environment")
+    UI.user_error!("Release-Entitlement aps-environment ist '#{aps_environment || 'nicht gesetzt'}', erwartet 'production'.") unless aps_environment == "production"
+
+    if plist_key_present?(entitlements_path, "com.apple.developer.aps-environment")
+      UI.user_error!("Release-Entitlements enthalten den ungültigen doppelten Schlüssel com.apple.developer.aps-environment.")
+    end
+
+    UI.message("Release-Entitlements validiert: aps-environment=production.")
+  end
+end
+
+def next_build_number
+  override = ENV["BUILD_NUMBER"].to_s.strip
+  return override.to_i if override.match?(/^\d+$/)
+
+  Time.now.utc.strftime("%Y%m%d%H%M%S").to_i
+end
+
+def capture_all_screenshots!(pages: screenshot_page_selection)
+  FileUtils.mkdir_p(SCREENSHOT_ROOT)
+  FileUtils.rm_rf(IOS_SCREENSHOT_OUTPUT)
+  FileUtils.mkdir_p(IOS_SCREENSHOT_OUTPUT)
+
+  IOS_SCREENSHOT_DEVICES.each do |device_name|
+    device = resolve_simulator_for_capture(device_name)
+    prepare_ios_simulator!(device, override_status_bar: true)
+
+    SCREENSHOT_LANGUAGES.each do |language_config|
+      language = language_config.fetch(:language)
+      locale = language_config.fetch(:locale)
+
+      clear_screenshot_cache!
+      write_snapshot_configuration_files!(language: language, locale: locale, pages: pages)
+      UI.message("Erzeuge Screenshot-Seiten '#{pages}' für #{language} auf #{device_name}.")
+      run_screenshot_test!(
+        destination: "platform=iOS Simulator,id=#{device.udid}",
+        result_bundle_path: screenshot_result_bundle_path(IOS_SCREENSHOT_OUTPUT, device_name, language: language),
+        language: language,
+        pages: pages
+      )
+      copy_device_screenshots!(device_name: device_name, output_directory: IOS_SCREENSHOT_OUTPUT, language: language)
+    end
+
+    clear_ios_status_bar!(device)
+  end
+end
+
+def validate_screenshot_seed!
+  language_config = SCREENSHOT_LANGUAGES.first
+  language = language_config.fetch(:language)
+  locale = language_config.fetch(:locale)
+  device_name = IOS_SCREENSHOT_DEVICES.first
+  device = resolve_simulator_for_capture(device_name)
+
+  FileUtils.mkdir_p(SCREENSHOT_ROOT)
+  write_snapshot_configuration_files!(language: language, locale: locale)
+  prepare_ios_simulator!(device, override_status_bar: false)
+  run_ui_test!(
+    destination: "platform=iOS Simulator,id=#{device.udid}",
+    result_bundle_path: screenshot_result_bundle_path(File.join(SCREENSHOT_ROOT, "seed-check"), device_name, language: language),
+    language: language,
+    test_identifier: SCREENSHOT_SEED_TEST_IDENTIFIER
+  )
+end
+
+def upload_screenshot_sets!(api_key:, version:)
+  SCREENSHOT_LANGUAGES.each do |language_config|
+    language = language_config.fetch(:language)
+    directory = screenshot_language_directory(IOS_SCREENSHOT_OUTPUT, language: language)
+    UI.user_error!("Keine vorhandenen iOS-Screenshots unter #{directory} gefunden.") if Dir.glob(File.join(directory, "*.png")).empty?
+  end
+
+  FileUtils.rm_rf(File.join(IOS_SCREENSHOT_OUTPUT, "test_output"))
+
+  deliver(
+    api_key: api_key,
+    app_identifier: APP_IDENTIFIER,
+    app_version: version,
+    platform: "ios",
+    screenshots_path: IOS_SCREENSHOT_OUTPUT,
+    skip_binary_upload: true,
+    skip_metadata: true,
+    overwrite_screenshots: true,
+    force: true,
+    run_precheck_before_submit: false,
+    precheck_default_rule_level: :warn
+  )
+end
+
+def build_release_ipa!(build_number:, profile_mapping:)
+  require_env_vars!("APPLE_DEVELOPER_TEAM_ID")
+
+  output_directory = File.join(release_root, "fastlane")
+  FileUtils.rm_rf(output_directory)
+  FileUtils.mkdir_p(output_directory)
+
+  build_app(
+    project: PROJECT_PATH,
+    scheme: SCHEME,
+    configuration: CONFIGURATION,
+    clean: true,
+    export_method: "app-store",
+    output_directory: output_directory,
+    output_name: "Cujana.ipa",
+    export_options: {
+      signingStyle: "manual",
+      provisioningProfiles: profile_mapping,
+      manageAppVersionAndBuildNumber: false,
+      teamID: ENV["APPLE_DEVELOPER_TEAM_ID"]
+    },
+    xcargs: release_signing_xcargs(build_number: build_number)
+  )
+end
+
+platform :ios do
+  before_all do
+    setup_ci if ENV["CI"]
+    write_local_secrets!
+  end
+
+  desc "Erzeugt App-Store-Screenshots für iPhone und iPad"
+  lane :sync_screenshots do |options|
+    capture_all_screenshots!(pages: screenshot_page_selection(options))
+  end
+
+  desc "Validiert den Screenshot-Seed ohne vollständige Screenshot-Erzeugung"
+  lane :validate_screenshot_seed do
+    validate_screenshot_seed!
+  end
+
+  desc "Erzeugt und lädt iPhone- und iPad-Screenshots nach App Store Connect hoch"
+  lane :upload_screenshots do
+    api_key = app_store_api_key
+    version = current_marketing_version
+
+    upload_screenshot_sets!(api_key: api_key, version: version)
+  end
+
+  desc "Baut eine Distribution-IPA mit match und lädt sie nach TestFlight hoch"
+  lane :beta do |options|
+    changelog = options[:changelog].to_s.strip
+    UI.user_error!("Changelog fehlt.") if changelog.empty?
+
+    api_key = app_store_api_key
+    sync_release_signing!(api_key: api_key)
+
+    profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
+    build_number = next_build_number
+    increment_build_number(
+      xcodeproj: PROJECT_PATH,
+      build_number: build_number
+    )
+    ipa_path = build_release_ipa!(build_number: build_number, profile_mapping: profile_mapping)
+    validate_release_ipa_entitlements!(ipa_path)
+
+    pilot(
+      api_key: api_key,
+      app_identifier: APP_IDENTIFIER,
+      ipa: ipa_path,
+      changelog: changelog,
+      skip_waiting_for_build_processing: true,
+      skip_submission: true
+    )
+  end
+
+  desc "Validiert Version, Metadaten und Screenshots für einen App-Store-Release"
+  lane :verify_release do |options|
+    version = options[:version].to_s.strip
+
+    validate_release_version!(version)
+    validate_release_artifacts!
+
+    UI.message("Release-Verifikation für Version #{version} erfolgreich.")
+  end
+
+  desc "Prüft, dass eine Version in App Store Connect noch nicht existiert"
+  lane :ensure_version_not_released do |options|
+    version = options[:version].to_s.strip
+
+    validate_release_version!(version)
+    ensure_version_not_released!(api_key: app_store_api_key, version: version)
+
+    UI.message("Version #{version} existiert noch nicht in App Store Connect.")
+  end
+
+  desc "Baut eine Distribution-IPA und lädt sie mit Metadaten und Screenshots für die manuelle App-Store-Einreichung hoch"
+  lane :release do |options|
+    version = options[:version].to_s.strip
+
+    verify_release(version: version)
+
+    api_key = app_store_api_key
+    ensure_version_not_released!(api_key: api_key, version: version)
+    sync_release_signing!(api_key: api_key)
+
+    profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
+    build_number = next_build_number
+    increment_build_number(
+      xcodeproj: PROJECT_PATH,
+      build_number: build_number
+    )
+    ipa_path = build_release_ipa!(build_number: build_number, profile_mapping: profile_mapping)
+    validate_release_ipa_entitlements!(ipa_path)
+
+    deliver(
+      api_key: api_key,
+      app_identifier: APP_IDENTIFIER,
+      app_version: version,
+      ipa: ipa_path,
+      metadata_path: File.join(REPO_ROOT, "fastlane", "metadata"),
+      screenshots_path: IOS_SCREENSHOT_OUTPUT,
+      submit_for_review: false,
+      automatic_release: false,
+      force: false,
+      skip_metadata: false,
+      skip_screenshots: false,
+      platform: "ios",
+      precheck_default_rule_level: :warn,
+      run_precheck_before_submit: true
+    )
+  end
+
+end

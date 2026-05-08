@@ -1,0 +1,5 @@
+Cujana ist ein lokal-first Allergie-Tagebuch. Die App stellt keine Diagnose, gibt keine Therapieempfehlungen und ersetzt keine medizinische Beratung.
+
+Gesundheitsbezogene Beobachtungen bleiben lokal auf dem Gerät. Für den Review sind kein Account und keine Zugangsdaten erforderlich.
+
+Die App kann Standort- und Umweltkontext nutzen, um Pollen- und Umgebungsdaten einzuordnen. Der Standortzugriff ist optional und dient nur dazu, relevante Kontextdaten für die Umgebung zu laden.
