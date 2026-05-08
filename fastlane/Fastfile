@@ -652,13 +652,4 @@ platform :ios do
     )
   end
 
-  desc "Kompatibilitätsalias für ältere lokale Aufrufe: bitte ios beta verwenden"
-  lane :release_testflight do |options|
-    beta(changelog: options[:changelog].to_s.empty? ? "Manueller TestFlight-Build" : options[:changelog])
-  end
-
-  desc "Kompatibilitätsalias für ältere lokale Aufrufe: bitte ios release verwenden"
-  lane :release_app_store do |options|
-    release(version: options[:version].to_s.empty? ? current_marketing_version : options[:version])
-  end
 end

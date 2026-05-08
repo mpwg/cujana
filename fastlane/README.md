@@ -71,22 +71,6 @@ Prüft, dass eine Version in App Store Connect noch nicht existiert
 
 Baut eine Distribution-IPA und lädt sie mit Metadaten und Screenshots für die manuelle App-Store-Einreichung hoch
 
-### ios release_testflight
-
-```sh
-[bundle exec] fastlane ios release_testflight
-```
-
-Kompatibilitätsalias für ältere lokale Aufrufe: bitte ios beta verwenden
-
-### ios release_app_store
-
-```sh
-[bundle exec] fastlane ios release_app_store
-```
-
-Kompatibilitätsalias für ältere lokale Aufrufe: bitte ios release verwenden
-
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
