@@ -130,7 +130,7 @@ private enum HomeLayout {
     static let horizontalPadding: CGFloat = SpacingToken.xl
     static let topPadding: CGFloat = SpacingToken.xl
     static let bottomPadding: CGFloat = SpacingToken.xxl
-    static let sectionSpacing: CGFloat = 22
+    static let sectionSpacing: CGFloat = 24
     static let cardInnerSpacing: CGFloat = SpacingToken.lg
 }
 
@@ -141,32 +141,50 @@ private struct HomeHeroSection: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             SunriseIllustration()
-                .frame(width: 104, height: 100)
-                .offset(x: SpacingToken.sm, y: SpacingToken.md)
+                .frame(width: 108, height: 104)
+                .offset(x: SpacingToken.md, y: SpacingToken.lg)
+                .opacity(0.86)
                 .accessibilityHidden(true)
 
             textContent
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.trailing, 82)
         }
+        .padding(.vertical, SpacingToken.sm)
+        .background(alignment: .topTrailing) {
+            ZStack {
+                OrganicBlob()
+                    .fill(ColorToken.accentSoft.opacity(0.72))
+                    .frame(width: 210, height: 150)
+                    .offset(x: 54, y: 26)
+
+                OrganicBlob()
+                    .fill(ColorToken.accentWarning.opacity(0.13))
+                    .frame(width: 150, height: 120)
+                    .offset(x: 26, y: -8)
+            }
+            .accessibilityHidden(true)
+        }
         .accessibilityElement(children: .combine)
     }
 
     private var textContent: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.sm) {
+        VStack(alignment: .leading, spacing: SpacingToken.xs) {
             Text("Guten Morgen,")
                 .font(TypographyToken.footnote)
                 .foregroundStyle(ColorToken.textSecondary)
 
             Text(name)
-                .font(.system(.largeTitle, design: .serif).weight(.regular))
+                .font(.system(size: 42, weight: .regular, design: .serif))
                 .foregroundStyle(ColorToken.accentPrimary)
+                .tracking(-0.4)
                 .lineLimit(2)
                 .minimumScaleFactor(0.82)
 
             Text(subtitle)
                 .font(TypographyToken.footnote)
                 .foregroundStyle(ColorToken.textSecondary)
+                .lineSpacing(SpacingToken.xs)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -241,24 +259,26 @@ private struct DailyOverviewCard: View {
 
             FlowPills(
                 pills: [
-                    pollenBadgeText,
+                    "• \(pollenBadgeText)",
                     "22°",
-                    "Leichter Wind"
+                    "• Leichter Wind"
                 ]
             )
         }
         .overlay(alignment: .bottomTrailing) {
             MeadowIllustration()
-                .frame(width: 126, height: 104)
+                .frame(width: 112, height: 92)
                 .padding(.trailing, SpacingToken.sm)
                 .padding(.bottom, SpacingToken.sm)
                 .accessibilityHidden(true)
         }
-        .padding(CardToken.padding)
+        .padding(.horizontal, CardToken.padding)
+        .padding(.vertical, SpacingToken.lg)
         .background(
             OrganicCardBackground(
-                base: ColorToken.cardBackground,
-                glow: ColorToken.accentSoft
+                base: ColorToken.cardBackground.opacity(0.92),
+                glow: ColorToken.accentSoft.opacity(0.9),
+                secondaryGlow: ColorToken.accentWarning.opacity(0.12)
             )
         )
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusXLarge, style: .continuous))
@@ -275,11 +295,19 @@ private struct QuickCheckInCard: View {
             ZStack(alignment: .bottomTrailing) {
                 textContent
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.trailing, 84)
+                    .padding(.trailing, 104)
 
                 BotanicalIllustration()
-                    .frame(width: 124, height: 142)
-                    .offset(x: SpacingToken.md, y: SpacingToken.xl)
+                    .frame(width: 132, height: 148)
+                    .offset(x: SpacingToken.xl, y: 28)
+                    .opacity(0.82)
+                    .accessibilityHidden(true)
+            }
+            .background(alignment: .bottomTrailing) {
+                OrganicBlob()
+                    .fill(ColorToken.accentWarning.opacity(0.12))
+                    .frame(width: 190, height: 138)
+                    .offset(x: 74, y: 42)
                     .accessibilityHidden(true)
             }
 
@@ -294,7 +322,8 @@ private struct QuickCheckInCard: View {
         .background(
             OrganicCardBackground(
                 base: ColorToken.cardMutedBackground,
-                glow: ColorToken.accentWarning.opacity(0.14)
+                glow: ColorToken.accentWarning.opacity(0.16),
+                secondaryGlow: ColorToken.accentSoft.opacity(0.42)
             )
         )
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusXLarge, style: .continuous))
@@ -343,8 +372,8 @@ private struct PollenHighlightsSection: View {
                 )
             } else {
                 VStack(spacing: SpacingToken.sm) {
-                    ForEach(visibleItems) { item in
-                        PollenHighlightRow(item: item)
+                    ForEach(Array(visibleItems.enumerated()), id: \.element.id) { index, item in
+                        PollenHighlightRow(item: item, index: index)
                     }
                 }
             }
@@ -355,6 +384,18 @@ private struct PollenHighlightsSection: View {
 
 private struct PollenHighlightRow: View {
     let item: PollenDashboardItem
+    let index: Int
+
+    private var rowTint: Color {
+        switch index % 3 {
+        case 0:
+            ColorToken.cardBackground.opacity(0.7)
+        case 1:
+            ColorToken.backgroundSecondary.opacity(0.74)
+        default:
+            ColorToken.cardMutedBackground.opacity(0.62)
+        }
+    }
 
     var body: some View {
         HStack(alignment: .center, spacing: SpacingToken.md) {
@@ -378,14 +419,15 @@ private struct PollenHighlightRow: View {
                 .foregroundStyle(ColorToken.textTertiary)
                 .padding(.horizontal, SpacingToken.sm)
                 .padding(.vertical, SpacingToken.xs)
-                .background(ColorToken.cardMutedBackground)
+                .background(item.background.opacity(0.8))
                 .clipShape(Capsule())
         }
         .padding(.horizontal, SpacingToken.md)
         .padding(.vertical, SpacingToken.sm)
-        .background(ColorToken.cardBackground.opacity(0.68))
+        .background(rowTint)
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusMedium, style: .continuous))
         .softShadow(ShadowToken.card)
+        .offset(x: index == 1 ? SpacingToken.xs : 0)
         .accessibilityElement(children: .combine)
     }
 
@@ -468,7 +510,7 @@ private struct SymptomsEmptyState: View {
     let onStartSymptomEntry: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.lg) {
+        VStack(alignment: .leading, spacing: SpacingToken.xl) {
             SoftSymbol(systemImageName: "heart.text.square", background: ColorToken.accentSoft)
                 .accessibilityHidden(true)
 
@@ -488,10 +530,12 @@ private struct SymptomsEmptyState: View {
                 Label("Kurz eintragen", systemImage: "plus")
             }
             .buttonStyle(SoftSecondaryButtonStyle())
+            .controlSize(.small)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(CardToken.padding)
-        .background(ColorToken.cardBackground.opacity(0.82))
+        .padding(.horizontal, CardToken.padding)
+        .padding(.vertical, SpacingToken.xxl)
+        .background(ColorToken.cardBackground.opacity(0.74))
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous))
         .softShadow(ShadowToken.card)
         .accessibilityElement(children: .combine)
@@ -500,7 +544,7 @@ private struct SymptomsEmptyState: View {
 
 private struct InsightCard: View {
     var body: some View {
-        HStack(alignment: .center, spacing: SpacingToken.lg) {
+        HStack(alignment: .center, spacing: SpacingToken.md) {
             VStack(alignment: .leading, spacing: SpacingToken.sm) {
                 SectionKicker("Sanfte Tendenz")
 
@@ -520,16 +564,18 @@ private struct InsightCard: View {
             Image(systemName: "sparkles")
                 .font(.system(size: 26, weight: .light))
                 .foregroundStyle(ColorToken.accentPrimary)
-                .frame(width: 58, height: 58)
-                .background(ColorToken.accentSoft)
+                .frame(width: 64, height: 58)
+                .background(ColorToken.accentSoft.opacity(0.9))
                 .clipShape(OrganicBlob())
+                .offset(x: SpacingToken.sm, y: -SpacingToken.md)
                 .accessibilityHidden(true)
         }
         .padding(CardToken.padding)
         .background(
             OrganicCardBackground(
-                base: ColorToken.backgroundSecondary,
-                glow: ColorToken.accentSoft
+                base: ColorToken.backgroundSecondary.opacity(0.94),
+                glow: ColorToken.accentSoft.opacity(0.84),
+                secondaryGlow: ColorToken.accentWarning.opacity(0.12)
             )
         )
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous))
@@ -574,13 +620,13 @@ private struct FlowPills: View {
 
     private func pillView(_ text: String) -> some View {
         Text(text)
-            .font(TypographyToken.footnote.weight(.medium))
-            .foregroundStyle(ColorToken.textPrimary)
+            .font(TypographyToken.caption.weight(.medium))
+            .foregroundStyle(ColorToken.textSecondary)
             .lineLimit(2)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, SpacingToken.md)
             .padding(.vertical, SpacingToken.sm)
-            .background(ColorToken.cardBackground.opacity(0.58))
+            .background(ColorToken.cardBackground.opacity(0.48))
             .clipShape(Capsule())
     }
 }
@@ -627,15 +673,27 @@ private struct SoftSymbol: View {
 
 private struct HomeBackground: View {
     var body: some View {
-        LinearGradient(
-            colors: [
-                ColorToken.backgroundPrimary,
-                ColorToken.backgroundSecondary,
-                ColorToken.backgroundPrimary
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+        ZStack {
+            LinearGradient(
+                colors: [
+                    ColorToken.backgroundPrimary,
+                    ColorToken.backgroundSecondary.opacity(0.82),
+                    ColorToken.backgroundPrimary
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            OrganicBlob()
+                .fill(ColorToken.accentSoft.opacity(0.18))
+                .frame(width: 280, height: 220)
+                .offset(x: 150, y: -220)
+
+            OrganicBlob()
+                .fill(ColorToken.accentWarning.opacity(0.08))
+                .frame(width: 260, height: 230)
+                .offset(x: -170, y: 260)
+        }
         .ignoresSafeArea()
     }
 }
@@ -643,6 +701,7 @@ private struct HomeBackground: View {
 private struct OrganicCardBackground: View {
     let base: Color
     let glow: Color
+    var secondaryGlow: Color = .clear
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -650,9 +709,13 @@ private struct OrganicCardBackground: View {
 
             OrganicBlob()
                 .fill(glow)
-                .frame(width: 190, height: 150)
-                .offset(x: 44, y: 50)
-                .blur(radius: 6)
+                .frame(width: 210, height: 160)
+                .offset(x: 56, y: 54)
+
+            OrganicBlob()
+                .fill(secondaryGlow)
+                .frame(width: 150, height: 116)
+                .offset(x: -82, y: -70)
         }
     }
 }

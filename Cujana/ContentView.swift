@@ -109,8 +109,9 @@ private struct FloatingTabBar: View {
                 }
             }
         }
-        .padding(SpacingToken.sm)
-        .background(ColorToken.cardBackground.opacity(0.9))
+        .padding(.horizontal, SpacingToken.sm)
+        .padding(.vertical, SpacingToken.xs)
+        .background(ColorToken.cardBackground.opacity(0.78))
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusXLarge, style: .continuous))
         .softShadow(ShadowToken.floating)
         .accessibilityElement(children: .contain)
@@ -124,7 +125,7 @@ private struct FloatingTabBarItem: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: SpacingToken.xs) {
+            VStack(spacing: 2) {
                 Image(systemName: tab.systemImageName)
                     .font(.system(.body, design: .rounded).weight(.light))
 
@@ -135,11 +136,12 @@ private struct FloatingTabBarItem: View {
             }
             .foregroundStyle(isSelected ? ColorToken.accentPrimary : ColorToken.textSecondary)
             .frame(maxWidth: .infinity)
-            .frame(height: 58)
+            .frame(height: 50)
             .background {
                 if isSelected {
                     OrganicTabSelection()
                         .fill(ColorToken.accentSoft)
+                        .scaleEffect(x: 0.92, y: 0.78)
                 }
             }
         }
