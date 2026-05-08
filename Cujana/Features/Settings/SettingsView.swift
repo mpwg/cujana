@@ -71,7 +71,7 @@ struct SettingsView: View {
                     }
                 }
             )
-            .tint(ColorToken.brandPrimary)
+            .tint(ColorToken.accentPrimary)
 
             VStack(alignment: .leading, spacing: SpacingToken.sm) {
                 Label("Keine Gesundheitsnotizen oder genaue Standortdaten.", systemImage: "lock")
@@ -99,7 +99,7 @@ struct SettingsView: View {
         case .undecided:
             ColorToken.textTertiary
         case .allowed:
-            ColorToken.feedbackSuccess
+            ColorToken.accentPositive
         case .denied:
             ColorToken.textSecondary
         }

@@ -15,10 +15,6 @@ final class CoreLocationCoordinateProvider: NSObject, LocationCoordinateProvidin
     }
 
     func currentCoordinate() async -> LocationCoordinate? {
-        guard CLLocationManager.locationServicesEnabled() else {
-            return nil
-        }
-
         guard await ensureAuthorized() else {
             return nil
         }

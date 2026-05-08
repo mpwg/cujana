@@ -15,20 +15,20 @@ final class AllergyDashboardViewModel {
 
     private let loadUseCase: LoadAllergyOverviewUseCase
     private let locationProvider: (any LocationCoordinateProviding)?
-    private let coordinate: LocationCoordinate
+    private let previewCoordinate: LocationCoordinate?
     private let calendar: Calendar
     private let now: () -> Date
 
     init(
         loadUseCase: LoadAllergyOverviewUseCase,
         locationProvider: (any LocationCoordinateProviding)? = nil,
-        coordinate: LocationCoordinate,
+        coordinate: LocationCoordinate? = nil,
         calendar: Calendar = .current,
         now: @escaping () -> Date = Date.init
     ) {
         self.loadUseCase = loadUseCase
         self.locationProvider = locationProvider
-        self.coordinate = coordinate
+        self.previewCoordinate = coordinate
         self.calendar = calendar
         self.now = now
     }
@@ -40,7 +40,11 @@ final class AllergyDashboardViewModel {
             let currentDate = now()
             let startDate = startOfHistory(for: currentDate)
             let endDate = forecastEndDate(from: currentDate)
-            let currentCoordinate = await locationProvider?.currentCoordinate() ?? coordinate
+            guard let currentCoordinate = await currentCoordinate() else {
+                state = .failure("Aktiviere den Standort, damit Cujana deine lokale Pollenlage anzeigen kann.")
+                return
+            }
+
             let overview = try await loadUseCase.execute(
                 for: currentCoordinate,
                 from: startDate,
@@ -52,6 +56,14 @@ final class AllergyDashboardViewModel {
         } catch {
             state = .failure("Die Übersicht konnte gerade nicht geladen werden. Bitte versuche es erneut.")
         }
+    }
+
+    private func currentCoordinate() async -> LocationCoordinate? {
+        if let locationProvider {
+            return await locationProvider.currentCoordinate()
+        }
+
+        return previewCoordinate
     }
 
     private func makeContent(from overview: AllergyOverview, currentDate: Date) -> AllergyDashboardContent {

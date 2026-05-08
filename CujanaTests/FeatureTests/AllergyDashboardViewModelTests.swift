@@ -115,7 +115,6 @@ struct AllergyDashboardViewModelTests {
     @MainActor
     func loadUsesCurrentLocationWhenAvailable() async throws {
         let date = Date(timeIntervalSince1970: 1_800)
-        let fallbackCoordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let currentCoordinate = try LocationCoordinate(latitude: 47.0707, longitude: 15.4395)
         let pollenRepository = CapturingPollenRepository()
         let viewModel = AllergyDashboardViewModel(
@@ -124,7 +123,6 @@ struct AllergyDashboardViewModelTests {
                 symptomEntryRepository: StubSymptomEntryRepository(entries: [])
             ),
             locationProvider: StubLocationCoordinateProvider(coordinate: currentCoordinate),
-            coordinate: fallbackCoordinate,
             calendar: calendar,
             now: { date }
         )
@@ -136,9 +134,8 @@ struct AllergyDashboardViewModelTests {
 
     @Test
     @MainActor
-    func loadFallsBackToDefaultLocationWhenCurrentLocationIsUnavailable() async throws {
+    func loadDoesNotUseDefaultLocationWhenCurrentLocationIsUnavailable() async throws {
         let date = Date(timeIntervalSince1970: 1_800)
-        let fallbackCoordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let pollenRepository = CapturingPollenRepository()
         let viewModel = AllergyDashboardViewModel(
             loadUseCase: LoadAllergyOverviewUseCase(
@@ -146,14 +143,14 @@ struct AllergyDashboardViewModelTests {
                 symptomEntryRepository: StubSymptomEntryRepository(entries: [])
             ),
             locationProvider: StubLocationCoordinateProvider(coordinate: nil),
-            coordinate: fallbackCoordinate,
             calendar: calendar,
             now: { date }
         )
 
         await viewModel.load()
 
-        #expect(await pollenRepository.requestedCoordinates() == [fallbackCoordinate])
+        #expect(await pollenRepository.requestedCoordinates().isEmpty)
+        #expect(viewModel.state == .failure("Aktiviere den Standort, damit Cujana deine lokale Pollenlage anzeigen kann."))
     }
 
     @Test

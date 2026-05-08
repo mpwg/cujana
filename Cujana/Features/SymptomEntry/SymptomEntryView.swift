@@ -184,7 +184,7 @@ private struct SymptomChip: View {
             HStack(spacing: SpacingToken.sm) {
                 Image(systemName: option.systemImageName)
                     .font(TypographyToken.bodyEmphasized)
-                    .foregroundStyle(ColorToken.brandPrimary)
+                    .foregroundStyle(ColorToken.accentPrimary)
                     .frame(width: ChipToken.iconSize, height: ChipToken.iconSize)
 
                 Text(option.title)

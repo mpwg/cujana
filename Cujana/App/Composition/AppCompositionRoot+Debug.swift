@@ -48,8 +48,7 @@ extension AppDependencies {
         AppDependencies(
             pollenRepository: DemoPollenRepository(forecasts: AppDemoData.pollenForecasts),
             symptomEntryRepository: DemoSymptomEntryRepository(entries: AppDemoData.symptomEntries),
-            locationProvider: FixedLocationCoordinateProvider(coordinate: AppDemoData.coordinate),
-            defaultCoordinate: AppDemoData.coordinate
+            locationProvider: FixedLocationCoordinateProvider(coordinate: AppDemoData.coordinate)
         )
     }
 }
