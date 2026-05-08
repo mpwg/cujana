@@ -28,8 +28,8 @@ SCREENSHOT_ROOT = File.join(REPO_ROOT, "fastlane", "screenshots")
 IOS_SCREENSHOT_OUTPUT = File.join(SCREENSHOT_ROOT, "ios")
 MAC_SCREENSHOT_OUTPUT = File.join(SCREENSHOT_ROOT, "macos")
 IOS_SCREENSHOT_DEVICES = [
-  "iPhone 15 Pro Max",
-  "iPad Pro 13-inch (M4)"
+  "iPhone 17 Pro Max",
+  "iPad Pro 13-inch (M5)"
 ].freeze
 MAC_SCREENSHOT_DEVICES = ["Mac"].freeze
 
