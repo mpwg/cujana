@@ -1,0 +1,282 @@
+name: iOS CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "Cujana/**"
+      - "CujanaTests/**"
+      - "CujanaUITests/**"
+      - "Cujana.xcodeproj/**"
+      - "Configuration/**"
+      - "scripts/run_xcode_tests.sh"
+      - ".gitignore"
+      - ".swiftlint.yml"
+      - "Gemfile"
+      - "Gemfile.lock"
+      - "fastlane/Fastfile"
+      - "fastlane/Snapfile"
+      - ".github/workflows/ios-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "Cujana/**"
+      - "CujanaTests/**"
+      - "CujanaUITests/**"
+      - "Cujana.xcodeproj/**"
+      - "Configuration/**"
+      - "scripts/run_xcode_tests.sh"
+      - ".gitignore"
+      - ".swiftlint.yml"
+      - "Gemfile"
+      - "Gemfile.lock"
+      - "fastlane/Fastfile"
+      - "fastlane/Snapfile"
+      - ".github/workflows/ios-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  ARCHS: arm64
+  DERIVED_DATA_PATH: .xcode-derived-data
+  IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+  MACOSX_DEPLOYMENT_TARGET: "26.0"
+  SWIFTPM_CACHE_PATH: ${{ github.workspace }}/.swiftpm-cache
+
+jobs:
+  changes:
+    name: Änderungen prüfen
+    runs-on: ubuntu-latest
+    outputs:
+      iphone_tests: ${{ steps.filter.outputs.iphone_tests }}
+      ui_smoke: ${{ steps.filter.outputs.ui_smoke }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Relevante Änderungen bestimmen
+        id: filter
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" || "${{ github.event_name }}" == "push" ]]; then
+            echo "iphone_tests=true" >> "$GITHUB_OUTPUT"
+            echo "ui_smoke=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          base_sha="${{ github.event.pull_request.base.sha }}"
+          git fetch --no-tags --depth=1 origin "${base_sha}"
+          changed_files="$(git diff --name-only "${base_sha}" HEAD)"
+
+          printf 'Geänderte Dateien:\n%s\n' "${changed_files}"
+
+          if printf '%s\n' "${changed_files}" | grep -Eq '^(Cujana/(App|Domain|Infrastructure|Features|DesignSystem)/|CujanaTests/|Cujana\.xcodeproj/|Configuration/|scripts/run_xcode_tests\.sh$|\.github/workflows/ios-ci\.yml$)'; then
+            echo "iphone_tests=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "iphone_tests=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if printf '%s\n' "${changed_files}" | grep -Eq '^(Cujana/(App|Features|DesignSystem|Assets\.xcassets)/|CujanaUITests/|Cujana\.xcodeproj/|fastlane/(Fastfile|Snapfile)$|\.github/workflows/ios-ci\.yml$)'; then
+            echo "ui_smoke=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ui_smoke=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  lint:
+    name: SwiftLint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: SwiftLint ausführen
+        run: |
+          docker run --rm \
+            -v "$PWD:$PWD" \
+            -w "$PWD" \
+            ghcr.io/realm/swiftlint:0.63.2 \
+            lint --strict
+
+  catalyst-tests:
+    name: Unit-Tests (Catalyst)
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Xcode 26.4 auswählen
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.4"
+
+      - name: Xcode-Version ausgeben
+        id: xcode-version
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          xcode-select -p
+          cache_version="$(xcodebuild -version | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
+          echo "xcode-cache-version=$cache_version" >> "$GITHUB_OUTPUT"
+
+      - name: SwiftPM-Cache wiederherstellen
+        uses: actions/cache@v5
+        with:
+          path: .xcode-derived-data/SourcePackages
+          key: swiftpm-${{ runner.os }}-xcode-${{ steps.xcode-version.outputs.xcode-cache-version }}-${{ hashFiles('Cujana.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            swiftpm-${{ runner.os }}-xcode-${{ steps.xcode-version.outputs.xcode-cache-version }}-
+
+      - name: Xcode-Build-Cache wiederherstellen
+        uses: actions/cache@v5
+        with:
+          path: |
+            .xcode-derived-data/Build
+            .xcode-derived-data/ModuleCache.noindex
+            .xcode-derived-data/SDKStatCaches.noindex
+          key: xcodebuild-maccatalyst-${{ runner.os }}-xcode-${{ steps.xcode-version.outputs.xcode-cache-version }}-${{ hashFiles('Cujana.xcodeproj/project.pbxproj', 'Cujana.xcodeproj/xcshareddata/xcschemes/*.xcscheme', 'Cujana.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'Cujana/**/*.swift', 'CujanaTests/**/*.swift') }}
+          restore-keys: |
+            xcodebuild-maccatalyst-${{ runner.os }}-xcode-${{ steps.xcode-version.outputs.xcode-cache-version }}-
+
+      - name: Catalyst-Tests ausführen
+        run: ./scripts/run_xcode_tests.sh
+
+  iphone-tests:
+    name: Unit-Tests (iPhone)
+    needs:
+      - changes
+    if: needs.changes.outputs.iphone_tests == 'true'
+    runs-on: macos-26
+    timeout-minutes: 25
+    env:
+      RESULT_BUNDLE_PATH: ${{ github.workspace }}/artifacts/CujanaTests-iPhone.xcresult
+      TEST_DESTINATION: platform=iOS Simulator,name=iPhone 17
+      TEST_DEVICE_NAME: iPhone 17
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Xcode 26.4 auswählen
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.4"
+
+      - name: Xcode-Version ausgeben
+        run: |
+          xcodebuild -version
+          xcode-select -p
+
+      - name: SwiftPM-Cache wiederherstellen
+        uses: actions/cache@v5
+        with:
+          path: |
+            ${{ env.SWIFTPM_CACHE_PATH }}
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/org.swift.swiftpm
+          key: swiftpm-macos-26-xcode-26_4-${{ hashFiles('Cujana.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            swiftpm-macos-26-xcode-26_4-
+
+      - name: Simulator vorbereiten
+        run: |
+          xcrun simctl shutdown "${TEST_DEVICE_NAME}" || true
+          xcrun simctl boot "${TEST_DEVICE_NAME}" || true
+          xcrun simctl bootstatus "${TEST_DEVICE_NAME}" -b
+
+      - name: iPhone-Tests ausführen
+        run: |
+          xcodebuild test \
+            -project Cujana.xcodeproj \
+            -scheme Cujana-UnitTests \
+            -clonedSourcePackagesDirPath "${SWIFTPM_CACHE_PATH}" \
+            -destination "${TEST_DESTINATION}" \
+            -derivedDataPath "${RUNNER_TEMP}/DerivedData-iPhone" \
+            -resultBundlePath "${RESULT_BUNDLE_PATH}" \
+            -testLanguage de \
+            -testRegion DE \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: xcresult bei Fehler hochladen
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-ci-CujanaTests-iPhone-xcresult
+          path: ${{ env.RESULT_BUNDLE_PATH }}
+          if-no-files-found: warn
+
+  ui-smoke:
+    name: UI-Smoke (iPhone)
+    needs:
+      - changes
+    if: needs.changes.outputs.ui_smoke == 'true'
+    runs-on: macos-26
+    timeout-minutes: 20
+    env:
+      RESULT_BUNDLE_PATH: ${{ github.workspace }}/artifacts/CujanaUISmoke-iPhone.xcresult
+      TEST_DESTINATION: platform=iOS Simulator,name=iPhone 17
+      TEST_DEVICE_NAME: iPhone 17
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Xcode 26.4 auswählen
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.4"
+
+      - name: Xcode-Version ausgeben
+        run: |
+          xcodebuild -version
+          xcode-select -p
+
+      - name: SwiftPM-Cache wiederherstellen
+        uses: actions/cache@v5
+        with:
+          path: |
+            ${{ env.SWIFTPM_CACHE_PATH }}
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/org.swift.swiftpm
+          key: swiftpm-macos-26-xcode-26_4-${{ hashFiles('Cujana.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            swiftpm-macos-26-xcode-26_4-
+
+      - name: Simulator vorbereiten
+        run: |
+          xcrun simctl shutdown "${TEST_DEVICE_NAME}" || true
+          xcrun simctl boot "${TEST_DEVICE_NAME}" || true
+          xcrun simctl bootstatus "${TEST_DEVICE_NAME}" -b
+
+      - name: Zentrale UI-Smokes ausführen
+        run: |
+          xcodebuild test \
+            -project Cujana.xcodeproj \
+            -scheme CujanaScreenshots \
+            -clonedSourcePackagesDirPath "${SWIFTPM_CACHE_PATH}" \
+            -destination "${TEST_DESTINATION}" \
+            -derivedDataPath "${RUNNER_TEMP}/DerivedData-UI" \
+            -resultBundlePath "${RESULT_BUNDLE_PATH}" \
+            -testLanguage de \
+            -testRegion DE \
+            -only-testing:CujanaUITests/CujanaScreenshotTests/testLaunchScreenRenders \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: xcresult bei Fehler hochladen
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-ci-CujanaUISmoke-iPhone-xcresult
+          path: ${{ env.RESULT_BUNDLE_PATH }}
+          if-no-files-found: warn
