@@ -57,6 +57,19 @@ def screenshot_image_cache_directory
   File.join(screenshot_cache_directory, "screenshots")
 end
 
+def screenshot_derived_data_path
+  ENV["CUJANA_SCREENSHOT_DERIVED_DATA_PATH"].to_s.empty? ? File.join(REPO_ROOT, ".xcode-derived-data-screenshots") : File.expand_path(ENV["CUJANA_SCREENSHOT_DERIVED_DATA_PATH"])
+end
+
+def reset_screenshot_simulators?
+  truthy_env?("CUJANA_RESET_SCREENSHOT_SIMULATORS", default: false)
+end
+
+def simulator_booted?(device)
+  output, _error, status = Open3.capture3("xcrun", "simctl", "list", "devices", "booted")
+  status.success? && output.include?(device.udid)
+end
+
 def screenshot_language_directory(output_directory, language:)
   File.join(output_directory, language)
 end
@@ -67,11 +80,12 @@ def screenshot_result_bundle_path(output_directory, device_name, language:)
   File.join(SCREENSHOT_ROOT, "test_output", platform_name, language, "#{SCREENSHOT_SCHEME}-#{sanitized_name}.xcresult")
 end
 
-def write_snapshot_configuration_files!(language:, locale:)
+def write_snapshot_configuration_files!(language:, locale:, pages: nil)
   FileUtils.mkdir_p(screenshot_cache_directory)
   File.write(File.join(screenshot_cache_directory, "language.txt"), "#{language}\n")
   File.write(File.join(screenshot_cache_directory, "locale.txt"), "#{locale}\n")
   File.write(File.join(screenshot_cache_directory, "snapshot-launch_arguments.txt"), "-mt_screenshot_seed #{SCREENSHOT_SEED}\n")
+  File.write(File.join(screenshot_cache_directory, "screenshot-pages.txt"), "#{pages}\n") unless pages.to_s.empty?
 end
 
 def clear_screenshot_cache!
@@ -102,16 +116,19 @@ def resolve_simulator_for_capture(device_name, requested_version = screenshot_io
 end
 
 def prepare_ios_simulator!(device, override_status_bar:)
-  wait_timeout = ENV.fetch("SNAPSHOT_SIMULATOR_WAIT_FOR_BOOT_TIMEOUT", "10")
+  status_bar_wait = ENV.fetch("SNAPSHOT_STATUS_BAR_WAIT_SECONDS", "0").to_i
 
-  sh("xcrun simctl shutdown #{device.udid.shellescape} || true")
-  sh("xcrun simctl erase #{device.udid.shellescape}")
-  sh("xcrun simctl boot #{device.udid.shellescape} || true")
+  if reset_screenshot_simulators?
+    sh("xcrun simctl shutdown #{device.udid.shellescape} || true")
+    sh("xcrun simctl erase #{device.udid.shellescape}")
+  end
+
+  sh("xcrun simctl boot #{device.udid.shellescape}") unless simulator_booted?(device)
   sh("xcrun simctl bootstatus #{device.udid.shellescape} -b")
 
   return unless override_status_bar
 
-  sleep(wait_timeout.to_i)
+  sleep(status_bar_wait) if status_bar_wait.positive?
   sh("xcrun simctl status_bar #{device.udid.shellescape} override --time 09:41 --dataNetwork wifi --wifiMode active --wifiBars 3 --cellularMode active --operatorName '' --cellularBars 4 --batteryState charged --batteryLevel 100")
 end
 
@@ -132,29 +149,28 @@ end
 def run_ui_test!(destination:, result_bundle_path:, language:, test_identifier:, pages: "store")
   FileUtils.rm_rf(result_bundle_path)
   FileUtils.mkdir_p(File.dirname(result_bundle_path))
+  FileUtils.mkdir_p(screenshot_derived_data_path)
 
-  Dir.mktmpdir("snapshot_derived") do |derived_data_path|
-    command = [
-      "xcodebuild",
-      "test",
-      "-scheme", SCREENSHOT_SCHEME.shellescape,
-      "-project", PROJECT_PATH.shellescape,
-      "-derivedDataPath", derived_data_path.shellescape,
-      "-resultBundlePath", result_bundle_path.shellescape,
-      "-destination", destination.shellescape,
-      "-only-testing:#{test_identifier.shellescape}"
-    ].join(" ")
+  command = [
+    "xcodebuild",
+    "test",
+    "-scheme", SCREENSHOT_SCHEME.shellescape,
+    "-project", PROJECT_PATH.shellescape,
+    "-derivedDataPath", screenshot_derived_data_path.shellescape,
+    "-resultBundlePath", result_bundle_path.shellescape,
+    "-destination", destination.shellescape,
+    "-only-testing:#{test_identifier.shellescape}"
+  ].join(" ")
 
-    sh(
-      {
-        "FASTLANE_SNAPSHOT" => "YES",
-        "FASTLANE_LANGUAGE" => language,
-        "TEST_TARGET_NAME" => SCREENSHOT_TEST_TARGET,
-        SCREENSHOT_PAGE_SELECTION_ENV => pages
-      },
-      command
-    )
-  end
+  sh(
+    {
+      "FASTLANE_SNAPSHOT" => "YES",
+      "FASTLANE_LANGUAGE" => language,
+      "TEST_TARGET_NAME" => SCREENSHOT_TEST_TARGET,
+      SCREENSHOT_PAGE_SELECTION_ENV => pages
+    },
+    command
+  )
 end
 
 def copy_device_screenshots!(device_name:, output_directory:, language:)
@@ -439,41 +455,32 @@ def next_build_number
   Time.now.utc.strftime("%Y%m%d%H%M%S").to_i
 end
 
-def capture_screenshot_set!(devices:, output_directory:, override_status_bar:, language_config:, pages:)
-  language = language_config.fetch(:language)
-  locale = language_config.fetch(:locale)
-  FileUtils.mkdir_p(output_directory)
-  write_snapshot_configuration_files!(language: language, locale: locale)
-  UI.message("Erzeuge Screenshot-Seiten '#{pages}' für #{language}.")
-
-  devices.each do |device_name|
-    device = resolve_simulator_for_capture(device_name)
-    clear_screenshot_cache!
-    prepare_ios_simulator!(device, override_status_bar: override_status_bar)
-    run_screenshot_test!(
-      destination: "platform=iOS Simulator,id=#{device.udid}",
-      result_bundle_path: screenshot_result_bundle_path(output_directory, device_name, language: language),
-      language: language,
-      pages: pages
-    )
-    copy_device_screenshots!(device_name: device_name, output_directory: output_directory, language: language)
-    clear_ios_status_bar!(device) if override_status_bar
-  end
-end
-
 def capture_all_screenshots!(pages: screenshot_page_selection)
   FileUtils.mkdir_p(SCREENSHOT_ROOT)
   FileUtils.rm_rf(IOS_SCREENSHOT_OUTPUT)
   FileUtils.mkdir_p(IOS_SCREENSHOT_OUTPUT)
 
-  SCREENSHOT_LANGUAGES.each do |language_config|
-    capture_screenshot_set!(
-      devices: IOS_SCREENSHOT_DEVICES,
-      output_directory: IOS_SCREENSHOT_OUTPUT,
-      override_status_bar: true,
-      language_config: language_config,
-      pages: pages
-    )
+  IOS_SCREENSHOT_DEVICES.each do |device_name|
+    device = resolve_simulator_for_capture(device_name)
+    prepare_ios_simulator!(device, override_status_bar: true)
+
+    SCREENSHOT_LANGUAGES.each do |language_config|
+      language = language_config.fetch(:language)
+      locale = language_config.fetch(:locale)
+
+      clear_screenshot_cache!
+      write_snapshot_configuration_files!(language: language, locale: locale, pages: pages)
+      UI.message("Erzeuge Screenshot-Seiten '#{pages}' für #{language} auf #{device_name}.")
+      run_screenshot_test!(
+        destination: "platform=iOS Simulator,id=#{device.udid}",
+        result_bundle_path: screenshot_result_bundle_path(IOS_SCREENSHOT_OUTPUT, device_name, language: language),
+        language: language,
+        pages: pages
+      )
+      copy_device_screenshots!(device_name: device_name, output_directory: IOS_SCREENSHOT_OUTPUT, language: language)
+    end
+
+    clear_ios_status_bar!(device)
   end
 end
 

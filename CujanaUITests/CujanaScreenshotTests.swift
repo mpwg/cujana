@@ -2,6 +2,7 @@ import XCTest
 
 @MainActor
 final class CujanaScreenshotTests: XCTestCase {
+    @MainActor
     private enum ScreenshotSelection {
         static let environmentKey = "CUJANA_SCREENSHOT_PAGES"
 
@@ -11,7 +12,7 @@ final class CujanaScreenshotTests: XCTestCase {
         ]
 
         static func screens(from environment: [String: String] = ProcessInfo.processInfo.environment) throws -> [Screen] {
-            let rawSelection = environment[environmentKey]?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let rawSelection = configuredSelection(from: environment)
             guard let rawSelection, !rawSelection.isEmpty else {
                 return storeScreens
             }
@@ -24,6 +25,20 @@ final class CujanaScreenshotTests: XCTestCase {
             default:
                 return try screens(matching: rawSelection)
             }
+        }
+
+        private static func configuredSelection(from environment: [String: String]) -> String? {
+            if let rawSelection = environment[environmentKey]?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !rawSelection.isEmpty {
+                return rawSelection
+            }
+
+            guard let cacheDirectory = try? Snapshot.getCacheDirectory() else {
+                return nil
+            }
+
+            let path = cacheDirectory.appendingPathComponent("screenshot-pages.txt")
+            return try? String(contentsOf: path, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
         private static func screens(matching rawSelection: String) throws -> [Screen] {
