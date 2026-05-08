@@ -16,31 +16,37 @@ enum AppDemoData {
     static var symptomEntries: [AllergySymptomEntry] {
         [
             makeSymptomEntry(
-                id: "4F3D9A01-6F70-4B50-8ED8-10F7B63D0F51",
-                daysOffset: 0,
-                hour: 7,
-                minute: 25,
-                symptomType: .itchyEyes,
-                severity: .moderate,
-                note: "Nach dem Weg durch den Park deutlich stärker."
+                seed: SymptomEntrySeed(
+                    id: "4F3D9A01-6F70-4B50-8ED8-10F7B63D0F51",
+                    daysOffset: 0,
+                    hour: 7,
+                    minute: 25,
+                    symptomType: .itchyEyes,
+                    severity: .moderate,
+                    note: "Nach dem Weg durch den Park deutlich stärker."
+                )
             ),
             makeSymptomEntry(
-                id: "18259AE3-A2CF-49ED-A3A4-5D3E86A24D8D",
-                daysOffset: -1,
-                hour: 21,
-                minute: 10,
-                symptomType: .blockedNose,
-                severity: .mild,
-                note: "Fenster am Abend länger offen gelassen."
+                seed: SymptomEntrySeed(
+                    id: "18259AE3-A2CF-49ED-A3A4-5D3E86A24D8D",
+                    daysOffset: -1,
+                    hour: 21,
+                    minute: 10,
+                    symptomType: .blockedNose,
+                    severity: .mild,
+                    note: "Fenster am Abend länger offen gelassen."
+                )
             ),
             makeSymptomEntry(
-                id: "9069639C-18D6-4577-86BD-10A8D254679F",
-                daysOffset: -2,
-                hour: 16,
-                minute: 40,
-                symptomType: .sneezing,
-                severity: .severe,
-                note: "Nach Rasenmähen im Innenhof."
+                seed: SymptomEntrySeed(
+                    id: "9069639C-18D6-4577-86BD-10A8D254679F",
+                    daysOffset: -2,
+                    hour: 16,
+                    minute: 40,
+                    symptomType: .sneezing,
+                    severity: .severe,
+                    note: "Nach Rasenmähen im Innenhof."
+                )
             )
         ]
     }
@@ -106,22 +112,24 @@ enum AppDemoData {
         }
     }
 
-    private static func makeSymptomEntry(
-        id: String,
-        daysOffset: Int,
-        hour: Int,
-        minute: Int,
-        symptomType: SymptomType,
-        severity: SymptomSeverity,
-        note: String
-    ) -> AllergySymptomEntry {
+    private struct SymptomEntrySeed {
+        let id: String
+        let daysOffset: Int
+        let hour: Int
+        let minute: Int
+        let symptomType: SymptomType
+        let severity: SymptomSeverity
+        let note: String
+    }
+
+    private static func makeSymptomEntry(seed: SymptomEntrySeed) -> AllergySymptomEntry {
         do {
             return try AllergySymptomEntry(
-                id: UUID(uuidString: id) ?? UUID(),
-                date: makeRelativeDate(daysOffset: daysOffset, hour: hour, minute: minute),
-                symptomType: symptomType,
-                severity: severity,
-                note: note,
+                id: UUID(uuidString: seed.id) ?? UUID(),
+                date: makeRelativeDate(daysOffset: seed.daysOffset, hour: seed.hour, minute: seed.minute),
+                symptomType: seed.symptomType,
+                severity: seed.severity,
+                note: seed.note,
                 coordinate: coordinate
             )
         } catch {
