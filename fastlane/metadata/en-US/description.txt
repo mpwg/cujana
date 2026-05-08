@@ -1,0 +1,16 @@
+Cujana is a calm allergy journal for people who want to understand symptoms and possible triggers in everyday life. The app helps you record symptoms quickly and connect them with relevant context such as pollen exposure and environmental conditions.
+
+A new entry is intentionally simple: choose the symptom, record its severity, confirm the time, and add notes when needed.
+
+Cujana is designed to stay clear and private. The app is built for local use without an account and without a custom backend.
+
+Key features:
+
+- fast journal entries for allergy symptoms
+- severity, time, and notes
+- overview of entries and current exposure
+- pollen and environmental context for orientation
+- local processing without an account
+- iOS-only interface focused on simple daily use
+
+Cujana is not a diagnostic app and does not replace medical advice. It supports you in documenting observations for yourself or for conversations with doctors or allergy specialists.

@@ -1,0 +1,6 @@
+Initial App Store preparation for Cujana.
+
+- allergy symptom journal
+- overview of recent entries and context data
+- local processing without an account
+- prepared pollen and environmental information

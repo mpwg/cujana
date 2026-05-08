@@ -11,6 +11,7 @@ excluded:
   - DerivedData
   - Carthage
   - Pods
+  - CujanaUITests
 
 allow_zero_lintable_files: true
 strict: true

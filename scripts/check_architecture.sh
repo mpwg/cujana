@@ -69,6 +69,7 @@ done < <(
     ! -path './.build/*' \
     ! -path './.swiftpm-package-cache/*' \
     ! -path './.xcode-derived-data/*' \
+    ! -path './.xcode-derived-data-*/*' \
     ! -path './.xcode-source-packages/*' \
     ! -path './DerivedData/*' \
     ! -path './Carthage/*' \
