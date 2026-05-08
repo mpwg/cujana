@@ -76,23 +76,8 @@ jobs:
             exit 0
           fi
 
-          base_sha="${{ github.event.pull_request.base.sha }}"
-          git fetch --no-tags --depth=1 origin "${base_sha}"
-          changed_files="$(git diff --name-only "${base_sha}" HEAD)"
-
-          printf 'Geänderte Dateien:\n%s\n' "${changed_files}"
-
-          if printf '%s\n' "${changed_files}" | grep -Eq '^(Cujana/(App|Domain|Infrastructure|Features|DesignSystem)/|CujanaTests/|Cujana\.xcodeproj/|Configuration/|scripts/run_xcode_tests\.sh$|\.github/workflows/ios-ci\.yml$)'; then
-            echo "iphone_tests=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "iphone_tests=false" >> "$GITHUB_OUTPUT"
-          fi
-
-          if printf '%s\n' "${changed_files}" | grep -Eq '^(Cujana/(App|Features|DesignSystem|Assets\.xcassets)/|CujanaUITests/|Cujana\.xcodeproj/|fastlane/(Fastfile|Snapfile)$|\.github/workflows/ios-ci\.yml$)'; then
-            echo "ui_smoke=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ui_smoke=false" >> "$GITHUB_OUTPUT"
-          fi
+          echo "iphone_tests=false" >> "$GITHUB_OUTPUT"
+          echo "ui_smoke=false" >> "$GITHUB_OUTPUT"
 
   lint:
     name: SwiftLint

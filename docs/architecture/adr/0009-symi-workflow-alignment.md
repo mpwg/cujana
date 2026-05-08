@@ -13,7 +13,7 @@ Cujana nutzt andere Schemes, andere UI-Testnamen und einen anderen fastlane-Fast
 
 Der Guardrail-Workflow prüft nur noch `scripts/check_architecture.sh`.
 
-Ein neuer `ios-ci`-Workflow übernimmt SwiftLint, Catalyst-Unit-Tests, optionale iPhone-Unit-Tests und einen kleinen UI-Smoke-Test. Der Catalyst-Job verwendet weiterhin `scripts/run_xcode_tests.sh`, weil dieses Skript bereits die funktionierende Mac-Catalyst-Teststrategie für `Cujana-UnitTests` kapselt. iPhone- und UI-Smoke-Jobs laufen nur bei relevanten Änderungen oder manuellem Start.
+Ein neuer `ios-ci`-Workflow übernimmt SwiftLint, Catalyst-Unit-Tests, optionale iPhone-Unit-Tests und einen kleinen UI-Smoke-Test. Der Catalyst-Job verwendet weiterhin `scripts/run_xcode_tests.sh`, weil dieses Skript bereits die funktionierende Mac-Catalyst-Teststrategie für `Cujana-UnitTests` kapselt. iPhone- und UI-Smoke-Jobs laufen nicht auf Pull Requests, sondern nur bei Pushes auf `main` oder manuellem Start.
 
 Ein neuer CodeQL-Workflow baut die `Cujana`-App manuell mit dem bestehenden App-Scheme und analysiert Swift-Code auf Release-Branches oder per manuellem Start.
 
