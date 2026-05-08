@@ -15,6 +15,7 @@ struct AppCompositionRoot {
     func makeContentView(telemetryService: AppTelemetryService) -> ContentView {
         ContentView(
             dashboardViewModel: makeAllergyDashboardViewModel(),
+            entryListViewModel: makeEntryListViewModel(),
             symptomEntryViewModel: makeSymptomEntryViewModel(),
             telemetryService: telemetryService
         )
@@ -30,6 +31,15 @@ struct AppCompositionRoot {
 
     private func makeSymptomEntryViewModel() -> SymptomEntryViewModel {
         SymptomEntryViewModel(saveUseCase: makeSaveAllergySymptomEntryUseCase())
+    }
+
+    private func makeEntryListViewModel() -> EntryListViewModel {
+        EntryListViewModel(
+            loadEntriesUseCase: LoadAllergySymptomEntriesUseCase(repository: dependencies.symptomEntryRepository),
+            loadPollenUseCase: LoadPollenForecastUseCase(repository: dependencies.pollenRepository),
+            locationProvider: dependencies.locationProvider,
+            coordinate: dependencies.defaultCoordinate
+        )
     }
 
     private func makeLoadAllergyOverviewUseCase() -> LoadAllergyOverviewUseCase {
