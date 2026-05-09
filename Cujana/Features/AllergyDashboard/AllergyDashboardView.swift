@@ -9,7 +9,7 @@ struct AllergyDashboardView: View {
             ScrollView {
                 content
                     .padding(.horizontal, SpacingToken.xl)
-                    .padding(.top, SpacingToken.xl)
+                    .padding(.top, SpacingToken.sm)
                     .padding(.bottom, SpacingToken.xxl)
             }
             .scrollIndicators(.hidden)
@@ -36,14 +36,14 @@ struct AllergyDashboardView: View {
     private var content: some View {
         switch viewModel.state {
         case .idle, .loading:
-            VStack(spacing: SpacingToken.section) {
+            VStack(spacing: SpacingToken.xl) {
                 ForecastSummaryCard(days: [], isLoading: true)
                 FeelingCTAView(action: onStartSymptomEntry)
             }
         case .empty(let dashboardContent), .loaded(let dashboardContent):
             dashboard(for: dashboardContent)
         case .failure:
-            VStack(spacing: SpacingToken.section) {
+            VStack(spacing: SpacingToken.xl) {
                 ForecastSummaryCard(days: [], isLoading: false)
                 FeelingCTAView(action: onStartSymptomEntry)
             }
@@ -51,7 +51,7 @@ struct AllergyDashboardView: View {
     }
 
     private func dashboard(for dashboardContent: AllergyDashboardContent) -> some View {
-        VStack(spacing: SpacingToken.section) {
+        VStack(spacing: SpacingToken.xl) {
             ForecastSummaryCard(days: dashboardContent.forecastDays, isLoading: false)
             FeelingCTAView(action: onStartSymptomEntry)
         }
@@ -63,7 +63,7 @@ private struct ForecastSummaryCard: View {
     let isLoading: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.lg) {
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
             VStack(alignment: .leading, spacing: SpacingToken.xs) {
                 Text("Heute & Morgen")
                     .font(TypographyToken.title)
@@ -134,12 +134,13 @@ private struct ForecastDaySummaryView: View {
             Spacer(minLength: SpacingToken.sm)
 
             Text(day.temperatureText)
-                .font(TypographyToken.title)
+                .font(TypographyToken.headline)
                 .foregroundStyle(ColorToken.textPrimary)
                 .minimumScaleFactor(0.8)
         }
-        .padding(SpacingToken.md)
-        .background(ColorToken.cardMutedBackground.opacity(0.72))
+        .padding(.horizontal, SpacingToken.md)
+        .padding(.vertical, SpacingToken.sm)
+        .background(ColorToken.cardMutedBackground.opacity(0.56))
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusMedium, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(day.accessibilityText)
@@ -166,7 +167,7 @@ private struct OpenMeteoAttributionView: View {
                 .multilineTextAlignment(.leading)
         }
         .font(TypographyToken.caption)
-        .foregroundStyle(ColorToken.textTertiary)
+        .foregroundStyle(ColorToken.textSecondary)
         .fixedSize(horizontal: false, vertical: true)
         .accessibilityLabel(attributionText)
     }
@@ -188,7 +189,7 @@ private struct FeelingCTAView: View {
             }
 
             Button(action: action) {
-                Label("Check-In starten", systemImage: "plus.circle.fill")
+                Label("Check-in starten", systemImage: "plus.circle.fill")
                     .font(TypographyToken.button)
                     .frame(maxWidth: .infinity)
             }
@@ -196,7 +197,20 @@ private struct FeelingCTAView: View {
             .accessibilityLabel("Wie fühlst du dich? Check-in starten")
         }
         .padding(CardToken.padding)
-        .background(ColorToken.cardMutedBackground)
+        .background {
+            RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous)
+                .fill(ColorToken.cardMutedBackground)
+                .overlay {
+                    LinearGradient(
+                        colors: [
+                            ColorToken.accentSoft.opacity(0.52),
+                            ColorToken.cardMutedBackground.opacity(0.12)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                }
+        }
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous))
         .softShadow(ShadowToken.card)
     }
@@ -208,8 +222,9 @@ private struct FeelingCTAButtonStyle: ButtonStyle {
             .foregroundStyle(ColorToken.cardBackground)
             .padding(.horizontal, SpacingToken.xl)
             .padding(.vertical, SpacingToken.lg)
+            .frame(minHeight: SpacingToken.xxl + SpacingToken.xl)
             .background(ColorToken.accentPrimary)
-            .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusMedium, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous))
             .opacity(configuration.isPressed ? 0.9 : 1)
             .scaleEffect(configuration.isPressed ? 0.99 : 1)
             .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
