@@ -102,9 +102,13 @@ final class AllergyDashboardViewModel {
             let pollenText = topPollen.map { level in
                 "\(AllergyDashboardPresentationState.title(for: level.pollenType)): \(shortLevelText(for: level.level))"
             } ?? "Pollen: nicht verfügbar"
-            let weatherText = weather.map { weatherDescription(for: $0.conditionCode) } ?? "Wetter aktuell nicht verfügbar"
+            let weatherText = weather.map {
+                weatherDescription(for: $0.conditionCode)
+            } ?? "Wetter aktuell nicht verfügbar"
             let temperatureText = weather.map { formattedTemperatureText(for: $0.temperature) } ?? "--"
-            let weatherSystemImageName = weather.map { systemImageName(forWeatherCode: $0.conditionCode) } ?? "cloud.sun"
+            let weatherSystemImageName = weather.map {
+                systemImageName(forWeatherCode: $0.conditionCode)
+            } ?? "cloud.sun"
 
             return ForecastDaySummaryItem(
                 id: dayTitle,
@@ -136,15 +140,14 @@ final class AllergyDashboardViewModel {
         forecasts
             .flatMap(\.dailyLevels)
             .filter { calendar.isDate($0.date, inSameDayAs: date) }
-            .sorted { first, second in
+            .max { first, second in
                 if first.level == second.level {
                     return AllergyDashboardPresentationState.title(for: first.pollenType)
-                        < AllergyDashboardPresentationState.title(for: second.pollenType)
+                        > AllergyDashboardPresentationState.title(for: second.pollenType)
                 }
 
-                return first.level > second.level
+                return first.level < second.level
             }
-            .first
     }
 
     private func shortLevelText(for level: PollenLevel) -> String {

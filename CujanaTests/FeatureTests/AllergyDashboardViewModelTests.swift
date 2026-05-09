@@ -16,42 +16,9 @@ struct AllergyDashboardViewModelTests {
     func loadMapsPollenAndSymptomsIntoDashboardContent() async throws {
         let date = Date(timeIntervalSince1970: 1_800)
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
-        let forecast = try PollenForecast(
-            coordinate: coordinate,
-            sourceKind: .forecast,
-            generatedAt: date,
-            validFrom: date,
-            validUntil: date.addingTimeInterval(86_400),
-            dailyLevels: [
-                PollenForecast.DailyLevel(date: date, pollenType: .birch, level: .high),
-                PollenForecast.DailyLevel(date: date, pollenType: .grass, level: .moderate),
-                PollenForecast.DailyLevel(
-                    date: date.addingTimeInterval(86_400),
-                    pollenType: .grass,
-                    level: .moderate
-                )
-            ]
-        )
-        let weather = WeatherForecast(
-            coordinate: coordinate,
-            generatedAt: date,
-            dailyConditions: [
-                WeatherForecast.DailyCondition(date: date, temperature: 18.4, conditionCode: 2),
-                WeatherForecast.DailyCondition(
-                    date: date.addingTimeInterval(86_400),
-                    temperature: 21.2,
-                    conditionCode: 61
-                )
-            ]
-        )
-        let symptom = try AllergySymptomEntry(
-            id: UUID(uuidString: "7B4D4D42-A192-4873-8C2C-2E8103536787") ?? UUID(),
-            date: date,
-            symptomType: .itchyEyes,
-            severity: .severe,
-            note: "Abends stärker.",
-            coordinate: coordinate
-        )
+        let forecast = try dashboardForecast(date: date, coordinate: coordinate)
+        let weather = dashboardWeather(date: date, coordinate: coordinate)
+        let symptom = try dashboardSymptom(date: date, coordinate: coordinate)
         let viewModel = AllergyDashboardViewModel(
             loadUseCase: LoadAllergyOverviewUseCase(
                 pollenRepository: StubPollenRepository(forecasts: [forecast]),
@@ -175,7 +142,9 @@ struct AllergyDashboardViewModelTests {
         await viewModel.load()
 
         #expect(await pollenRepository.requestedCoordinates().isEmpty)
-        #expect(viewModel.state == .failure("Aktiviere den Standort, damit Cujana deine lokale Pollenlage anzeigen kann."))
+        #expect(
+            viewModel.state == .failure("Aktiviere den Standort, damit Cujana deine lokale Pollenlage anzeigen kann.")
+        )
     }
 
     @Test
@@ -254,6 +223,51 @@ struct AllergyDashboardViewModelTests {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .current
         return calendar
+    }
+
+    private func dashboardForecast(date: Date, coordinate: LocationCoordinate) throws -> PollenForecast {
+        try PollenForecast(
+            coordinate: coordinate,
+            sourceKind: .forecast,
+            generatedAt: date,
+            validFrom: date,
+            validUntil: date.addingTimeInterval(86_400),
+            dailyLevels: [
+                PollenForecast.DailyLevel(date: date, pollenType: .birch, level: .high),
+                PollenForecast.DailyLevel(date: date, pollenType: .grass, level: .moderate),
+                PollenForecast.DailyLevel(
+                    date: date.addingTimeInterval(86_400),
+                    pollenType: .grass,
+                    level: .moderate
+                )
+            ]
+        )
+    }
+
+    private func dashboardWeather(date: Date, coordinate: LocationCoordinate) -> WeatherForecast {
+        WeatherForecast(
+            coordinate: coordinate,
+            generatedAt: date,
+            dailyConditions: [
+                WeatherForecast.DailyCondition(date: date, temperature: 18.4, conditionCode: 2),
+                WeatherForecast.DailyCondition(
+                    date: date.addingTimeInterval(86_400),
+                    temperature: 21.2,
+                    conditionCode: 61
+                )
+            ]
+        )
+    }
+
+    private func dashboardSymptom(date: Date, coordinate: LocationCoordinate) throws -> AllergySymptomEntry {
+        try AllergySymptomEntry(
+            id: UUID(uuidString: "7B4D4D42-A192-4873-8C2C-2E8103536787") ?? UUID(),
+            date: date,
+            symptomType: .itchyEyes,
+            severity: .severe,
+            note: "Abends stärker.",
+            coordinate: coordinate
+        )
     }
 
     private func symptom(date: Date, type: SymptomType) throws -> AllergySymptomEntry {

@@ -5,7 +5,6 @@ struct ContentView: View {
     @State private var dashboardViewModel: AllergyDashboardViewModel
     @State private var entryListViewModel: EntryListViewModel
     @State private var symptomEntryViewModel: SymptomEntryViewModel
-    @State private var selectedTab: AppTab = .home
     @State private var isShowingSymptomEntry = false
 
     init(
@@ -21,7 +20,7 @@ struct ContentView: View {
     }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView {
             AllergyDashboardView(
                 viewModel: dashboardViewModel,
                 onStartSymptomEntry: {
@@ -29,21 +28,18 @@ struct ContentView: View {
                 }
             )
             .tabItem {
-                Label(AppTab.home.title, systemImage: AppTab.home.systemImageName)
+                Label("Home", systemImage: "leaf")
             }
-            .tag(AppTab.home)
 
             EntryListView(viewModel: entryListViewModel)
                 .tabItem {
-                    Label(AppTab.entries.title, systemImage: AppTab.entries.systemImageName)
+                    Label("Einträge", systemImage: "list.bullet.rectangle")
                 }
-                .tag(AppTab.entries)
 
             SettingsView(telemetryService: telemetryService)
                 .tabItem {
-                    Label(AppTab.settings.title, systemImage: AppTab.settings.systemImageName)
+                    Label("Einstellungen", systemImage: "gearshape")
                 }
-                .tag(AppTab.settings)
         }
         .background(ColorToken.backgroundPrimary)
         .tint(ColorToken.accentPrimary)
@@ -59,37 +55,5 @@ struct ContentView: View {
                 SymptomEntryView(viewModel: symptomEntryViewModel)
             }
         )
-    }
-}
-
-private enum AppTab: CaseIterable, Identifiable {
-    case home
-    case entries
-    case settings
-
-    var id: Self {
-        self
-    }
-
-    var title: String {
-        switch self {
-        case .home:
-            "Home"
-        case .entries:
-            "Einträge"
-        case .settings:
-            "Einstellungen"
-        }
-    }
-
-    var systemImageName: String {
-        switch self {
-        case .home:
-            "leaf"
-        case .entries:
-            "list.bullet.rectangle"
-        case .settings:
-            "gearshape"
-        }
     }
 }

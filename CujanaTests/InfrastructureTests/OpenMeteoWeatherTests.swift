@@ -31,7 +31,7 @@ struct OpenMeteoWeatherTests {
         let dto = OpenMeteoWeatherResponseDTO(
             latitude: 48.2082,
             longitude: 16.3738,
-            daily: OpenMeteoWeatherResponseDTO.Daily(
+            daily: OpenMeteoWeatherDailyDTO(
                 time: ["2026-05-08", "2026-05-09"],
                 weatherCode: [2, 61],
                 temperature2mMax: [18.4, 21.2]
@@ -64,7 +64,7 @@ struct OpenMeteoWeatherTests {
             response: OpenMeteoWeatherResponseDTO(
                 latitude: 48.2082,
                 longitude: 16.3738,
-                daily: OpenMeteoWeatherResponseDTO.Daily(
+                daily: OpenMeteoWeatherDailyDTO(
                     time: ["2026-05-08"],
                     weatherCode: [3],
                     temperature2mMax: [20.1]

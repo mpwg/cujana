@@ -159,7 +159,7 @@ private struct ForecastEmptyState: View {
 
 private struct OpenMeteoAttributionView: View {
     private let attributionText = "Wetter- und Pollendaten: Open-Meteo.com, CC BY 4.0. Zusammengefasst für Cujana."
-    private let openMeteoURL = URL(string: "https://open-meteo.com/")!
+    private let openMeteoURL = URL(string: "https://open-meteo.com/") ?? URL(filePath: "/")
 
     var body: some View {
         Link(destination: openMeteoURL) {
