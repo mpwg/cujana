@@ -28,7 +28,7 @@ struct ContentView: View {
                 }
             )
             .tabItem {
-                Label("Cujana", systemImage: "leaf")
+                Label("Home", systemImage: "leaf")
             }
 
             EntryListView(viewModel: entryListViewModel)
@@ -41,7 +41,8 @@ struct ContentView: View {
                     Label("Einstellungen", systemImage: "gearshape")
                 }
         }
-        .tint(ColorToken.brandPrimary)
+        .background(ColorToken.backgroundPrimary)
+        .tint(ColorToken.accentPrimary)
         .sheet(
             isPresented: $isShowingSymptomEntry,
             onDismiss: {

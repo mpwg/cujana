@@ -3,9 +3,20 @@ import SwiftUI
 struct AllergyDashboardContent: Equatable {
     let title: String
     let subtitle: String
+    let forecastDays: [ForecastDaySummaryItem]
     let pollenItems: [PollenDashboardItem]
     let symptomItems: [SymptomDashboardItem]
     let generatedAtText: String
+}
+
+struct ForecastDaySummaryItem: Identifiable, Equatable {
+    let id: String
+    let title: String
+    let temperatureText: String
+    let weatherText: String
+    let weatherSystemImageName: String
+    let pollenText: String
+    let accessibilityText: String
 }
 
 struct PollenDashboardItem: Identifiable, Equatable {

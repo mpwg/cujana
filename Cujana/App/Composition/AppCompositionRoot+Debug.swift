@@ -47,9 +47,9 @@ extension AppDependencies {
     static func demo() -> AppDependencies {
         AppDependencies(
             pollenRepository: DemoPollenRepository(forecasts: AppDemoData.pollenForecasts),
+            weatherRepository: DemoWeatherRepository(forecasts: AppDemoData.weatherForecasts),
             symptomEntryRepository: DemoSymptomEntryRepository(entries: AppDemoData.symptomEntries),
-            locationProvider: FixedLocationCoordinateProvider(coordinate: AppDemoData.coordinate),
-            defaultCoordinate: AppDemoData.coordinate
+            locationProvider: FixedLocationCoordinateProvider(coordinate: AppDemoData.coordinate)
         )
     }
 }

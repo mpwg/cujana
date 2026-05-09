@@ -95,6 +95,43 @@ struct EntryListViewModelTests {
 
     @Test
     @MainActor
+    func loadKeepsEntriesButSkipsPollenWhenLocationIsUnavailable() async throws {
+        let date = Date(timeIntervalSince1970: 86_400)
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let entries = try [
+            symptom(seed: SymptomSeed(
+                id: "F2F0C101-6F5B-4AA4-9867-66D9BA7B0483",
+                date: date,
+                type: .itchyEyes,
+                severity: .severe,
+                note: nil
+            ), coordinate: coordinate)
+        ]
+        let pollenRepository = CapturingEntryListPollenRepository()
+        let viewModel = EntryListViewModel(
+            loadEntriesUseCase: LoadAllergySymptomEntriesUseCase(
+                repository: StubEntryListSymptomRepository(entries: entries)
+            ),
+            loadPollenUseCase: LoadPollenForecastUseCase(repository: pollenRepository),
+            locationProvider: StubEntryListLocationProvider(coordinate: nil),
+            calendar: calendar,
+            now: { date }
+        )
+
+        await viewModel.load()
+
+        guard case .loaded(let content) = viewModel.state else {
+            Issue.record("Expected loaded state.")
+            return
+        }
+
+        #expect(content.items.map(\.symptomTitle) == ["Juckende Augen"])
+        #expect(content.items.first?.pollenItems.isEmpty == true)
+        #expect(await pollenRepository.requestCount() == 0)
+    }
+
+    @Test
+    @MainActor
     func loadShowsFailureStateWhenEntriesCannotBeLoaded() async throws {
         let date = Date(timeIntervalSince1970: 86_400)
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
@@ -187,5 +224,18 @@ private actor CapturingEntryListPollenRepository: PollenRepository {
 
     func requestCount() -> Int {
         requests
+    }
+}
+
+@MainActor
+private final class StubEntryListLocationProvider: LocationCoordinateProviding {
+    private let coordinate: LocationCoordinate?
+
+    init(coordinate: LocationCoordinate?) {
+        self.coordinate = coordinate
+    }
+
+    func currentCoordinate() async -> LocationCoordinate? {
+        coordinate
     }
 }

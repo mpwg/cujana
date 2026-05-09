@@ -13,7 +13,7 @@ final class EntryListViewModel {
     private let loadEntriesUseCase: LoadAllergySymptomEntriesUseCase
     private let loadPollenUseCase: LoadPollenForecastUseCase
     private let locationProvider: (any LocationCoordinateProviding)?
-    private let coordinate: LocationCoordinate
+    private let previewCoordinate: LocationCoordinate?
     private let calendar: Calendar
     private let now: () -> Date
 
@@ -21,14 +21,14 @@ final class EntryListViewModel {
         loadEntriesUseCase: LoadAllergySymptomEntriesUseCase,
         loadPollenUseCase: LoadPollenForecastUseCase,
         locationProvider: (any LocationCoordinateProviding)? = nil,
-        coordinate: LocationCoordinate,
+        coordinate: LocationCoordinate? = nil,
         calendar: Calendar = .current,
         now: @escaping () -> Date = Date.init
     ) {
         self.loadEntriesUseCase = loadEntriesUseCase
         self.loadPollenUseCase = loadPollenUseCase
         self.locationProvider = locationProvider
-        self.coordinate = coordinate
+        self.previewCoordinate = coordinate
         self.calendar = calendar
         self.now = now
     }
@@ -62,12 +62,23 @@ final class EntryListViewModel {
             return []
         }
 
-        let currentCoordinate = await locationProvider?.currentCoordinate() ?? coordinate
+        guard let currentCoordinate = await currentCoordinate() else {
+            return []
+        }
+
         return try await loadPollenUseCase.execute(
             for: currentCoordinate,
             from: calendar.startOfDay(for: firstDate),
             to: endOfDay(for: lastDate)
         )
+    }
+
+    private func currentCoordinate() async -> LocationCoordinate? {
+        if let locationProvider {
+            return await locationProvider.currentCoordinate()
+        }
+
+        return previewCoordinate
     }
 
     private func makeContent(

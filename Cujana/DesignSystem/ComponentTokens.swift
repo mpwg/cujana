@@ -8,18 +8,19 @@
 import SwiftUI
 
 enum CardToken {
-    static let background = ColorToken.backgroundElevated
-    static let radius = RadiusToken.xxl
-    static let padding = SpacingToken.lg
+    static let background = ColorToken.cardBackground
+    static let mutedBackground = ColorToken.cardMutedBackground
+    static let radius = RadiusToken.radiusLarge
+    static let padding = SpacingToken.xl
     static let shadow = ShadowToken.card
-    static let border = ColorToken.borderSubtle
-    static let borderWidth: CGFloat = 1
+    static let border = ColorToken.separatorSoft
+    static let borderWidth: CGFloat = 0
 }
 
 enum ButtonToken {
     enum Primary {
-        static let background = ColorToken.brandPrimary
-        static let text = ColorToken.textInverse
+        static let background = ColorToken.accentPrimary
+        static let text = ColorToken.cardBackground
         static let radius = RadiusToken.full
         static let paddingH = SpacingToken.lg
         static let paddingV = SpacingToken.md
@@ -27,8 +28,8 @@ enum ButtonToken {
     }
 
     enum Secondary {
-        static let background = ColorToken.fillSubtle
-        static let text = ColorToken.brandPrimary
+        static let background = ColorToken.cardMutedBackground
+        static let text = ColorToken.accentPrimary
         static let radius = RadiusToken.full
         static let paddingH = SpacingToken.lg
         static let paddingV = SpacingToken.md
@@ -36,11 +37,11 @@ enum ButtonToken {
 }
 
 enum ChipToken {
-    static let background = ColorToken.fillSubtle
-    static let selectedBackground = ColorToken.brandSecondary
-    static let warmBackground = ColorToken.backgroundTertiary
-    static let calmBackground = ColorToken.fillSoft
-    static let alertBackground = ColorToken.brandAccent.opacity(0.18)
+    static let background = ColorToken.cardMutedBackground
+    static let selectedBackground = ColorToken.accentSoft
+    static let warmBackground = ColorToken.accentWarning.opacity(0.16)
+    static let calmBackground = ColorToken.accentSoft
+    static let alertBackground = ColorToken.accentNegative.opacity(0.16)
     static let text = ColorToken.textPrimary
     static let selectedText = ColorToken.textPrimary
     static let radius = RadiusToken.full
@@ -48,38 +49,38 @@ enum ChipToken {
     static let paddingV = SpacingToken.sm
     static let iconSize = SpacingToken.xl
     static let minHeight: CGFloat = 52
-    static let border = ColorToken.borderSubtle
-    static let selectedBorder = ColorToken.brandPrimary
-    static let borderWidth: CGFloat = 1
+    static let border = ColorToken.separatorSoft
+    static let selectedBorder = ColorToken.accentPrimary
+    static let borderWidth: CGFloat = 0
 }
 
 enum InputToken {
     static let background = ColorToken.backgroundSecondary
-    static let border = ColorToken.borderSubtle
-    static let focusedBorder = ColorToken.brandPrimary
-    static let radius = RadiusToken.lg
+    static let border = ColorToken.separatorSoft
+    static let focusedBorder = ColorToken.accentPrimary
+    static let radius = RadiusToken.radiusSmall
     static let padding = SpacingToken.md
     static let minHeight: CGFloat = 112
     static let borderWidth: CGFloat = 1
 }
 
 enum SelectionToken {
-    static let background = ColorToken.fillSubtle
-    static let selectedBackground = ColorToken.brandPrimary
+    static let background = ColorToken.cardMutedBackground
+    static let selectedBackground = ColorToken.accentPrimary
     static let text = ColorToken.textPrimary
-    static let selectedText = ColorToken.textInverse
+    static let selectedText = ColorToken.cardBackground
     static let radius = RadiusToken.full
     static let size = SpacingToken.xxl
-    static let border = ColorToken.borderSoft
+    static let border = ColorToken.separatorSoft
     static let borderWidth: CGFloat = 1
 }
 
 enum StatusToken {
-    static let successBackground = ColorToken.feedbackSuccess.opacity(0.16)
-    static let successText = ColorToken.brandPrimary
-    static let errorBackground = ColorToken.feedbackError.opacity(0.16)
-    static let errorText = ColorToken.feedbackError
-    static let radius = RadiusToken.lg
+    static let successBackground = ColorToken.accentPositive.opacity(0.16)
+    static let successText = ColorToken.accentPrimary
+    static let errorBackground = ColorToken.accentNegative.opacity(0.16)
+    static let errorText = ColorToken.accentNegative
+    static let radius = RadiusToken.radiusSmall
     static let padding = SpacingToken.md
 }
 

@@ -150,7 +150,7 @@ private struct EntryCard: View {
 
                         Text(item.severityText)
                             .font(TypographyToken.footnote)
-                            .foregroundStyle(ColorToken.brandPrimary)
+                            .foregroundStyle(ColorToken.accentPrimary)
                             .cujanaChip()
                     }
 
@@ -245,7 +245,7 @@ private struct FlexiblePollenChips: View {
                 .padding(.vertical, SpacingToken.sm)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(item.background)
-                .clipShape(RoundedRectangle(cornerRadius: RadiusToken.sm, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
             }
         }
     }
@@ -281,7 +281,7 @@ private struct EntryIcon: View {
     var body: some View {
         Image(systemName: systemImageName)
             .font(TypographyToken.bodyEmphasized)
-            .foregroundStyle(ColorToken.brandPrimary)
+            .foregroundStyle(ColorToken.accentPrimary)
             .frame(width: SelectionToken.size, height: SelectionToken.size)
             .background(background)
             .clipShape(Circle())

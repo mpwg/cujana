@@ -117,6 +117,13 @@ struct AllergyDomainTests {
     @Test func loadAllergyOverviewCombinesForecastAndSymptoms() async throws {
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let forecast = try sampleForecast(coordinate: coordinate)
+        let weatherForecast = WeatherForecast(
+            coordinate: coordinate,
+            generatedAt: forecast.generatedAt,
+            dailyConditions: [
+                WeatherForecast.DailyCondition(date: forecast.validFrom, temperature: 18, conditionCode: 2)
+            ]
+        )
         let symptomEntry = try AllergySymptomEntry(
             date: forecast.validFrom,
             symptomType: .wateryEyes,
@@ -127,6 +134,7 @@ struct AllergyDomainTests {
         let symptomRepository = InMemorySymptomEntryRepository(entries: [symptomEntry])
         let useCase = LoadAllergyOverviewUseCase(
             pollenRepository: pollenRepository,
+            weatherRepository: StubWeatherRepository(forecasts: [weatherForecast]),
             symptomEntryRepository: symptomRepository
         )
 
@@ -138,6 +146,7 @@ struct AllergyDomainTests {
 
         #expect(overview.coordinate == coordinate)
         #expect(overview.pollenForecasts == [forecast])
+        #expect(overview.weatherForecasts == [weatherForecast])
         #expect(overview.symptomEntries == [symptomEntry])
     }
 
@@ -188,6 +197,20 @@ private struct StubPollenRepository: PollenRepository {
             forecast.coordinate == coordinate
                 && forecast.validFrom >= startDate
                 && forecast.validUntil <= endDate
+        }
+    }
+}
+
+private struct StubWeatherRepository: WeatherRepository {
+    let forecasts: [WeatherForecast]
+
+    func weatherForecast(
+        for coordinate: LocationCoordinate,
+        from startDate: Date,
+        to endDate: Date
+    ) async throws -> [WeatherForecast] {
+        forecasts.filter { forecast in
+            forecast.coordinate == coordinate
         }
     }
 }
