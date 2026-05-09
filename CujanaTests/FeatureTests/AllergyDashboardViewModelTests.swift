@@ -41,9 +41,12 @@ struct AllergyDashboardViewModelTests {
         #expect(content.forecastDays.first?.temperatureText == "18°")
         #expect(content.forecastDays.first?.weatherText == "leicht bewölkt")
         #expect(content.forecastDays.first?.pollenText == "Birke: hoch")
+        #expect(content.forecastDays.first?.allergyRiskText == "Allergierisiko: hoch")
+        #expect(content.forecastDays.first?.hourlyAllergyRiskText == "Höchster Stundenwert ab 02:00: sehr hoch")
         #expect(content.forecastDays.last?.temperatureText == "21°")
         #expect(content.forecastDays.last?.weatherText == "regnerisch")
         #expect(content.forecastDays.last?.pollenText == "Gräser: mittel")
+        #expect(content.forecastDays.last?.allergyRiskText == "Allergierisiko: mittel")
         #expect(content.pollenItems.map(\.title) == ["Birke", "Gräser"])
         #expect(content.pollenItems.first?.levelText == "Hoch")
         #expect(content.symptomItems.first?.title == "Juckende Augen")
@@ -239,6 +242,18 @@ struct AllergyDashboardViewModelTests {
                     date: date.addingTimeInterval(86_400),
                     pollenType: .grass,
                     level: .moderate
+                )
+            ],
+            dailyAllergyRisks: [
+                PollenForecast.DailyAllergyRisk(
+                    date: date,
+                    level: .high,
+                    hourlyLevels: [.low, .high, .veryHigh]
+                ),
+                PollenForecast.DailyAllergyRisk(
+                    date: date.addingTimeInterval(86_400),
+                    level: .moderate,
+                    hourlyLevels: [.low, .moderate]
                 )
             ]
         )

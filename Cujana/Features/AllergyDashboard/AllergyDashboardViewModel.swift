@@ -94,7 +94,8 @@ final class AllergyDashboardViewModel {
 
             let weather = weatherCondition(from: weatherForecasts, for: date)
             let topPollen = topPollenLevel(from: pollenForecasts, for: date)
-            guard weather != nil || topPollen != nil else {
+            let allergyRisk = allergyRisk(from: pollenForecasts, for: date)
+            guard weather != nil || topPollen != nil || allergyRisk != nil else {
                 return nil
             }
 
@@ -109,6 +110,10 @@ final class AllergyDashboardViewModel {
             let weatherSystemImageName = weather.map {
                 systemImageName(forWeatherCode: $0.conditionCode)
             } ?? "cloud.sun"
+            let allergyRiskText = allergyRisk.map { risk in
+                "Allergierisiko: \(shortLevelText(for: risk.level))"
+            }
+            let hourlyAllergyRiskText = allergyRisk.flatMap(hourlyAllergyRiskText(for:))
 
             return ForecastDaySummaryItem(
                 id: dayTitle,
@@ -117,7 +122,18 @@ final class AllergyDashboardViewModel {
                 weatherText: weatherText,
                 weatherSystemImageName: weatherSystemImageName,
                 pollenText: pollenText,
-                accessibilityText: "\(dayTitle), \(temperatureText), \(weatherText), \(pollenText)"
+                allergyRiskText: allergyRiskText,
+                hourlyAllergyRiskText: hourlyAllergyRiskText,
+                accessibilityText: [
+                    dayTitle,
+                    temperatureText,
+                    weatherText,
+                    pollenText,
+                    allergyRiskText,
+                    hourlyAllergyRiskText
+                ]
+                .compactMap(\.self)
+                .joined(separator: ", ")
             )
         }
 
@@ -150,10 +166,28 @@ final class AllergyDashboardViewModel {
             }
     }
 
+    private func allergyRisk(
+        from forecasts: [PollenForecast],
+        for date: Date
+    ) -> PollenForecast.DailyAllergyRisk? {
+        forecasts
+            .flatMap(\.dailyAllergyRisks)
+            .first { calendar.isDate($0.date, inSameDayAs: date) }
+    }
+
+    private func hourlyAllergyRiskText(for risk: PollenForecast.DailyAllergyRisk) -> String? {
+        guard let peak = risk.hourlyLevels.enumerated().max(by: { $0.element < $1.element }) else {
+            return nil
+        }
+
+        let hourText = String(format: "%02d:00", peak.offset)
+        return "Höchster Stundenwert ab \(hourText): \(shortLevelText(for: peak.element))"
+    }
+
     private func shortLevelText(for level: PollenLevel) -> String {
         switch level.rawValue {
         case 0:
-            "niedrig"
+            "keine"
         case 1:
             "niedrig"
         case 2:
