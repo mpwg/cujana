@@ -1,22 +1,13 @@
 {
-  "originHash" : "4619de1a76b34372369873e81d916d2cbdd0c39f3e6e4a64972854d97ed9326f",
+  "originHash" : "6f09190f5644420fde4ce203490a0d5954e82061230d4d67305e3f46b4e4fe1f",
   "pins" : [
     {
-      "identity" : "flatbuffers",
+      "identity" : "polleninformationen-swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/google/flatbuffers.git",
+      "location" : "https://github.com/mpwg/polleninformationen-swift",
       "state" : {
-        "revision" : "187240970746d00bbd26b0f5873ed54d2477f9f3",
-        "version" : "25.9.23"
-      }
-    },
-    {
-      "identity" : "sdk",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/open-meteo/sdk.git",
-      "state" : {
-        "revision" : "a29c4b62dd8445128e6db30f0a6fb5509fa1259c",
-        "version" : "1.26.0"
+        "revision" : "c2f5d8d34b56769a8dacda59d38c9e0b3e7c5722",
+        "version" : "1.1.0"
       }
     },
     {

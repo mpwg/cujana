@@ -95,7 +95,7 @@ private struct ForecastSummaryCard: View {
                 }
             }
 
-            OpenMeteoAttributionView()
+            ForecastAttributionView()
         }
         .padding(CardToken.padding)
         .background(ColorToken.cardBackground.opacity(0.94))
@@ -129,6 +129,18 @@ private struct ForecastDaySummaryView: View {
                 Text(day.pollenText)
                     .font(TypographyToken.footnote.weight(.medium))
                     .foregroundStyle(ColorToken.accentPrimary)
+
+                if let allergyRiskText = day.allergyRiskText {
+                    Text(allergyRiskText)
+                        .font(TypographyToken.footnote.weight(.medium))
+                        .foregroundStyle(ColorToken.textPrimary)
+                }
+
+                if let hourlyAllergyRiskText = day.hourlyAllergyRiskText {
+                    Text(hourlyAllergyRiskText)
+                        .font(TypographyToken.caption)
+                        .foregroundStyle(ColorToken.textSecondary)
+                }
             }
 
             Spacer(minLength: SpacingToken.sm)
@@ -157,19 +169,17 @@ private struct ForecastEmptyState: View {
     }
 }
 
-private struct OpenMeteoAttributionView: View {
-    private let attributionText = "Wetter- und Pollendaten: Open-Meteo.com, CC BY 4.0. Zusammengefasst für Cujana."
-    private let openMeteoURL = URL(string: "https://open-meteo.com/") ?? URL(filePath: "/")
+private struct ForecastAttributionView: View {
+    private let attributionText = "Wetterdaten: Apple Weather. Pollen- und Allergierisiko: "
+        + "Österreichischer Polleninformationsdienst, www.polleninformation.at."
 
     var body: some View {
-        Link(destination: openMeteoURL) {
-            Text(attributionText)
-                .multilineTextAlignment(.leading)
-        }
-        .font(TypographyToken.caption)
-        .foregroundStyle(ColorToken.textSecondary)
-        .fixedSize(horizontal: false, vertical: true)
-        .accessibilityLabel(attributionText)
+        Text(attributionText)
+            .multilineTextAlignment(.leading)
+            .font(TypographyToken.caption)
+            .foregroundStyle(ColorToken.textSecondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityLabel(attributionText)
     }
 }
 

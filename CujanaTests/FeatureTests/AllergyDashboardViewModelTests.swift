@@ -13,6 +13,33 @@ struct AllergyDashboardViewModelTests {
 
     @Test
     @MainActor
+    func loadShowsLocationSpecificPollenEmptyTextWhenOnlyWeatherIsAvailable() async throws {
+        let date = Date(timeIntervalSince1970: 1_800)
+        let coordinate = try LocationCoordinate(latitude: 37.75, longitude: -122.4)
+        let weather = dashboardWeather(date: date, coordinate: coordinate)
+        let viewModel = AllergyDashboardViewModel(
+            loadUseCase: LoadAllergyOverviewUseCase(
+                pollenRepository: StubPollenRepository(forecasts: []),
+                weatherRepository: StubWeatherRepository(forecasts: [weather]),
+                symptomEntryRepository: StubSymptomEntryRepository(entries: [])
+            ),
+            coordinate: coordinate,
+            calendar: calendar,
+            now: { date }
+        )
+
+        await viewModel.load()
+
+        guard case .loaded(let content) = viewModel.state else {
+            Issue.record("Expected loaded state.")
+            return
+        }
+
+        #expect(content.forecastDays.first?.pollenText == "Keine Polleninformationen für diesen Standort.")
+    }
+
+    @Test
+    @MainActor
     func loadMapsPollenAndSymptomsIntoDashboardContent() async throws {
         let date = Date(timeIntervalSince1970: 1_800)
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
@@ -41,9 +68,12 @@ struct AllergyDashboardViewModelTests {
         #expect(content.forecastDays.first?.temperatureText == "18°")
         #expect(content.forecastDays.first?.weatherText == "leicht bewölkt")
         #expect(content.forecastDays.first?.pollenText == "Birke: hoch")
+        #expect(content.forecastDays.first?.allergyRiskText == "Allergierisiko: hoch")
+        #expect(content.forecastDays.first?.hourlyAllergyRiskText == "Höchster Stundenwert ab 02:00: sehr hoch")
         #expect(content.forecastDays.last?.temperatureText == "21°")
         #expect(content.forecastDays.last?.weatherText == "regnerisch")
         #expect(content.forecastDays.last?.pollenText == "Gräser: mittel")
+        #expect(content.forecastDays.last?.allergyRiskText == "Allergierisiko: mittel")
         #expect(content.pollenItems.map(\.title) == ["Birke", "Gräser"])
         #expect(content.pollenItems.first?.levelText == "Hoch")
         #expect(content.symptomItems.first?.title == "Juckende Augen")
@@ -204,8 +234,8 @@ struct AllergyDashboardViewModelTests {
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let viewModel = AllergyDashboardViewModel(
             loadUseCase: LoadAllergyOverviewUseCase(
-                pollenRepository: FailingPollenRepository(),
-                symptomEntryRepository: StubSymptomEntryRepository(entries: [])
+                pollenRepository: StubPollenRepository(forecasts: []),
+                symptomEntryRepository: FailingSymptomEntryRepository()
             ),
             coordinate: coordinate,
             calendar: calendar,
@@ -239,6 +269,18 @@ struct AllergyDashboardViewModelTests {
                     date: date.addingTimeInterval(86_400),
                     pollenType: .grass,
                     level: .moderate
+                )
+            ],
+            dailyAllergyRisks: [
+                PollenForecast.DailyAllergyRisk(
+                    date: date,
+                    level: .high,
+                    hourlyLevels: [.low, .high, .veryHigh]
+                ),
+                PollenForecast.DailyAllergyRisk(
+                    date: date.addingTimeInterval(86_400),
+                    level: .moderate,
+                    hourlyLevels: [.low, .moderate]
                 )
             ]
         )
@@ -327,6 +369,16 @@ private struct FailingPollenRepository: PollenRepository {
         to endDate: Date
     ) async throws -> [PollenForecast] {
         throw PollenDataError.unavailable
+    }
+}
+
+private struct FailingSymptomEntryRepository: SymptomEntryRepository {
+    func save(_ entry: AllergySymptomEntry) async throws {
+        throw SymptomEntryError.storageUnavailable
+    }
+
+    func symptomEntries(from startDate: Date, to endDate: Date) async throws -> [AllergySymptomEntry] {
+        throw SymptomEntryError.storageUnavailable
     }
 }
 

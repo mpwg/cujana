@@ -146,6 +146,7 @@ Die App wird nach App Store Connect hochgeladen, aber nicht automatisch zur Prü
 Erforderliche GitHub-Secrets:
 
 - `APPLE_DEVELOPER_TEAM_ID`
+- `POLLENINFORMATION_API_KEY`
 - `APP_STORE_CONNECT_ISSUER_ID`
 - `APP_STORE_CONNECT_KEY_ID`
 - `APP_STORE_CONNECT_PRIVATE_KEY`

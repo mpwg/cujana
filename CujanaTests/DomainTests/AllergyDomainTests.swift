@@ -150,6 +150,50 @@ struct AllergyDomainTests {
         #expect(overview.symptomEntries == [symptomEntry])
     }
 
+    @Test func loadAllergyOverviewKeepsWeatherAndSymptomsWhenPollenFails() async throws {
+        let coordinate = try LocationCoordinate(latitude: 37.75, longitude: -122.4)
+        let startDate = Date(timeIntervalSince1970: 0)
+        let endDate = Date(timeIntervalSince1970: 86_400)
+        let weatherForecast = WeatherForecast(
+            coordinate: coordinate,
+            generatedAt: startDate,
+            dailyConditions: [
+                WeatherForecast.DailyCondition(date: startDate, temperature: 18, conditionCode: 2)
+            ]
+        )
+        let symptomEntry = try AllergySymptomEntry(
+            date: startDate,
+            symptomType: .wateryEyes,
+            severity: .severe,
+            coordinate: coordinate
+        )
+        let useCase = LoadAllergyOverviewUseCase(
+            pollenRepository: FailingPollenRepository(),
+            weatherRepository: StubWeatherRepository(forecasts: [weatherForecast]),
+            symptomEntryRepository: InMemorySymptomEntryRepository(entries: [symptomEntry])
+        )
+
+        let overview = try await useCase.execute(for: coordinate, from: startDate, to: endDate)
+
+        #expect(overview.pollenForecasts.isEmpty)
+        #expect(overview.weatherForecasts == [weatherForecast])
+        #expect(overview.symptomEntries == [symptomEntry])
+    }
+
+    @Test func loadAllergyOverviewStillThrowsWhenSymptomsCannotLoad() async throws {
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let startDate = Date(timeIntervalSince1970: 0)
+        let endDate = Date(timeIntervalSince1970: 86_400)
+        let useCase = LoadAllergyOverviewUseCase(
+            pollenRepository: StubPollenRepository(forecasts: []),
+            symptomEntryRepository: FailingSymptomEntryRepository()
+        )
+
+        await #expect(throws: SymptomEntryError.storageUnavailable) {
+            _ = try await useCase.execute(for: coordinate, from: startDate, to: endDate)
+        }
+    }
+
     @Test func loadAllergyOverviewRejectsInvalidDateRange() async throws {
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let startDate = Date(timeIntervalSince1970: 2_000)
@@ -212,6 +256,26 @@ private struct StubWeatherRepository: WeatherRepository {
         forecasts.filter { forecast in
             forecast.coordinate == coordinate
         }
+    }
+}
+
+private struct FailingPollenRepository: PollenRepository {
+    func pollenForecast(
+        for coordinate: LocationCoordinate,
+        from startDate: Date,
+        to endDate: Date
+    ) async throws -> [PollenForecast] {
+        throw PollenDataError.decodingFailed
+    }
+}
+
+private struct FailingSymptomEntryRepository: SymptomEntryRepository {
+    func save(_ entry: AllergySymptomEntry) async throws {
+        throw SymptomEntryError.storageUnavailable
+    }
+
+    func symptomEntries(from startDate: Date, to endDate: Date) async throws -> [AllergySymptomEntry] {
+        throw SymptomEntryError.storageUnavailable
     }
 }
 

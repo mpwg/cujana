@@ -16,6 +16,8 @@ struct ForecastDaySummaryItem: Identifiable, Equatable {
     let weatherText: String
     let weatherSystemImageName: String
     let pollenText: String
+    let allergyRiskText: String?
+    let hourlyAllergyRiskText: String?
     let accessibilityText: String
 }
 

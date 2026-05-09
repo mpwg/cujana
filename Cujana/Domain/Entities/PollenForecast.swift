@@ -17,6 +17,22 @@ nonisolated public struct PollenForecast: Equatable, Identifiable, Sendable {
         }
     }
 
+    nonisolated public struct DailyAllergyRisk: Equatable, Identifiable, Sendable {
+        public var id: String {
+            "\(date.timeIntervalSince1970)-allergy-risk"
+        }
+
+        public let date: Date
+        public let level: PollenLevel
+        public let hourlyLevels: [PollenLevel]
+
+        public init(date: Date, level: PollenLevel, hourlyLevels: [PollenLevel] = []) {
+            self.date = date
+            self.level = level
+            self.hourlyLevels = hourlyLevels
+        }
+    }
+
     public let id: UUID
     public let coordinate: LocationCoordinate
     public let sourceKind: InformationSourceKind
@@ -24,6 +40,7 @@ nonisolated public struct PollenForecast: Equatable, Identifiable, Sendable {
     public let validFrom: Date
     public let validUntil: Date
     public let dailyLevels: [DailyLevel]
+    public let dailyAllergyRisks: [DailyAllergyRisk]
 
     public init(
         id: UUID = UUID(),
@@ -32,7 +49,8 @@ nonisolated public struct PollenForecast: Equatable, Identifiable, Sendable {
         generatedAt: Date,
         validFrom: Date,
         validUntil: Date,
-        dailyLevels: [DailyLevel]
+        dailyLevels: [DailyLevel],
+        dailyAllergyRisks: [DailyAllergyRisk] = []
     ) throws {
         guard validFrom <= validUntil else {
             throw PollenDataError.invalidForecastPeriod(start: validFrom, end: validUntil)
@@ -45,5 +63,6 @@ nonisolated public struct PollenForecast: Equatable, Identifiable, Sendable {
         self.validFrom = validFrom
         self.validUntil = validUntil
         self.dailyLevels = dailyLevels
+        self.dailyAllergyRisks = dailyAllergyRisks
     }
 }

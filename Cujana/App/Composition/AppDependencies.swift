@@ -8,8 +8,8 @@ struct AppDependencies {
 
     static func production() -> AppDependencies {
         return AppDependencies(
-            pollenRepository: OpenMeteoPollenRepository(),
-            weatherRepository: OpenMeteoWeatherRepository(),
+            pollenRepository: PolleninformationPollenRepository(),
+            weatherRepository: WeatherKitWeatherRepository(),
             symptomEntryRepository: makeSymptomEntryRepository(),
             locationProvider: CoreLocationCoordinateProvider()
         )
