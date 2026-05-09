@@ -49,6 +49,10 @@ env:
   DERIVED_DATA_PATH: .xcode-derived-data
   IPHONEOS_DEPLOYMENT_TARGET: "26.0"
   MACOSX_DEPLOYMENT_TARGET: "26.0"
+  APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
+  CUJANA_SENTRY_DSN: ${{ secrets.CUJANA_SENTRY_DSN }}
+  CUJANA_TELEMETRY_APP_ID: ${{ secrets.CUJANA_TELEMETRY_APP_ID }}
+  POLLENINFORMATION_API_KEY: ${{ secrets.POLLENINFORMATION_API_KEY }}
   SWIFTPM_CACHE_PATH: ${{ github.workspace }}/.swiftpm-cache
 
 jobs:
@@ -103,6 +107,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: LocalSecrets.xcconfig erzeugen
+        run: ./scripts/write_ci_local_secrets.sh
+
       - name: Xcode 26.4 auswählen
         uses: maxim-lobanov/setup-xcode@v1
         with:
@@ -153,6 +160,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: LocalSecrets.xcconfig erzeugen
+        run: ./scripts/write_ci_local_secrets.sh
 
       - name: Xcode 26.4 auswählen
         uses: maxim-lobanov/setup-xcode@v1
@@ -216,6 +226,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: LocalSecrets.xcconfig erzeugen
+        run: ./scripts/write_ci_local_secrets.sh
 
       - name: Xcode 26.4 auswählen
         uses: maxim-lobanov/setup-xcode@v1
