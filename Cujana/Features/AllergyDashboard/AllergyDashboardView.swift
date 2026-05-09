@@ -10,7 +10,7 @@ struct AllergyDashboardView: View {
                 content
                     .padding(.horizontal, SpacingToken.xl)
                     .padding(.top, SpacingToken.sm)
-                    .padding(.bottom, SpacingToken.xxl)
+                    .padding(.bottom, SpacingToken.lg)
             }
             .scrollIndicators(.hidden)
             .background(ColorToken.backgroundPrimary.ignoresSafeArea())
