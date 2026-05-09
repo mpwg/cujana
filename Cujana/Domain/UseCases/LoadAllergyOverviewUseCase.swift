@@ -24,7 +24,7 @@ nonisolated public struct LoadAllergyOverviewUseCase: Sendable {
             throw PollenDataError.invalidForecastPeriod(start: startDate, end: endDate)
         }
 
-        async let pollenForecasts = pollenRepository.pollenForecast(for: coordinate, from: startDate, to: endDate)
+        async let pollenForecasts = loadPollenForecasts(for: coordinate, from: startDate, to: endDate)
         async let weatherForecasts = loadWeatherForecasts(for: coordinate, from: startDate, to: endDate)
         async let symptomEntries = symptomEntryRepository.symptomEntries(from: startDate, to: endDate)
 
@@ -47,6 +47,18 @@ nonisolated public struct LoadAllergyOverviewUseCase: Sendable {
 
         do {
             return try await weatherRepository.weatherForecast(for: coordinate, from: startDate, to: endDate)
+        } catch {
+            return []
+        }
+    }
+
+    private func loadPollenForecasts(
+        for coordinate: LocationCoordinate,
+        from startDate: Date,
+        to endDate: Date
+    ) async -> [PollenForecast] {
+        do {
+            return try await pollenRepository.pollenForecast(for: coordinate, from: startDate, to: endDate)
         } catch {
             return []
         }

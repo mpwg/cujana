@@ -25,22 +25,42 @@ nonisolated public struct PolleninformationPollenRepository: PollenRepository {
         from startDate: Date,
         to endDate: Date
     ) async throws -> [PollenForecast] {
-        if let cachedResponse = await cache.response(
-            for: coordinate,
-            currentDate: now(),
-            maximumAge: cacheDuration
+        try await AppObservability.trace(
+            name: "Polleninformation Forecast laden",
+            operation: "pollen.repository",
+            category: "Polleninformation",
+            metadata: [
+                "latitude": String(format: "%.2f", coordinate.latitude),
+                "longitude": String(format: "%.2f", coordinate.longitude)
+            ]
         ) {
-            return try PolleninformationPollenMapper.map(cachedResponse)
+            if let cachedResponse = await cache.response(
+                for: coordinate,
+                currentDate: now(),
+                maximumAge: cacheDuration
+            ) {
+                AppObservability.log(
+                    .info,
+                    "Polleninformation-Cache getroffen.",
+                    category: "Polleninformation"
+                )
+                return try PolleninformationPollenMapper.map(cachedResponse)
+            }
+
+            AppObservability.log(
+                .info,
+                "Polleninformation-Cache verfehlt, API wird geladen.",
+                category: "Polleninformation"
+            )
+            let response = try await apiClient.pollenResponse(
+                for: coordinate,
+                from: startDate,
+                to: endDate
+            )
+            await cache.store(response, for: coordinate)
+
+            return try PolleninformationPollenMapper.map(response)
         }
-
-        let response = try await apiClient.pollenResponse(
-            for: coordinate,
-            from: startDate,
-            to: endDate
-        )
-        await cache.store(response, for: coordinate)
-
-        return try PolleninformationPollenMapper.map(response)
     }
 }
 

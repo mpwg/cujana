@@ -170,15 +170,16 @@ private struct ForecastEmptyState: View {
 }
 
 private struct ForecastAttributionView: View {
-    private let attributionText = "Wetterdaten: Open-Meteo.com, CC BY 4.0. Pollen- und Allergierisiko: Österreichischer Polleninformationsdienst, www.polleninformation.at."
+    private let attributionText = "Wetterdaten: Apple Weather. Pollen- und Allergierisiko: "
+        + "Österreichischer Polleninformationsdienst, www.polleninformation.at."
 
     var body: some View {
         Text(attributionText)
             .multilineTextAlignment(.leading)
-        .font(TypographyToken.caption)
-        .foregroundStyle(ColorToken.textSecondary)
-        .fixedSize(horizontal: false, vertical: true)
-        .accessibilityLabel(attributionText)
+            .font(TypographyToken.caption)
+            .foregroundStyle(ColorToken.textSecondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityLabel(attributionText)
     }
 }
 

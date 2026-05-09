@@ -42,19 +42,36 @@ final class AllergyDashboardViewModel {
             let startDate = startOfHistory(for: currentDate)
             let endDate = forecastEndDate(from: currentDate)
             guard let currentCoordinate = await currentCoordinate() else {
+                AppObservability.log(
+                    .warning,
+                    "Allergie-Übersicht ohne Standort abgebrochen.",
+                    category: "AllergyDashboard"
+                )
                 state = .failure("Aktiviere den Standort, damit Cujana deine lokale Pollenlage anzeigen kann.")
                 return
             }
 
-            let overview = try await loadUseCase.execute(
-                for: currentCoordinate,
-                from: startDate,
-                to: endDate
-            )
+            let overview = try await AppObservability.trace(
+                name: "Allergie-Übersicht laden",
+                operation: "dashboard.load",
+                category: "AllergyDashboard"
+            ) {
+                try await loadUseCase.execute(
+                    for: currentCoordinate,
+                    from: startDate,
+                    to: endDate
+                )
+            }
             let content = makeContent(from: overview, currentDate: currentDate)
 
             state = content.forecastDays.isEmpty ? .empty(content) : .loaded(content)
         } catch {
+            AppObservability.log(
+                .error,
+                "Allergie-Übersicht konnte nicht geladen werden.",
+                category: "AllergyDashboard",
+                metadata: ["error": String(describing: error)]
+            )
             state = .failure("Die Übersicht konnte gerade nicht geladen werden. Bitte versuche es erneut.")
         }
     }
@@ -102,7 +119,7 @@ final class AllergyDashboardViewModel {
             let dayTitle = dayOffset == 0 ? "Heute" : "Morgen"
             let pollenText = topPollen.map { level in
                 "\(AllergyDashboardPresentationState.title(for: level.pollenType)): \(shortLevelText(for: level.level))"
-            } ?? "Pollen: nicht verfügbar"
+            } ?? "Keine Polleninformationen für diesen Standort."
             let weatherText = weather.map {
                 weatherDescription(for: $0.conditionCode)
             } ?? "Wetter aktuell nicht verfügbar"
@@ -139,7 +156,9 @@ final class AllergyDashboardViewModel {
 
         return days.count == Constant.visibleHomeForecastDays ? days : []
     }
+}
 
+private extension AllergyDashboardViewModel {
     private func weatherCondition(
         from forecasts: [WeatherForecast],
         for date: Date

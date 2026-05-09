@@ -13,6 +13,33 @@ struct AllergyDashboardViewModelTests {
 
     @Test
     @MainActor
+    func loadShowsLocationSpecificPollenEmptyTextWhenOnlyWeatherIsAvailable() async throws {
+        let date = Date(timeIntervalSince1970: 1_800)
+        let coordinate = try LocationCoordinate(latitude: 37.75, longitude: -122.4)
+        let weather = dashboardWeather(date: date, coordinate: coordinate)
+        let viewModel = AllergyDashboardViewModel(
+            loadUseCase: LoadAllergyOverviewUseCase(
+                pollenRepository: StubPollenRepository(forecasts: []),
+                weatherRepository: StubWeatherRepository(forecasts: [weather]),
+                symptomEntryRepository: StubSymptomEntryRepository(entries: [])
+            ),
+            coordinate: coordinate,
+            calendar: calendar,
+            now: { date }
+        )
+
+        await viewModel.load()
+
+        guard case .loaded(let content) = viewModel.state else {
+            Issue.record("Expected loaded state.")
+            return
+        }
+
+        #expect(content.forecastDays.first?.pollenText == "Keine Polleninformationen für diesen Standort.")
+    }
+
+    @Test
+    @MainActor
     func loadMapsPollenAndSymptomsIntoDashboardContent() async throws {
         let date = Date(timeIntervalSince1970: 1_800)
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
@@ -207,8 +234,8 @@ struct AllergyDashboardViewModelTests {
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let viewModel = AllergyDashboardViewModel(
             loadUseCase: LoadAllergyOverviewUseCase(
-                pollenRepository: FailingPollenRepository(),
-                symptomEntryRepository: StubSymptomEntryRepository(entries: [])
+                pollenRepository: StubPollenRepository(forecasts: []),
+                symptomEntryRepository: FailingSymptomEntryRepository()
             ),
             coordinate: coordinate,
             calendar: calendar,
@@ -342,6 +369,16 @@ private struct FailingPollenRepository: PollenRepository {
         to endDate: Date
     ) async throws -> [PollenForecast] {
         throw PollenDataError.unavailable
+    }
+}
+
+private struct FailingSymptomEntryRepository: SymptomEntryRepository {
+    func save(_ entry: AllergySymptomEntry) async throws {
+        throw SymptomEntryError.storageUnavailable
+    }
+
+    func symptomEntries(from startDate: Date, to endDate: Date) async throws -> [AllergySymptomEntry] {
+        throw SymptomEntryError.storageUnavailable
     }
 }
 

@@ -8,6 +8,8 @@
 	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Cujana nutzt deinen ungefähren Standort, um Pollendaten für deine Umgebung zu laden.</string>
+	<key>POLLENINFORMATION_API_KEY</key>
+	<string>$(POLLENINFORMATION_API_KEY)</string>
 	<key>SENTRY_DSN</key>
 	<string>$(CUJANA_SENTRY_DSN)</string>
 	<key>TELEMETRY_APP_ID</key>

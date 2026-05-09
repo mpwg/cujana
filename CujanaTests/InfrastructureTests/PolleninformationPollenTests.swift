@@ -152,13 +152,15 @@ struct PolleninformationPollenTests {
         let endDate = try #require(isoDate("2026-05-09T00:00:00Z"))
         let dto = try await PolleninformationURLSessionClient.makeResponse(
             client: FakePolleninformationForecastClient(),
-            coordinate: coordinate,
-            country: .austria,
-            language: .german,
-            calendar: calendar,
-            generatedAt: generatedAt,
-            startDate: startDate,
-            endDate: endDate
+            context: PolleninformationResponseContext(
+                coordinate: coordinate,
+                country: .austria,
+                language: .german,
+                calendar: calendar,
+                generatedAt: generatedAt,
+                startDate: startDate,
+                endDate: endDate
+            )
         )
 
         #expect(dto.daily.dates == [
@@ -171,6 +173,60 @@ struct PolleninformationPollenTests {
         ])
         #expect(dto.dailyAllergyRisks.map(\.value) == [7, 6])
         #expect(dto.dailyAllergyRisks.map(\.hourlyValues) == [[4, 7], [3, 6]])
+    }
+
+    @Test func apiClientMapsDecodingResponseToNoInformationForLocation() async throws {
+        let coordinate = try LocationCoordinate(latitude: 37.75, longitude: -122.4)
+        let generatedAt = try #require(isoDate("2026-05-07T08:00:00Z"))
+        let startDate = try #require(isoDate("2026-05-08T00:00:00Z"))
+        let endDate = try #require(isoDate("2026-05-09T00:00:00Z"))
+        let dto = try await PolleninformationURLSessionClient.makeResponse(
+            client: DecodingPolleninformationForecastClient(),
+            context: PolleninformationResponseContext(
+                coordinate: coordinate,
+                country: .austria,
+                language: .german,
+                calendar: calendar,
+                generatedAt: generatedAt,
+                startDate: startDate,
+                endDate: endDate
+            )
+        )
+
+        #expect(dto.coordinate == coordinate)
+        #expect(dto.daily.dates == [
+            try #require(isoDate("2026-05-08T00:00:00Z")),
+            try #require(isoDate("2026-05-09T00:00:00Z"))
+        ])
+        #expect(dto.daily.variables.isEmpty)
+        #expect(dto.dailyAllergyRisks.isEmpty)
+    }
+
+    @Test func repositoryRequestsForecastForAnyCoordinate() async throws {
+        let coordinate = try LocationCoordinate(latitude: 37.75, longitude: -122.4)
+        let date = Date(timeIntervalSince1970: 0)
+        let apiClient = CapturingPollenAPIClient(
+            response: PolleninformationPollenResponseDTO(
+                coordinate: coordinate,
+                generatedAt: date,
+                daily: PolleninformationPollenResponseDTO.Daily(dates: [date], variables: [])
+            )
+        )
+        let cache = PolleninformationPollenResponseCache(
+            userDefaults: testDefaults(),
+            storageKey: "repository-any-coordinate"
+        )
+        await cache.removeAll()
+        let repository = PolleninformationPollenRepository(apiClient: apiClient, cache: cache)
+
+        _ = try await repository.pollenForecast(for: coordinate, from: date, to: date)
+
+        #expect(await apiClient.requestedCoordinates() == [coordinate])
+    }
+
+    @Test func defaultAPIKeyIgnoresUnexpandedBuildSettingPlaceholder() {
+        let bundle = placeholderBundle()
+        #expect(PolleninformationURLSessionClient.defaultAPIKey(bundle: bundle) == nil)
     }
 
     @Test func repositoryLoadsForecastsThroughInjectedAPIClient() async throws {
@@ -250,6 +306,20 @@ struct PolleninformationPollenTests {
     private func testDefaults() -> UserDefaults {
         UserDefaults(suiteName: "PolleninformationPollenTests") ?? .standard
     }
+
+    private func placeholderBundle() -> Bundle {
+        let bundleURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("PolleninformationPollenTests-\(UUID().uuidString).bundle")
+        try? FileManager.default.createDirectory(at: bundleURL, withIntermediateDirectories: true)
+        let plistURL = bundleURL.appendingPathComponent("Info.plist")
+        let plist: [String: Any] = [
+            "CFBundleIdentifier": "eu.mpwg.Cujana.PolleninformationPollenTests",
+            "POLLENINFORMATION_API_KEY": "$(POLLENINFORMATION_API_KEY)"
+        ]
+        let data = try? PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
+        try? data?.write(to: plistURL)
+        return Bundle(url: bundleURL) ?? .main
+    }
 }
 
 private struct FakePolleninformationForecastClient: PolleninformationForecastLoading {
@@ -261,8 +331,22 @@ private struct FakePolleninformationForecastClient: PolleninformationForecastLoa
     ) async throws -> ForecastResponse {
         ForecastResponse(
             contamination: [
-                PollenContamination(pollID: 1, pollTitle: "Birke", today: 4, tomorrow: 3, inTwoDays: 2, inThreeDays: 1),
-                PollenContamination(pollID: 2, pollTitle: "Gräser", today: 2, tomorrow: 1, inTwoDays: 0, inThreeDays: 0),
+                PollenContamination(
+                    pollID: 1,
+                    pollTitle: "Birke",
+                    today: 4,
+                    tomorrow: 3,
+                    inTwoDays: 2,
+                    inThreeDays: 1
+                ),
+                PollenContamination(
+                    pollID: 2,
+                    pollTitle: "Gräser",
+                    today: 2,
+                    tomorrow: 1,
+                    inTwoDays: 0,
+                    inThreeDays: 0
+                ),
                 PollenContamination(
                     pollID: 23,
                     pollTitle: "Pilzsporen (Alternaria)",
@@ -280,6 +364,39 @@ private struct FakePolleninformationForecastClient: PolleninformationForecastLoa
                 inThreeDays: [2, 5]
             )
         )
+    }
+}
+
+private struct DecodingPolleninformationForecastClient: PolleninformationForecastLoading {
+    func forecast(
+        country: CountryCode,
+        language: LanguageCode,
+        latitude: Double,
+        longitude: Double
+    ) async throws -> ForecastResponse {
+        throw PolleninformationError.decoding("no payload for coordinate")
+    }
+}
+
+private actor CapturingPollenAPIClient: PolleninformationPollenAPIClient {
+    private let response: PolleninformationPollenResponseDTO
+    private var coordinates: [LocationCoordinate] = []
+
+    init(response: PolleninformationPollenResponseDTO) {
+        self.response = response
+    }
+
+    func pollenResponse(
+        for coordinate: LocationCoordinate,
+        from startDate: Date,
+        to endDate: Date
+    ) async throws -> PolleninformationPollenResponseDTO {
+        coordinates.append(coordinate)
+        return response
+    }
+
+    func requestedCoordinates() -> [LocationCoordinate] {
+        coordinates
     }
 }
 

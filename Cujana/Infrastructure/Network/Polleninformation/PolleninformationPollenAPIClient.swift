@@ -20,6 +20,16 @@ nonisolated protocol PolleninformationForecastLoading: Sendable {
 
 extension PolleninformationClient: PolleninformationForecastLoading {}
 
+nonisolated struct PolleninformationResponseContext: Sendable {
+    let coordinate: LocationCoordinate
+    let country: CountryCode
+    let language: LanguageCode
+    let calendar: Calendar
+    let generatedAt: Date
+    let startDate: Date
+    let endDate: Date
+}
+
 nonisolated public struct PolleninformationURLSessionClient: PolleninformationPollenAPIClient {
     private let apiKey: String?
     private let country: CountryCode
@@ -28,7 +38,7 @@ nonisolated public struct PolleninformationURLSessionClient: PolleninformationPo
     private let now: @Sendable () -> Date
 
     public init(
-        apiKey: String? = ProcessInfo.processInfo.environment["POLLENINFORMATION_API_KEY"],
+        apiKey: String? = Self.defaultAPIKey(),
         country: CountryCode = .austria,
         language: LanguageCode = .german,
         calendar: Calendar = Calendar(identifier: .gregorian),
@@ -47,77 +57,120 @@ nonisolated public struct PolleninformationURLSessionClient: PolleninformationPo
         to endDate: Date
     ) async throws -> PolleninformationPollenResponseDTO {
         guard let apiKey, !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            AppObservability.log(
+                .warning,
+                "Polleninformation API-Key fehlt.",
+                category: "Polleninformation"
+            )
             throw PollenDataError.unavailable
         }
 
         let client = PolleninformationClient(apiKey: apiKey)
         return try await Self.makeResponse(
             client: client,
-            coordinate: coordinate,
-            country: country,
-            language: language,
-            calendar: calendar,
-            generatedAt: now(),
-            startDate: startDate,
-            endDate: endDate
+            context: PolleninformationResponseContext(
+                coordinate: coordinate,
+                country: country,
+                language: language,
+                calendar: calendar,
+                generatedAt: now(),
+                startDate: startDate,
+                endDate: endDate
+            )
         )
     }
 
     static func makeResponse(
         client: any PolleninformationForecastLoading,
-        coordinate: LocationCoordinate,
-        country: CountryCode,
-        language: LanguageCode,
-        calendar: Calendar,
-        generatedAt: Date,
-        startDate: Date,
-        endDate: Date
+        context: PolleninformationResponseContext
     ) async throws -> PolleninformationPollenResponseDTO {
-        do {
-            let forecast = try await client.forecast(
-                country: country,
-                language: language,
-                latitude: coordinate.latitude,
-                longitude: coordinate.longitude
-            )
+        try await AppObservability.trace(
+            name: "Polleninformation API Forecast",
+            operation: "http.client",
+            category: "Polleninformation",
+            metadata: [
+                "country": context.country.rawValue,
+                "language": context.language.rawValue
+            ]
+        ) {
+            do {
+                let forecast = try await client.forecast(
+                    country: context.country,
+                    language: context.language,
+                    latitude: context.coordinate.latitude,
+                    longitude: context.coordinate.longitude
+                )
 
-            return try map(
-                forecast,
-                coordinate: coordinate,
-                generatedAt: generatedAt,
-                calendar: calendar,
-                startDate: startDate,
-                endDate: endDate
-            )
-        } catch let error as PollenDataError {
-            throw error
-        } catch let error as PolleninformationError {
-            throw map(error)
-        } catch {
-            throw PollenDataError.networkFailure
+                AppObservability.log(
+                    .info,
+                    "Polleninformation API Forecast geladen.",
+                    category: "Polleninformation",
+                    metadata: ["contaminationCount": "\(forecast.contamination.count)"]
+                )
+                return try map(
+                    forecast,
+                    context: context
+                )
+            } catch let error as PollenDataError {
+                throw error
+            } catch let error as PolleninformationError {
+                if case .decoding = error {
+                    AppObservability.log(
+                        .info,
+                        "Keine Polleninformationen für diesen Standort.",
+                        category: "Polleninformation",
+                        metadata: [
+                            "latitude": String(format: "%.2f", context.coordinate.latitude),
+                            "longitude": String(format: "%.2f", context.coordinate.longitude)
+                        ]
+                    )
+                    return emptyResponse(context: context)
+                }
+                throw map(error)
+            } catch {
+                throw PollenDataError.networkFailure
+            }
         }
+    }
+
+    private static func emptyResponse(
+        context: PolleninformationResponseContext
+    ) -> PolleninformationPollenResponseDTO {
+        let allDates = forecastDates(generatedAt: context.generatedAt, calendar: context.calendar)
+        let dates = allDates
+            .filter { date in
+                context.calendar.compare(date, to: context.startDate, toGranularity: .day) != .orderedAscending
+                    && context.calendar.compare(date, to: context.endDate, toGranularity: .day) != .orderedDescending
+            }
+
+        return PolleninformationPollenResponseDTO(
+            coordinate: context.coordinate,
+            generatedAt: context.generatedAt,
+            daily: PolleninformationPollenResponseDTO.Daily(
+                dates: dates,
+                variables: []
+            ),
+            dailyAllergyRisks: []
+        )
     }
 
     static func map(
         _ forecast: ForecastResponse,
-        coordinate: LocationCoordinate,
-        generatedAt: Date,
-        calendar: Calendar,
-        startDate: Date,
-        endDate: Date
+        context: PolleninformationResponseContext
     ) throws -> PolleninformationPollenResponseDTO {
-        let allDates = forecastDates(generatedAt: generatedAt, calendar: calendar)
+        let allDates = forecastDates(generatedAt: context.generatedAt, calendar: context.calendar)
         let dates = allDates
             .filter { date in
-                calendar.compare(date, to: startDate, toGranularity: .day) != .orderedAscending
-                    && calendar.compare(date, to: endDate, toGranularity: .day) != .orderedDescending
+                context.calendar.compare(date, to: context.startDate, toGranularity: .day) != .orderedAscending
+                    && context.calendar.compare(date, to: context.endDate, toGranularity: .day) != .orderedDescending
             }
 
         let dateOffsets = dates.compactMap { date in
             allDates.firstIndex(of: date)
         }
 
-        let variables = forecast.contamination.compactMap { contamination -> PolleninformationPollenResponseDTO.DailyVariable? in
+        let variables = forecast.contamination.compactMap { contamination
+            -> PolleninformationPollenResponseDTO.DailyVariable? in
             guard let pollenType = pollenType(for: contamination) else {
                 return nil
             }
@@ -136,8 +189,8 @@ nonisolated public struct PolleninformationURLSessionClient: PolleninformationPo
         }
 
         return PolleninformationPollenResponseDTO(
-            coordinate: coordinate,
-            generatedAt: generatedAt,
+            coordinate: context.coordinate,
+            generatedAt: context.generatedAt,
             daily: PolleninformationPollenResponseDTO.Daily(
                 dates: dates,
                 variables: variables
@@ -152,7 +205,10 @@ nonisolated public struct PolleninformationURLSessionClient: PolleninformationPo
     }
 
     private static func pollenType(for contamination: PollenContamination) -> PollenType? {
-        let title = contamination.pollTitle.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+        let title = contamination.pollTitle.folding(
+            options: [.caseInsensitive, .diacriticInsensitive],
+            locale: .current
+        )
 
         if title.contains("erle") || title.contains("alder") {
             return .alder
@@ -196,5 +252,26 @@ nonisolated public struct PolleninformationURLSessionClient: PolleninformationPo
         case .decoding:
             return .decodingFailed
         }
+    }
+
+    public static func defaultAPIKey(bundle: Bundle = .main) -> String? {
+        normalizedAPIKey(bundle.object(forInfoDictionaryKey: "POLLENINFORMATION_API_KEY") as? String)
+    }
+
+    private static func normalizedAPIKey(_ value: String?) -> String? {
+        guard let value else {
+            return nil
+        }
+
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else {
+            return nil
+        }
+
+        if trimmed.hasPrefix("$("), trimmed.hasSuffix(")") {
+            return nil
+        }
+
+        return trimmed
     }
 }
