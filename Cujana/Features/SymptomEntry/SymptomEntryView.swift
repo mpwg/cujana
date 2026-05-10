@@ -37,7 +37,7 @@ struct SymptomEntryView: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Symptom erfassen")
-                        .font(TypographyToken.headline)
+                        .font(TypographyToken.sheetTitle)
                         .foregroundStyle(ColorToken.textPrimary)
                 }
             }
@@ -47,13 +47,14 @@ struct SymptomEntryView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: SpacingToken.sm) {
             Text("Wie fühlst du dich?")
-                .font(TypographyToken.title)
-                .tracking(-0.4)
+                .font(TypographyToken.sheetHeading)
+                .tracking(-0.8)
                 .foregroundStyle(ColorToken.textPrimary)
 
             Text("Halte fest, was du spürst. Das hilft dir, Muster ruhiger zu erkennen.")
                 .font(TypographyToken.body)
                 .foregroundStyle(ColorToken.textSecondary)
+                .frame(maxWidth: SymptomCheckInToken.introMaxWidth, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -105,6 +106,7 @@ struct SymptomEntryView: View {
                 .datePickerStyle(.graphical)
                 .font(TypographyToken.body)
                 .foregroundStyle(ColorToken.textPrimary)
+                .tint(ColorToken.accentPrimary)
 
                 Divider()
                     .overlay(ColorToken.separatorSoft)
@@ -116,10 +118,19 @@ struct SymptomEntryView: View {
                 )
                 .font(TypographyToken.body)
                 .foregroundStyle(ColorToken.textPrimary)
+                .tint(ColorToken.accentPrimary)
+                .frame(minHeight: SymptomCheckInToken.timePickerHeight)
+                .padding(.horizontal, SpacingToken.md)
+                .background(ColorToken.backgroundPrimary)
+                .clipShape(
+                    RoundedRectangle(cornerRadius: SymptomCheckInToken.timePickerCornerRadius, style: .continuous)
+                )
             }
             .padding(SymptomCheckInToken.fieldContainerPadding)
-            .background(ColorToken.secondarySurface)
-            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .background(ColorToken.cardBackground.opacity(SymptomCheckInToken.calendarContainerOpacity))
+            .clipShape(
+                RoundedRectangle(cornerRadius: SymptomCheckInToken.calendarContainerCornerRadius, style: .continuous)
+            )
             .softShadow(ShadowToken.card)
         }
     }
@@ -131,11 +142,10 @@ struct SymptomEntryView: View {
             TextEditor(text: $viewModel.note)
                 .font(TypographyToken.body)
                 .foregroundStyle(ColorToken.textPrimary)
-                .frame(minHeight: InputToken.minHeight)
+                .frame(minHeight: SymptomCheckInToken.notesMinHeight)
                 .scrollContentBackground(.hidden)
-                .padding(SymptomCheckInToken.fieldContainerPadding)
-                .background(ColorToken.secondarySurface)
-                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                .padding(SymptomCheckInToken.notesPadding)
+                .premiumSurface(cornerRadius: SymptomCheckInToken.notesCornerRadius)
                 .accessibilityLabel("Notiz")
         }
     }
@@ -194,9 +204,9 @@ private struct SymptomChip: View {
         Button(action: action) {
             HStack(spacing: SpacingToken.sm) {
                 Image(systemName: option.systemImageName)
-                    .font(.system(size: 22, weight: .regular, design: .rounded))
+                    .font(.system(size: ChipToken.iconSize, weight: .medium, design: .rounded))
                     .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(ColorToken.accentPrimary)
+                    .foregroundStyle(ColorToken.accentPrimary.opacity(SymptomCheckInToken.symptomIconOpacity))
                     .frame(width: ChipToken.iconSize, height: ChipToken.iconSize)
 
                 Text(option.title)
@@ -207,14 +217,19 @@ private struct SymptomChip: View {
 
                 Spacer(minLength: SpacingToken.xs)
             }
-            .padding(.horizontal, ChipToken.paddingH)
+            .padding(.horizontal, SymptomCheckInToken.symptomPillPaddingH)
             .padding(.vertical, ChipToken.paddingV)
             .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.symptomPillMinHeight, alignment: .leading)
-            .background(isSelected ? ColorToken.accentSoft : ColorToken.cardBackground)
+            .background(isSelected ? SymptomCheckInToken.symptomSelectedBackground : ColorToken.cardBackground)
             .clipShape(Capsule())
             .overlay(
                 Capsule()
-                    .stroke(isSelected ? Color.clear : ColorToken.separatorSoft, lineWidth: isSelected ? 0 : 1)
+                    .stroke(
+                        isSelected
+                            ? Color.clear
+                            : ColorToken.accentPrimary.opacity(SymptomCheckInToken.symptomBorderOpacity),
+                        lineWidth: isSelected ? 0 : 1
+                    )
             )
         }
         .buttonStyle(.plain)
@@ -231,10 +246,14 @@ private struct SeverityButton: View {
         Button(action: action) {
             Text(option.title)
                 .font(TypographyToken.caption.weight(.semibold))
-                .foregroundStyle(isSelected ? SelectionToken.selectedText : SelectionToken.text)
+                .foregroundStyle(isSelected ? SelectionToken.selectedText : SymptomCheckInToken.severityUnselectedText)
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
-                .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.severityPillMinHeight)
+                .frame(
+                    minWidth: SymptomCheckInToken.severityPillMinWidth,
+                    maxWidth: .infinity,
+                    minHeight: SymptomCheckInToken.severityPillMinHeight
+                )
                 .padding(.horizontal, SpacingToken.sm)
                 .background(isSelected ? ColorToken.accentPrimary : ColorToken.backgroundSecondary)
                 .clipShape(Capsule())
@@ -258,8 +277,16 @@ private struct SymptomSaveButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.saveButtonMinHeight)
             .background(isEnabled ? ColorToken.accentPrimary : SemanticColorToken.disabledButtonBackground)
             .clipShape(RoundedRectangle(cornerRadius: SymptomCheckInToken.saveButtonRadius, style: .continuous))
-            .opacity(configuration.isPressed ? PressFeedbackToken.prominentOpacity : 1)
+            .opacity(disabledOrPressedOpacity(configuration: configuration))
             .scaleEffect(configuration.isPressed ? PressFeedbackToken.prominentScale : 1)
             .animation(.easeInOut(duration: PressFeedbackToken.animationDuration), value: configuration.isPressed)
+    }
+
+    private func disabledOrPressedOpacity(configuration: Configuration) -> Double {
+        if isEnabled == false {
+            return SymptomCheckInToken.disabledButtonOpacity
+        }
+
+        return configuration.isPressed ? PressFeedbackToken.prominentOpacity : ButtonToken.Primary.enabledOpacity
     }
 }

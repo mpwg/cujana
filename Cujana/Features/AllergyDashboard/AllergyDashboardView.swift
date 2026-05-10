@@ -16,15 +16,20 @@ struct AllergyDashboardView: View {
             .scrollIndicators(.hidden)
             .background(ColorToken.backgroundPrimary.ignoresSafeArea())
 #if os(iOS)
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(ColorToken.backgroundPrimary, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
 #endif
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Cujana")
-                        .font(TypographyToken.largeTitle)
-                        .foregroundStyle(ColorToken.textPrimary)
+                    Image("Cujana")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(
+                            width: HomeOverviewToken.navigationLogoWidth,
+                            height: HomeOverviewToken.navigationLogoHeight
+                        )
+                        .accessibilityLabel("Cujana")
                 }
             }
             .task {
@@ -86,8 +91,6 @@ private struct ForecastSummaryCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: SpacingToken.section) {
-            HomeHeroCard()
-
             VStack(alignment: .leading, spacing: SpacingToken.md) {
                 HStack(alignment: .firstTextBaseline, spacing: SpacingToken.md) {
                     Text("3-Tage-Überblick")
@@ -156,13 +159,16 @@ private struct DayOverviewCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: SpacingToken.md) {
+            Text(day.title)
+                .font(TypographyToken.caption)
+                .tracking(HomeOverviewToken.dayLabelTracking)
+                .textCase(.uppercase)
+                .foregroundStyle(ColorToken.textSecondary)
+                .lineLimit(1)
+                .minimumScaleFactor(HomeOverviewToken.weatherDescriptionMinimumScale)
+
             HStack(alignment: .top, spacing: SpacingToken.sm) {
                 VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                    Text(day.title)
-                        .font(TypographyToken.caption)
-                        .textCase(.uppercase)
-                        .foregroundStyle(ColorToken.textPrimary)
-
                     Text(day.temperatureText == "--" ? "—" : day.temperatureText)
                         .font(.system(size: 34, weight: .semibold, design: .rounded))
                         .foregroundStyle(ColorToken.textPrimary)
@@ -172,14 +178,14 @@ private struct DayOverviewCard: View {
                 Spacer(minLength: SpacingToken.sm)
 
                 Image(systemName: day.weatherSystemImageName)
-                    .font(.system(size: 24, weight: .medium, design: .rounded))
+                    .font(.system(size: HomeOverviewToken.dayWeatherIconFontSize, weight: .medium, design: .rounded))
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(ColorToken.accentDark)
                     .frame(
                         width: HomeOverviewToken.dayWeatherIconSize,
                         height: HomeOverviewToken.dayWeatherIconSize
                     )
-                    .background(ColorToken.accentSoft)
+                    .background(HomeOverviewToken.dayWeatherIconBackground)
                     .clipShape(Circle())
                     .accessibilityHidden(true)
             }
@@ -187,7 +193,8 @@ private struct DayOverviewCard: View {
             Text(day.temperatureText == "--" ? "Wetter noch nicht verfügbar" : day.weatherText.capitalized)
                 .font(TypographyToken.secondaryBody)
                 .foregroundStyle(ColorToken.textSecondary)
-                .lineLimit(2)
+                .lineLimit(1)
+                .minimumScaleFactor(HomeOverviewToken.weatherDescriptionMinimumScale)
                 .fixedSize(horizontal: false, vertical: true)
 
             if day.allergenItems.isEmpty {
@@ -210,8 +217,7 @@ private struct DayOverviewCard: View {
             height: HomeOverviewToken.dayCardHeight,
             alignment: .topLeading
         )
-        .background(ColorToken.secondarySurface)
-        .clipShape(RoundedRectangle(cornerRadius: HomeOverviewToken.dayCardCornerRadius, style: .continuous))
+        .premiumSurface(cornerRadius: HomeOverviewToken.dayCardCornerRadius)
         .softShadow(ShadowToken.card)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(day.accessibilityText)
@@ -223,14 +229,16 @@ private struct AllergenLoadBadge: View {
 
     var body: some View {
         Text("\(item.title) · \(item.levelText)")
-                .font(TypographyToken.caption.weight(.semibold))
+                .font(TypographyToken.severityPill)
                 .foregroundStyle(SemanticColorToken.foreground(for: item.levelText))
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)
-                .padding(.horizontal, SpacingToken.sm)
-                .padding(.vertical, SpacingToken.xs)
+                .padding(.horizontal, HomeOverviewToken.severityPillPaddingH)
+                .frame(height: HomeOverviewToken.severityPillHeight)
                 .background(SemanticColorToken.background(for: item.levelText))
-                .clipShape(Capsule())
+                .clipShape(
+                    RoundedRectangle(cornerRadius: HomeOverviewToken.severityPillCornerRadius, style: .continuous)
+                )
         .fixedSize(horizontal: true, vertical: false)
     }
 }
@@ -265,9 +273,10 @@ struct ForecastAttributionView: View {
     var body: some View {
         Text(attributionText)
             .multilineTextAlignment(.leading)
-            .font(.system(.caption2))
-            .foregroundStyle(ColorToken.textTertiary)
+            .font(TypographyToken.attribution)
+            .foregroundStyle(ColorToken.textTertiary.opacity(HomeOverviewToken.attributionOpacity))
             .fixedSize(horizontal: false, vertical: true)
+            .padding(.top, HomeOverviewToken.attributionTopPadding)
             .accessibilityLabel(attributionText)
     }
 }

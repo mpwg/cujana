@@ -8,13 +8,13 @@
 import SwiftUI
 
 enum CardToken {
-    static let background = ColorToken.secondarySurface
+    static let background = ColorToken.cardBackground.opacity(SurfaceStyleToken.backgroundOpacity)
     static let mutedBackground = ColorToken.cardMutedBackground
     static let radius = RadiusToken.radiusLarge
-    static let padding: CGFloat = 20
+    static let padding = SpacingToken.lg
     static let shadow = ShadowToken.card
-    static let border = ColorToken.separatorSoft
-    static let borderWidth: CGFloat = 0
+    static let border = ColorToken.cardBackground.opacity(SurfaceStyleToken.strokeOpacity)
+    static let borderWidth: CGFloat = 1
 }
 
 enum ButtonToken {
@@ -94,31 +94,59 @@ enum SurfaceOpacityToken {
     static let accentSubtle = 0.52
 }
 
+enum SurfaceStyleToken {
+    static let backgroundOpacity = 0.72
+    static let gradientTopOpacity = 0.55
+    static let gradientBottomOpacity = 0.15
+    static let strokeOpacity = 0.45
+}
+
 enum HomeOverviewToken {
+    static let navigationLogoWidth: CGFloat = 112
+    static let navigationLogoHeight: CGFloat = 34
     static let allergenGridMinimumWidth: CGFloat = 116
     static let weatherIconSize: CGFloat = 28
-    static let scrollBottomPadding = SpacingToken.lg
-    static let largeTextScrollBottomPadding: CGFloat = 96
+    static let scrollBottomPadding = SpacingToken.md
+    static let largeTextScrollBottomPadding: CGFloat = 80
     static let titleLayoutPriority = 1.0
     static let detailsButtonLayoutPriority = 2.0
-    static let heroHeight: CGFloat = 240
+    static let heroHeight: CGFloat = 210
     static let heroCornerRadius: CGFloat = 32
-    static let heroContentPadding: CGFloat = 24
+    static let heroTopPadding: CGFloat = 28
+    static let heroHorizontalPadding: CGFloat = 28
+    static let heroBottomPadding: CGFloat = 24
+    static let heroSubtitleMaxWidth: CGFloat = 240
     static let heroLeafWidth: CGFloat = 96
     static let heroLeafHeight: CGFloat = 132
-    static let heroLeafOpacity = 0.62
+    static let heroLeafOpacity = 0.42
+    static let heroArtworkOpacity = 0.88
+    static let heroArtworkBlur: CGFloat = 0.3
+    static let heroArtworkScale = 0.96
     static let heroLeafTrailingPadding: CGFloat = 22
     static let heroLeafTopPadding: CGFloat = 52
-    static let dayCardPadding: CGFloat = 18
-    static let dayCardWidth: CGFloat = 150
-    static let dayCardHeight: CGFloat = 170
+    static let dayCardPadding: CGFloat = 16
+    static let dayCardWidth: CGFloat = 146
+    static let dayCardHeight: CGFloat = 156
     static let dayCardCornerRadius: CGFloat = 26
-    static let dayWeatherIconSize: CGFloat = 46
+    static let dayLabelTracking = 1.2
+    static let dayWeatherIconSize: CGFloat = 48
+    static let dayWeatherIconFontSize: CGFloat = 24
+    static let dayWeatherIconBackground = Color(hex: "#EDF3ED")
+    static let weatherDescriptionMinimumScale = 0.82
+    static let severityPillHeight: CGFloat = 28
+    static let severityPillPaddingH: CGFloat = 12
+    static let severityPillCornerRadius: CGFloat = 14
+    static let attributionOpacity = 0.85
+    static let attributionTopPadding: CGFloat = 8
     static let compactButtonPressedOpacity = 0.72
-    static let ctaPadding: CGFloat = 20
-    static let ctaHeight: CGFloat = 160
+    static let ctaPadding = SpacingToken.lg
+    static let ctaHeight: CGFloat = 142
     static let ctaCornerRadius: CGFloat = 30
-    static let ctaBackgroundOpacity = 0.32
+    static let ctaBackgroundOpacity = 0.18
+    static let ctaArtworkBlur: CGFloat = 1
+    static let ctaButtonHeight: CGFloat = 54
+    static let ctaButtonIconSpacing: CGFloat = 10
+    static let ctaButtonIconSize: CGFloat = 18
 }
 
 enum AllergenLoadToken {
@@ -127,30 +155,35 @@ enum AllergenLoadToken {
 }
 
 enum ForecastDetailToken {
+    static let titleBottomPadding: CGFloat = 20
     static let dayIconSize: CGFloat = 42
     static let weatherIconWidth: CGFloat = 24
     static let hourlyRiskGridMinimumWidth: CGFloat = 92
     static let screenHorizontalPadding: CGFloat = 24
-    static let sectionSpacing: CGFloat = 28
+    static let sectionSpacing: CGFloat = 22
     static let contextSpacing: CGFloat = 12
     static let cardHorizontalPadding: CGFloat = 20
     static let compactCardVerticalPadding: CGFloat = 18
     static let bottomInsetHeight: CGFloat = 56
-    static let dayPickerMinHeight: CGFloat = 48
-    static let dayPickerHeight: CGFloat = 56
+    static let dayPickerMinHeight: CGFloat = 44
+    static let dayPickerHeight: CGFloat = 52
     static let dayPickerSurfaceOpacity = 0.75
     static let dayPickerPadding: CGFloat = 4
+    static let dayPickerCornerRadius: CGFloat = 26
     static let weatherIconSize: CGFloat = 58
-    static let weatherMinHeight: CGFloat = 140
-    static let weatherCardPadding: CGFloat = 20
+    static let weatherMinHeight: CGFloat = 118
+    static let weatherCardPadding: CGFloat = 18
     static let weatherCardCornerRadius: CGFloat = 30
     static let allergenIconSize: CGFloat = 30
     static let allergenIconFrameSize: CGFloat = 44
-    static let allergenRowMinHeight: CGFloat = 110
-    static let allergenCardPadding: CGFloat = 20
+    static let allergenRowMinHeight: CGFloat = 94
+    static let allergenCardPadding = SpacingToken.lg
     static let allergenCardCornerRadius: CGFloat = 28
-    static let badgeVerticalPadding: CGFloat = 3
-    static let noRiskMinHeight: CGFloat = 40
+    static let badgeHeight: CGFloat = 32
+    static let badgeHorizontalPadding: CGFloat = 14
+    static let badgeCornerRadius: CGFloat = 16
+    static let noRiskMinHeight: CGFloat = 54
+    static let noRiskCornerRadius: CGFloat = 18
     static let hairlineStrokeWidth: CGFloat = 0.5
     static let dayPickerTextMinimumScale = 0.82
     static let weatherTextMinimumScale = 0.84
@@ -159,16 +192,18 @@ enum ForecastDetailToken {
     static let noRiskVerticalPadding: CGFloat = 6
     static let allergenTextSpacing: CGFloat = 4
     static let hourlyChipCornerRadius: CGFloat = 24
+    static let hourlyInactiveChipCornerRadius: CGFloat = 22
     static let hourlyChipContentSpacing: CGFloat = 5
-    static let hourlyChipSpacing: CGFloat = 5
+    static let hourlyChipSpacing: CGFloat = 12
     static let hourlyScrollerHorizontalPadding: CGFloat = 1
     static let hourlyDotSize: CGFloat = 5
     static let hourlyCurrentDotSize: CGFloat = 6
-    static let hourlyChipWidth: CGFloat = 70
-    static let hourlyCurrentChipWidth: CGFloat = 92
-    static let hourlyChipMinHeight: CGFloat = 96
-    static let hourlyCurrentChipMinHeight: CGFloat = 116
+    static let hourlyChipWidth: CGFloat = 68
+    static let hourlyCurrentChipWidth: CGFloat = 84
+    static let hourlyChipMinHeight: CGFloat = 112
+    static let hourlyCurrentChipMinHeight: CGFloat = 126
     static let hourlyCurrentScale: CGFloat = 1.02
+    static let hourlyInactiveOpacity = 0.82
     static let subtleNavigationRowMinHeight: CGFloat = 42
     static let subtleNavigationHorizontalPadding: CGFloat = 14
     static let overviewDotSize: CGFloat = 8
@@ -179,7 +214,8 @@ enum EntryListToken {
 }
 
 enum TabBarToken {
-    static let backgroundOpacity = 0.82
+    static let backgroundOpacity = 0.72
+    static let sheetCornerRadius: CGFloat = 34
 }
 
 enum PressFeedbackToken {
@@ -190,15 +226,30 @@ enum PressFeedbackToken {
 
 enum SymptomCheckInToken {
     static let symptomGridMinimumWidth: CGFloat = 150
-    static let scrollBottomPadding: CGFloat = 88
-    static let bottomBarBackgroundOpacity = 0.96
+    static let scrollBottomPadding: CGFloat = 72
+    static let bottomBarBackgroundOpacity = 0.94
+    static let introMaxWidth: CGFloat = 320
     static let fieldContainerPadding: CGFloat = 20
-    static let symptomPillMinHeight: CGFloat = 56
+    static let symptomPillMinHeight: CGFloat = 52
+    static let symptomPillPaddingH: CGFloat = 16
+    static let symptomBorderOpacity = 0.1
+    static let symptomSelectedBackground = Color(hex: "#E7F0E7")
+    static let symptomIconOpacity = 0.92
     static let severityPillMinHeight: CGFloat = 52
+    static let severityPillMinWidth: CGFloat = 68
+    static let severityUnselectedText = Color(hex: "#4B4B48")
+    static let calendarContainerOpacity = 0.82
+    static let calendarContainerCornerRadius: CGFloat = 30
+    static let timePickerHeight: CGFloat = 42
+    static let timePickerCornerRadius: CGFloat = 21
+    static let notesMinHeight: CGFloat = 180
+    static let notesPadding: CGFloat = 18
+    static let notesCornerRadius: CGFloat = 28
     static let buttonMinHeight: CGFloat = 58
-    static let saveButtonMinHeight: CGFloat = 60
+    static let saveButtonMinHeight: CGFloat = 58
     static let saveButtonRadius: CGFloat = 22
     static let disabledTextOpacity = 0.8
+    static let disabledButtonOpacity = 0.82
 }
 
 struct SoftShadowModifier: ViewModifier {
@@ -218,13 +269,35 @@ struct CardStyleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .padding(CardToken.padding)
-            .background(CardToken.background)
-            .clipShape(RoundedRectangle(cornerRadius: CardToken.radius, style: .continuous))
+            .premiumSurface(cornerRadius: CardToken.radius)
+            .softShadow(CardToken.shadow)
+    }
+}
+
+struct PremiumSurfaceModifier: ViewModifier {
+    let cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(ColorToken.cardBackground.opacity(SurfaceStyleToken.backgroundOpacity))
+                    .overlay {
+                        LinearGradient(
+                            colors: [
+                                ColorToken.cardBackground.opacity(SurfaceStyleToken.gradientTopOpacity),
+                                ColorToken.cardBackground.opacity(SurfaceStyleToken.gradientBottomOpacity)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: CardToken.radius, style: .continuous)
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .stroke(CardToken.border, lineWidth: CardToken.borderWidth)
             )
-            .softShadow(CardToken.shadow)
     }
 }
 
@@ -308,6 +381,10 @@ extension View {
 
     func cujanaCard() -> some View {
         modifier(CardStyleModifier())
+    }
+
+    func premiumSurface(cornerRadius: CGFloat) -> some View {
+        modifier(PremiumSurfaceModifier(cornerRadius: cornerRadius))
     }
 
     func cujanaChip(isSelected: Bool = false) -> some View {

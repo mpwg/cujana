@@ -58,7 +58,7 @@ struct ContentView: View {
             content: {
                 SymptomEntryView(viewModel: symptomEntryViewModel)
 #if os(iOS)
-                    .presentationCornerRadius(38)
+                    .presentationCornerRadius(TabBarToken.sheetCornerRadius)
                     .presentationBackground(ColorToken.backgroundPrimary)
 #endif
             }

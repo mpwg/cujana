@@ -47,7 +47,7 @@ struct DetailDayPicker: View {
                 Color.clear.background(.ultraThinMaterial)
             }
         }
-        .clipShape(Capsule())
+        .clipShape(RoundedRectangle(cornerRadius: ForecastDetailToken.dayPickerCornerRadius, style: .continuous))
         .softShadow(ShadowToken.floating)
     }
 }
@@ -66,14 +66,15 @@ struct WeatherContextRow: View {
                 .accessibilityHidden(true)
 
             Text(day.temperatureText)
-                .font(.system(size: 38, weight: .semibold, design: .rounded))
+                .font(TypographyToken.weatherTemperature)
+                .tracking(-1.8)
                 .foregroundStyle(ColorToken.textPrimary)
                 .monospacedDigit()
                 .accessibilityLabel("Temperatur \(day.temperatureText)")
 
             VStack(alignment: .leading, spacing: SpacingToken.xs) {
                 Text(day.weatherText.capitalized)
-                    .font(.system(.body, design: .rounded).weight(.medium))
+                    .font(TypographyToken.weatherDescription)
                     .foregroundStyle(ColorToken.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(ForecastDetailToken.weatherTextMinimumScale)
@@ -89,8 +90,7 @@ struct WeatherContextRow: View {
         }
         .padding(ForecastDetailToken.weatherCardPadding)
         .frame(minHeight: ForecastDetailToken.weatherMinHeight, alignment: .center)
-        .background(ColorToken.secondarySurface)
-        .clipShape(RoundedRectangle(cornerRadius: ForecastDetailToken.weatherCardCornerRadius, style: .continuous))
+        .premiumSurface(cornerRadius: ForecastDetailToken.weatherCardCornerRadius)
         .softShadow(ShadowToken.card)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(weatherAccessibilityLabel)

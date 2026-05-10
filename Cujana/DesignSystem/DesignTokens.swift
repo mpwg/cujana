@@ -151,17 +151,25 @@ enum SemanticColorToken {
 
 enum TypographyToken {
     static let largeTitle = Font.system(size: 34, weight: .semibold, design: .rounded)
+    static let detailTitle = Font.system(size: 30, weight: .semibold, design: .rounded)
+    static let heroTitle = Font.system(size: 28, weight: .semibold, design: .rounded)
+    static let sheetTitle = Font.system(size: 20, weight: .semibold, design: .rounded)
+    static let sheetHeading = Font.system(size: 26, weight: .semibold, design: .rounded)
     static let title = Font.system(size: 28, weight: .semibold, design: .rounded)
     static let headline = Font.system(size: 22, weight: .semibold, design: .rounded)
+    static let weatherTemperature = Font.system(size: 44, weight: .semibold, design: .rounded)
+    static let weatherDescription = Font.system(size: 18, weight: .medium, design: .rounded)
 
     static let body = Font.system(size: 17, weight: .regular, design: .rounded)
     static let bodyEmphasized = Font.system(size: 17, weight: .semibold, design: .rounded)
     static let secondaryBody = Font.system(size: 15, weight: .regular, design: .rounded)
 
     static let caption = Font.system(size: 13, weight: .medium, design: .rounded)
+    static let attribution = Font.system(size: 12, weight: .regular, design: .rounded)
+    static let severityPill = Font.system(size: 14, weight: .medium, design: .rounded)
     static let footnote = Font.system(size: 15, weight: .regular, design: .rounded)
 
-    static let button = Font.system(size: 19, weight: .semibold, design: .rounded)
+    static let button = Font.system(size: 18, weight: .semibold, design: .rounded)
 }
 
 enum SpacingToken {
@@ -171,7 +179,7 @@ enum SpacingToken {
     static let lg: CGFloat = 16
     static let xl: CGFloat = 24
     static let xxl: CGFloat = 32
-    static let section: CGFloat = 28
+    static let section: CGFloat = 22
 }
 
 enum RadiusToken {
@@ -203,8 +211,14 @@ enum ShadowToken {
 
     static let floating = ShadowTokenValue(
         color: Color.black.opacity(0.04),
-        radius: 24,
-        y: 10
+        radius: 20,
+        y: 6
+    )
+
+    static let ctaButton = ShadowTokenValue(
+        color: Color.black.opacity(0.08),
+        radius: 16,
+        y: 8
     )
 }
 

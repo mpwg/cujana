@@ -1,45 +1,5 @@
 import SwiftUI
 
-struct HomeHeroCard: View {
-    var body: some View {
-        ZStack(alignment: .leading) {
-            Image("HomeHeroOrganicLandscape")
-                .resizable()
-                .scaledToFill()
-                .accessibilityHidden(true)
-
-            Image("HomeHeroLeafSprig")
-                .resizable()
-                .scaledToFit()
-                .frame(width: HomeOverviewToken.heroLeafWidth, height: HomeOverviewToken.heroLeafHeight)
-                .opacity(HomeOverviewToken.heroLeafOpacity)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
-                .padding(.trailing, HomeOverviewToken.heroLeafTrailingPadding)
-                .padding(.top, HomeOverviewToken.heroLeafTopPadding)
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: SpacingToken.sm) {
-                Text("Guten Morgen, Sam")
-                    .font(TypographyToken.largeTitle)
-                    .tracking(-0.5)
-                    .foregroundStyle(ColorToken.textPrimary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text("Ein ruhiger Überblick für deinen Tag.")
-                    .font(TypographyToken.body)
-                    .foregroundStyle(ColorToken.textSecondary)
-                    .lineSpacing(4)
-            }
-            .padding(HomeOverviewToken.heroContentPadding)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        }
-        .frame(height: HomeOverviewToken.heroHeight)
-        .clipShape(RoundedRectangle(cornerRadius: HomeOverviewToken.heroCornerRadius, style: .continuous))
-        .softShadow(ShadowToken.card)
-        .accessibilityElement(children: .combine)
-    }
-}
-
 struct FeelingCTAView: View {
     let action: () -> Void
 
@@ -56,9 +16,19 @@ struct FeelingCTAView: View {
             }
 
             Button(action: action) {
-                Label("Symptome erfassen", systemImage: "plus.circle.fill")
-                    .font(TypographyToken.button)
-                    .frame(maxWidth: .infinity)
+                HStack(spacing: HomeOverviewToken.ctaButtonIconSpacing) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(
+                            size: HomeOverviewToken.ctaButtonIconSize,
+                            weight: .bold,
+                            design: .rounded
+                        ))
+                        .accessibilityHidden(true)
+
+                    Text("Symptome erfassen")
+                        .font(TypographyToken.button)
+                }
+                .frame(maxWidth: .infinity)
             }
             .buttonStyle(FeelingCTAButtonStyle())
             .accessibilityLabel("Symptome erfassen")
@@ -72,6 +42,7 @@ struct FeelingCTAView: View {
                     Image("HomeCTASoftGradient")
                         .resizable()
                         .scaledToFill()
+                        .blur(radius: HomeOverviewToken.ctaArtworkBlur)
                         .accessibilityHidden(true)
                 }
         }
@@ -85,9 +56,10 @@ private struct FeelingCTAButtonStyle: ButtonStyle {
         configuration.label
             .foregroundStyle(ColorToken.cardBackground)
             .padding(.horizontal, SpacingToken.lg)
-            .frame(height: SymptomCheckInToken.buttonMinHeight)
+            .frame(height: HomeOverviewToken.ctaButtonHeight)
             .background(ColorToken.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: ButtonToken.Primary.radius, style: .continuous))
+            .softShadow(ShadowToken.ctaButton)
             .opacity(configuration.isPressed ? PressFeedbackToken.prominentOpacity : 1)
             .scaleEffect(configuration.isPressed ? PressFeedbackToken.prominentScale : 1)
             .animation(.easeInOut(duration: PressFeedbackToken.animationDuration), value: configuration.isPressed)
