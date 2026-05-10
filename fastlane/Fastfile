@@ -444,9 +444,19 @@ def validate_release_ipa_entitlements!(ipa_path)
     sh("codesign -d --entitlements :- #{app_paths.first.shellescape} > #{entitlements_path.shellescape}", log: false)
 
     aps_environment = plist_value(entitlements_path, "aps-environment")
+    icloud_environment = plist_value(entitlements_path, "com.apple.developer.icloud-container-environment")
 
     if plist_key_present?(entitlements_path, "com.apple.developer.aps-environment")
       UI.user_error!("Release-Entitlements enthalten den ungültigen doppelten Schlüssel com.apple.developer.aps-environment.")
+    end
+
+    if icloud_environment
+      unless icloud_environment == "Production"
+        UI.user_error!(
+          "Release-Entitlement com.apple.developer.icloud-container-environment ist '#{icloud_environment}', erwartet 'Production'."
+        )
+      end
+      UI.message("Release-Entitlements validiert: iCloud-Container-Environment=Production.")
     end
 
     if aps_environment
