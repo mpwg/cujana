@@ -58,7 +58,7 @@ struct WeatherContextRow: View {
     var body: some View {
         HStack(alignment: .center, spacing: SpacingToken.md) {
             Image(systemName: day.weatherSystemImageName)
-                .font(.system(size: 34, weight: .medium, design: .rounded))
+                .font(.system(size: ForecastDetailToken.weatherIconWidth, weight: .medium, design: .rounded))
                 .foregroundStyle(ColorToken.accentDark)
                 .frame(width: ForecastDetailToken.weatherIconSize, height: ForecastDetailToken.weatherIconSize)
                 .background(ColorToken.accentSoft)
@@ -67,7 +67,7 @@ struct WeatherContextRow: View {
 
             Text(day.temperatureText)
                 .font(TypographyToken.weatherTemperature)
-                .tracking(-1.8)
+                .tracking(-1.5)
                 .foregroundStyle(ColorToken.textPrimary)
                 .monospacedDigit()
                 .accessibilityLabel("Temperatur \(day.temperatureText)")

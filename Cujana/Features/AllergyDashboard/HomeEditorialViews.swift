@@ -42,6 +42,7 @@ struct FeelingCTAView: View {
                     Image("HomeCTASoftGradient")
                         .resizable()
                         .scaledToFill()
+                        .opacity(HomeOverviewToken.ctaBackgroundOpacity)
                         .blur(radius: HomeOverviewToken.ctaArtworkBlur)
                         .accessibilityHidden(true)
                 }

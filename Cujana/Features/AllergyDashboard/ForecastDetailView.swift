@@ -3,7 +3,6 @@ import SwiftUI
 struct ForecastDetailView: View {
     let days: [ForecastDetailDayItem]
 
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var selectedDayID: ForecastDetailDayItem.ID?
     @Namespace private var dayPickerNamespace
 
@@ -18,11 +17,18 @@ struct ForecastDetailView: View {
     var body: some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: ForecastDetailToken.sectionSpacing) {
-                Text("Alle Details")
-                    .font(TypographyToken.detailTitle)
-                    .tracking(-0.7)
-                    .foregroundStyle(ColorToken.textPrimary)
-                    .padding(.bottom, ForecastDetailToken.titleBottomPadding)
+                VStack(alignment: .leading, spacing: ForecastDetailToken.titleBottomPadding) {
+                    Text("Alle Details")
+                        .font(TypographyToken.detailTitle)
+                        .tracking(-0.7)
+                        .foregroundStyle(ColorToken.textPrimary)
+
+                    DetailDayPicker(
+                        days: days,
+                        selectedDayID: bindingForSelectedDay,
+                        namespace: dayPickerNamespace
+                    )
+                }
 
                 if let selectedDay {
                     VStack(alignment: .leading, spacing: ForecastDetailToken.contextSpacing) {
@@ -45,21 +51,9 @@ struct ForecastDetailView: View {
                 AttributionFooter()
             }
             .padding(.horizontal, ForecastDetailToken.screenHorizontalPadding)
-            .padding(.top, SpacingToken.lg)
+            .padding(.top, ForecastDetailToken.screenTopPadding)
             .padding(.bottom, SpacingToken.xl)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .containerRelativeFrame(.horizontal)
-        }
-        .safeAreaInset(edge: .top) {
-            DetailDayPicker(
-                days: days,
-                selectedDayID: bindingForSelectedDay,
-                namespace: dayPickerNamespace
-            )
-            .padding(.horizontal, ForecastDetailToken.screenHorizontalPadding)
-            .padding(.top, SpacingToken.sm)
-            .padding(.bottom, SpacingToken.md)
-            .background(reduceTransparency ? DetailColorToken.background : Color.clear)
         }
         .safeAreaInset(edge: .bottom) {
             Spacer()
@@ -157,7 +151,6 @@ private struct AllergenFocusRow: View {
         .frame(minHeight: ForecastDetailToken.allergenRowMinHeight)
         .padding(ForecastDetailToken.allergenCardPadding)
         .premiumSurface(cornerRadius: ForecastDetailToken.allergenCardCornerRadius)
-        .softShadow(ShadowToken.card)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(item.title), \(item.levelText). \(item.levelDescription)")
     }
@@ -285,7 +278,7 @@ private struct HourlyRiskChip: View {
     var body: some View {
         VStack(spacing: ForecastDetailToken.hourlyChipContentSpacing) {
             Text(isCurrentHour ? "Jetzt" : item.hourText)
-                .font(TypographyToken.caption)
+                .font(TypographyToken.severityPill)
                 .foregroundStyle(isCurrentHour ? ColorToken.textPrimary : ColorToken.textSecondary)
                 .monospacedDigit()
 
@@ -295,19 +288,19 @@ private struct HourlyRiskChip: View {
                 .accessibilityHidden(true)
 
             Text(item.levelText)
-                .font(TypographyToken.caption.weight(.semibold))
+                .font(TypographyToken.footnote.weight(.semibold))
                 .foregroundStyle(ColorToken.textPrimary.opacity(DetailColorToken.hourlyPrimaryText))
                 .lineLimit(1)
                 .minimumScaleFactor(ForecastDetailToken.hourlyTextMinimumScale)
 
             Text(item.temperatureText)
-                .font(TypographyToken.caption)
+                .font(TypographyToken.secondaryBody)
                 .foregroundStyle(ColorToken.textSecondary)
                 .monospacedDigit()
         }
         .frame(width: chipWidth)
         .frame(minHeight: chipMinHeight)
-        .background(chipBackground)
+        .background { chipBackground }
         .clipShape(RoundedRectangle(cornerRadius: chipCornerRadius, style: .continuous))
         .scaleEffect(isCurrentHour ? ForecastDetailToken.hourlyCurrentScale : 1)
         .softShadow(isCurrentHour ? ShadowToken.floating : ShadowTokenValue(color: .clear, radius: 0, y: 0))
@@ -315,17 +308,21 @@ private struct HourlyRiskChip: View {
         .accessibilityLabel("\(item.hourText), Risiko \(item.levelText), \(item.temperatureText)")
     }
 
-    private var chipBackground: Color {
+    @ViewBuilder
+    private var chipBackground: some View {
         if isCurrentHour {
-            return ColorToken.softPeach
+            LinearGradient(
+                colors: [
+                    DetailColorToken.hourlyActiveTop,
+                    DetailColorToken.hourlyActiveBottom
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        } else {
+            SemanticColorToken.highSeverityBackground
+                .opacity(DetailColorToken.hourlyInactiveBackground)
         }
-
-        return DetailColorToken.riskBackground(for: item.levelText)
-            .opacity(ForecastDetailToken.hourlyInactiveOpacity)
-    }
-
-    private var strokeColor: Color {
-        isCurrentHour ? DetailColorToken.sageAccentBorder : DetailColorToken.neutralStroke
     }
 
     private var dotSize: CGFloat {

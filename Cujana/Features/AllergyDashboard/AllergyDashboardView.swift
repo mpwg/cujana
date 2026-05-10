@@ -8,9 +8,12 @@ struct AllergyDashboardView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                content
+                VStack(spacing: 0) {
+                    HomeLogoHeader()
+                    content
+                }
                     .padding(.horizontal, SpacingToken.xl)
-                    .padding(.top, SpacingToken.lg)
+                    .padding(.top, 0)
                     .padding(.bottom, scrollBottomPadding)
             }
             .scrollIndicators(.hidden)
@@ -20,18 +23,6 @@ struct AllergyDashboardView: View {
             .toolbarBackground(ColorToken.backgroundPrimary, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
 #endif
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Image("Cujana")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(
-                            width: HomeOverviewToken.navigationLogoWidth,
-                            height: HomeOverviewToken.navigationLogoHeight
-                        )
-                        .accessibilityLabel("Cujana")
-                }
-            }
             .task {
                 await viewModel.load()
             }
@@ -81,6 +72,23 @@ struct AllergyDashboardView: View {
         }
 
         return HomeOverviewToken.scrollBottomPadding
+    }
+}
+
+private struct HomeLogoHeader: View {
+    var body: some View {
+        Image("Cujana")
+            .resizable()
+            .scaledToFit()
+            .frame(
+                width: HomeOverviewToken.navigationLogoWidth,
+                height: HomeOverviewToken.navigationLogoHeight
+            )
+            .opacity(HomeOverviewToken.navigationLogoOpacity)
+            .padding(.top, HomeOverviewToken.navigationLogoTopPadding)
+            .padding(.bottom, HomeOverviewToken.navigationLogoBottomPadding)
+            .frame(maxWidth: .infinity)
+            .accessibilityLabel("Cujana")
     }
 }
 
@@ -158,7 +166,7 @@ private struct DayOverviewCard: View {
     let day: ForecastDaySummaryItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.md) {
+        VStack(alignment: .leading, spacing: SpacingToken.sm) {
             Text(day.title)
                 .font(TypographyToken.caption)
                 .tracking(HomeOverviewToken.dayLabelTracking)
@@ -169,8 +177,9 @@ private struct DayOverviewCard: View {
 
             HStack(alignment: .top, spacing: SpacingToken.sm) {
                 VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                    Text(day.temperatureText == "--" ? "—" : day.temperatureText)
-                        .font(.system(size: 34, weight: .semibold, design: .rounded))
+                    Text(day.temperatureText)
+                        .font(TypographyToken.dayTemperature)
+                        .tracking(HomeOverviewToken.dayTemperatureTracking)
                         .foregroundStyle(ColorToken.textPrimary)
                         .monospacedDigit()
                 }
@@ -185,12 +194,12 @@ private struct DayOverviewCard: View {
                         width: HomeOverviewToken.dayWeatherIconSize,
                         height: HomeOverviewToken.dayWeatherIconSize
                     )
-                    .background(HomeOverviewToken.dayWeatherIconBackground)
+                    .background(ColorToken.accentSoft.opacity(HomeOverviewToken.dayWeatherIconBackgroundOpacity))
                     .clipShape(Circle())
                     .accessibilityHidden(true)
             }
 
-            Text(day.temperatureText == "--" ? "Wetter noch nicht verfügbar" : day.weatherText.capitalized)
+            Text(day.weatherText.capitalized)
                 .font(TypographyToken.secondaryBody)
                 .foregroundStyle(ColorToken.textSecondary)
                 .lineLimit(1)
@@ -211,14 +220,15 @@ private struct DayOverviewCard: View {
                 }
             }
         }
-        .padding(HomeOverviewToken.dayCardPadding)
+        .padding(.top, HomeOverviewToken.dayCardPadding)
+        .padding(.horizontal, HomeOverviewToken.dayCardPadding)
+        .padding(.bottom, HomeOverviewToken.dayCardBottomPadding)
         .frame(
             width: HomeOverviewToken.dayCardWidth,
             height: HomeOverviewToken.dayCardHeight,
             alignment: .topLeading
         )
         .premiumSurface(cornerRadius: HomeOverviewToken.dayCardCornerRadius)
-        .softShadow(ShadowToken.card)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(day.accessibilityText)
     }

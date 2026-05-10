@@ -10,7 +10,7 @@ struct SymptomEntryView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: SpacingToken.section) {
+                VStack(alignment: .leading, spacing: SpacingToken.xxl) {
                     header
                     symptomSection
                     severitySection
@@ -19,8 +19,10 @@ struct SymptomEntryView: View {
                     statusMessage
                 }
                 .padding(.horizontal, SpacingToken.xl)
-                .padding(.vertical, SpacingToken.xl)
-                .padding(.bottom, SymptomCheckInToken.scrollBottomPadding)
+                .padding(.top, SpacingToken.xl)
+                .padding(.bottom, SpacingToken.lg)
+                .safeAreaPadding(.bottom, SymptomCheckInToken.scrollBottomPadding)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .background(ColorToken.backgroundPrimary.ignoresSafeArea())
             .safeAreaInset(edge: .bottom) {
@@ -50,6 +52,7 @@ struct SymptomEntryView: View {
                 .font(TypographyToken.sheetHeading)
                 .tracking(-0.8)
                 .foregroundStyle(ColorToken.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             Text("Halte fest, was du spürst. Das hilft dir, Muster ruhiger zu erkennen.")
                 .font(TypographyToken.body)
@@ -90,6 +93,7 @@ struct SymptomEntryView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity)
         }
     }
 
@@ -107,6 +111,7 @@ struct SymptomEntryView: View {
                 .font(TypographyToken.body)
                 .foregroundStyle(ColorToken.textPrimary)
                 .tint(ColorToken.accentPrimary)
+                .frame(maxHeight: SymptomCheckInToken.calendarMaxHeight)
 
                 Divider()
                     .overlay(ColorToken.separatorSoft)
@@ -131,7 +136,6 @@ struct SymptomEntryView: View {
             .clipShape(
                 RoundedRectangle(cornerRadius: SymptomCheckInToken.calendarContainerCornerRadius, style: .continuous)
             )
-            .softShadow(ShadowToken.card)
         }
     }
 
@@ -226,9 +230,9 @@ private struct SymptomChip: View {
                 Capsule()
                     .stroke(
                         isSelected
-                            ? Color.clear
+                            ? ColorToken.accentPrimary.opacity(SymptomCheckInToken.symptomBorderOpacity)
                             : ColorToken.accentPrimary.opacity(SymptomCheckInToken.symptomBorderOpacity),
-                        lineWidth: isSelected ? 0 : 1
+                        lineWidth: ChipToken.borderWidth
                     )
             )
         }

@@ -96,14 +96,17 @@ enum SurfaceOpacityToken {
 
 enum SurfaceStyleToken {
     static let backgroundOpacity = 0.72
-    static let gradientTopOpacity = 0.55
-    static let gradientBottomOpacity = 0.15
+    static let gradientTopOpacity = 0.28
+    static let gradientBottomOpacity = 0.08
     static let strokeOpacity = 0.45
 }
 
 enum HomeOverviewToken {
-    static let navigationLogoWidth: CGFloat = 112
-    static let navigationLogoHeight: CGFloat = 34
+    static let navigationLogoWidth: CGFloat = 150
+    static let navigationLogoHeight: CGFloat = 44
+    static let navigationLogoOpacity = 0.96
+    static let navigationLogoTopPadding: CGFloat = 12
+    static let navigationLogoBottomPadding: CGFloat = 28
     static let allergenGridMinimumWidth: CGFloat = 116
     static let weatherIconSize: CGFloat = 28
     static let scrollBottomPadding = SpacingToken.md
@@ -125,26 +128,28 @@ enum HomeOverviewToken {
     static let heroLeafTrailingPadding: CGFloat = 22
     static let heroLeafTopPadding: CGFloat = 52
     static let dayCardPadding: CGFloat = 16
-    static let dayCardWidth: CGFloat = 146
-    static let dayCardHeight: CGFloat = 156
-    static let dayCardCornerRadius: CGFloat = 26
+    static let dayCardWidth: CGFloat = 162
+    static let dayCardHeight: CGFloat = 150
+    static let dayCardCornerRadius: CGFloat = 30
     static let dayLabelTracking = 1.2
-    static let dayWeatherIconSize: CGFloat = 48
+    static let dayWeatherIconSize: CGFloat = 44
     static let dayWeatherIconFontSize: CGFloat = 24
-    static let dayWeatherIconBackground = Color(hex: "#EDF3ED")
+    static let dayWeatherIconBackgroundOpacity = 0.72
+    static let dayTemperatureTracking = -1.2
     static let weatherDescriptionMinimumScale = 0.82
     static let severityPillHeight: CGFloat = 28
     static let severityPillPaddingH: CGFloat = 12
     static let severityPillCornerRadius: CGFloat = 14
+    static let dayCardBottomPadding: CGFloat = 16
     static let attributionOpacity = 0.85
     static let attributionTopPadding: CGFloat = 8
     static let compactButtonPressedOpacity = 0.72
     static let ctaPadding = SpacingToken.lg
-    static let ctaHeight: CGFloat = 142
+    static let ctaHeight: CGFloat = 132
     static let ctaCornerRadius: CGFloat = 30
-    static let ctaBackgroundOpacity = 0.18
-    static let ctaArtworkBlur: CGFloat = 1
-    static let ctaButtonHeight: CGFloat = 54
+    static let ctaBackgroundOpacity = 0.12
+    static let ctaArtworkBlur: CGFloat = 1.6
+    static let ctaButtonHeight: CGFloat = 52
     static let ctaButtonIconSpacing: CGFloat = 10
     static let ctaButtonIconSize: CGFloat = 18
 }
@@ -155,11 +160,12 @@ enum AllergenLoadToken {
 }
 
 enum ForecastDetailToken {
-    static let titleBottomPadding: CGFloat = 20
+    static let titleBottomPadding: CGFloat = 18
     static let dayIconSize: CGFloat = 42
-    static let weatherIconWidth: CGFloat = 24
+    static let weatherIconWidth: CGFloat = 30
     static let hourlyRiskGridMinimumWidth: CGFloat = 92
     static let screenHorizontalPadding: CGFloat = 24
+    static let screenTopPadding: CGFloat = 24
     static let sectionSpacing: CGFloat = 22
     static let contextSpacing: CGFloat = 12
     static let cardHorizontalPadding: CGFloat = 20
@@ -170,18 +176,18 @@ enum ForecastDetailToken {
     static let dayPickerSurfaceOpacity = 0.75
     static let dayPickerPadding: CGFloat = 4
     static let dayPickerCornerRadius: CGFloat = 26
-    static let weatherIconSize: CGFloat = 58
-    static let weatherMinHeight: CGFloat = 118
+    static let weatherIconSize: CGFloat = 52
+    static let weatherMinHeight: CGFloat = 112
     static let weatherCardPadding: CGFloat = 18
     static let weatherCardCornerRadius: CGFloat = 30
     static let allergenIconSize: CGFloat = 30
-    static let allergenIconFrameSize: CGFloat = 44
-    static let allergenRowMinHeight: CGFloat = 94
+    static let allergenIconFrameSize: CGFloat = 52
+    static let allergenRowMinHeight: CGFloat = 88
     static let allergenCardPadding = SpacingToken.lg
     static let allergenCardCornerRadius: CGFloat = 28
-    static let badgeHeight: CGFloat = 32
+    static let badgeHeight: CGFloat = 30
     static let badgeHorizontalPadding: CGFloat = 14
-    static let badgeCornerRadius: CGFloat = 16
+    static let badgeCornerRadius: CGFloat = 15
     static let noRiskMinHeight: CGFloat = 54
     static let noRiskCornerRadius: CGFloat = 18
     static let hairlineStrokeWidth: CGFloat = 0.5
@@ -214,7 +220,7 @@ enum EntryListToken {
 }
 
 enum TabBarToken {
-    static let backgroundOpacity = 0.72
+    static let backgroundOpacity = 0.82
     static let sheetCornerRadius: CGFloat = 34
 }
 
@@ -225,29 +231,30 @@ enum PressFeedbackToken {
 }
 
 enum SymptomCheckInToken {
-    static let symptomGridMinimumWidth: CGFloat = 150
-    static let scrollBottomPadding: CGFloat = 72
-    static let bottomBarBackgroundOpacity = 0.94
+    static let symptomGridMinimumWidth: CGFloat = 160
+    static let scrollBottomPadding: CGFloat = 120
+    static let bottomBarBackgroundOpacity = 0.96
     static let introMaxWidth: CGFloat = 320
-    static let fieldContainerPadding: CGFloat = 20
-    static let symptomPillMinHeight: CGFloat = 52
-    static let symptomPillPaddingH: CGFloat = 16
-    static let symptomBorderOpacity = 0.1
-    static let symptomSelectedBackground = Color(hex: "#E7F0E7")
+    static let fieldContainerPadding: CGFloat = 18
+    static let symptomPillMinHeight: CGFloat = 54
+    static let symptomPillPaddingH: CGFloat = 18
+    static let symptomBorderOpacity = 0.14
+    static let symptomSelectedBackground = Color(hex: "#E4EFE5")
     static let symptomIconOpacity = 0.92
     static let severityPillMinHeight: CGFloat = 52
-    static let severityPillMinWidth: CGFloat = 68
+    static let severityPillMinWidth: CGFloat = 44
     static let severityUnselectedText = Color(hex: "#4B4B48")
     static let calendarContainerOpacity = 0.82
-    static let calendarContainerCornerRadius: CGFloat = 30
-    static let timePickerHeight: CGFloat = 42
-    static let timePickerCornerRadius: CGFloat = 21
-    static let notesMinHeight: CGFloat = 180
+    static let calendarContainerCornerRadius: CGFloat = 32
+    static let calendarMaxHeight: CGFloat = 420
+    static let timePickerHeight: CGFloat = 38
+    static let timePickerCornerRadius: CGFloat = 19
+    static let notesMinHeight: CGFloat = 140
     static let notesPadding: CGFloat = 18
     static let notesCornerRadius: CGFloat = 28
-    static let buttonMinHeight: CGFloat = 58
-    static let saveButtonMinHeight: CGFloat = 58
-    static let saveButtonRadius: CGFloat = 22
+    static let buttonMinHeight: CGFloat = 56
+    static let saveButtonMinHeight: CGFloat = 56
+    static let saveButtonRadius: CGFloat = 20
     static let disabledTextOpacity = 0.8
     static let disabledButtonOpacity = 0.82
 }

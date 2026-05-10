@@ -61,6 +61,8 @@ enum DetailColorToken {
         static let neutralStroke = Color(hex: "#DDD6CC")
         static let warningSoft = Color(hex: "#EEE4D0")
         static let alertSoft = Color(hex: "#EEDBD7")
+        static let hourlyActiveTop = Color(hex: "#F6E5E0")
+        static let hourlyActiveBottom = Color(hex: "#F4DDD7")
     }
 
     static let background = Raw.background
@@ -71,6 +73,8 @@ enum DetailColorToken {
     static let neutralStroke = Raw.neutralStroke.opacity(0.34)
     static let warningSoft = Raw.warningSoft
     static let alertSoft = Raw.alertSoft
+    static let hourlyActiveTop = Raw.hourlyActiveTop
+    static let hourlyActiveBottom = Raw.hourlyActiveBottom
 
     static let sageQuiet = Raw.sage.opacity(0.68)
     static let sageTertiary = Raw.sage.opacity(0.72)
@@ -93,6 +97,7 @@ enum DetailColorToken {
     static let softStroke = 0.68
     static let rowStroke = 0.72
     static let navigationSurface = 0.66
+    static let hourlyInactiveBackground = 0.55
 
     static func riskBackground(for text: String) -> Color {
         switch text {
@@ -157,8 +162,9 @@ enum TypographyToken {
     static let sheetHeading = Font.system(size: 26, weight: .semibold, design: .rounded)
     static let title = Font.system(size: 28, weight: .semibold, design: .rounded)
     static let headline = Font.system(size: 22, weight: .semibold, design: .rounded)
-    static let weatherTemperature = Font.system(size: 44, weight: .semibold, design: .rounded)
+    static let weatherTemperature = Font.system(size: 42, weight: .semibold, design: .rounded)
     static let weatherDescription = Font.system(size: 18, weight: .medium, design: .rounded)
+    static let dayTemperature = Font.system(size: 30, weight: .semibold, design: .rounded)
 
     static let body = Font.system(size: 17, weight: .regular, design: .rounded)
     static let bodyEmphasized = Font.system(size: 17, weight: .semibold, design: .rounded)
@@ -216,9 +222,9 @@ enum ShadowToken {
     )
 
     static let ctaButton = ShadowTokenValue(
-        color: Color.black.opacity(0.08),
-        radius: 16,
-        y: 8
+        color: Color.black.opacity(0.05),
+        radius: 12,
+        y: 4
     )
 }
 
