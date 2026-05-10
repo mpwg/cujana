@@ -24,6 +24,7 @@ enum ButtonToken {
         static let radius = RadiusToken.full
         static let paddingH = SpacingToken.lg
         static let paddingV = SpacingToken.md
+        static let enabledOpacity = 1.0
         static let disabledOpacity = 0.56
     }
 
@@ -82,6 +83,40 @@ enum StatusToken {
     static let errorText = ColorToken.accentNegative
     static let radius = RadiusToken.radiusSmall
     static let padding = SpacingToken.md
+}
+
+enum SurfaceOpacityToken {
+    static let primaryCard = 0.94
+    static let mutedCard = 0.56
+    static let mutedRow = 0.48
+    static let backgroundWash = 0.12
+    static let accentProminent = 0.72
+    static let accentSubtle = 0.52
+}
+
+enum HomeOverviewToken {
+    static let allergenGridMinimumWidth: CGFloat = 116
+    static let weatherIconSize: CGFloat = 28
+}
+
+enum ForecastDetailToken {
+    static let dayIconSize: CGFloat = 42
+    static let weatherIconWidth: CGFloat = 24
+    static let hourlyRiskGridMinimumWidth: CGFloat = 92
+}
+
+enum EntryListToken {
+    static let pollenChipGridMinimumWidth: CGFloat = 132
+}
+
+enum PressFeedbackToken {
+    static let prominentOpacity = 0.9
+    static let prominentScale = 0.99
+    static let animationDuration = 0.12
+}
+
+enum SymptomCheckInToken {
+    static let buttonMinHeight: CGFloat = 48
 }
 
 struct SoftShadowModifier: ViewModifier {

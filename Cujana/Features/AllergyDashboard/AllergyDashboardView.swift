@@ -10,7 +10,7 @@ struct AllergyDashboardView: View {
                 content
                     .padding(.horizontal, SpacingToken.xl)
                     .padding(.top, SpacingToken.sm)
-                    .padding(.bottom, SpacingToken.lg)
+                    .padding(.bottom, SpacingToken.xxl)
             }
             .scrollIndicators(.hidden)
             .background(ColorToken.backgroundPrimary.ignoresSafeArea())
@@ -36,7 +36,7 @@ struct AllergyDashboardView: View {
     private var content: some View {
         switch viewModel.state {
         case .idle, .loading:
-            VStack(spacing: SpacingToken.xl) {
+            VStack(spacing: SpacingToken.lg) {
                 ForecastSummaryCard(
                     days: [],
                     detailDays: [],
@@ -47,7 +47,7 @@ struct AllergyDashboardView: View {
         case .empty(let dashboardContent), .loaded(let dashboardContent):
             dashboard(for: dashboardContent)
         case .failure:
-            VStack(spacing: SpacingToken.xl) {
+            VStack(spacing: SpacingToken.lg) {
                 ForecastSummaryCard(
                     days: [],
                     detailDays: [],
@@ -59,7 +59,7 @@ struct AllergyDashboardView: View {
     }
 
     private func dashboard(for dashboardContent: AllergyDashboardContent) -> some View {
-        VStack(spacing: SpacingToken.xl) {
+        VStack(spacing: SpacingToken.lg) {
             ForecastSummaryCard(
                 days: dashboardContent.forecastDays,
                 detailDays: dashboardContent.forecastDetailDays,
@@ -76,23 +76,15 @@ private struct ForecastSummaryCard: View {
     let isLoading: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.md) {
-            HStack(alignment: .center, spacing: SpacingToken.md) {
-                Image(systemName: "leaf.fill")
-                    .font(.system(.title3, design: .rounded).weight(.medium))
-                    .foregroundStyle(ColorToken.accentPrimary)
-                    .frame(width: 42, height: 42)
-                    .background(ColorToken.accentSoft)
-                    .clipShape(Circle())
-                    .accessibilityHidden(true)
-
+        VStack(alignment: .leading, spacing: SpacingToken.sm) {
+            HStack(alignment: .firstTextBaseline, spacing: SpacingToken.md) {
                 VStack(alignment: .leading, spacing: SpacingToken.xs) {
                     Text("3-Tages-Überblick")
-                        .font(TypographyToken.title)
+                        .font(TypographyToken.headline)
                         .foregroundStyle(ColorToken.textPrimary)
 
-                    Text("Allergene im Vordergrund")
-                        .font(TypographyToken.footnote)
+                    Text("Relevante Belastungen")
+                        .font(TypographyToken.caption)
                         .foregroundStyle(ColorToken.textSecondary)
                 }
 
@@ -126,8 +118,8 @@ private struct ForecastSummaryCard: View {
 
             ForecastAttributionView()
         }
-        .padding(CardToken.padding)
-        .background(ColorToken.cardBackground.opacity(0.94))
+        .padding(SpacingToken.lg)
+        .background(ColorToken.cardBackground.opacity(SurfaceOpacityToken.primaryCard))
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous))
         .softShadow(ShadowToken.card)
     }
@@ -152,10 +144,18 @@ private struct DayOverviewCard: View {
     let day: ForecastDaySummaryItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.md) {
-            Text(day.title)
-                .font(TypographyToken.bodyEmphasized)
-                .foregroundStyle(ColorToken.textPrimary)
+        VStack(alignment: .leading, spacing: SpacingToken.sm) {
+            HStack(alignment: .top, spacing: SpacingToken.md) {
+                VStack(alignment: .leading, spacing: SpacingToken.xs) {
+                    Text(day.title)
+                        .font(TypographyToken.bodyEmphasized)
+                        .foregroundStyle(ColorToken.textPrimary)
+
+                    WeatherSummary(day: day)
+                }
+
+                Spacer(minLength: SpacingToken.sm)
+            }
 
             if day.allergenItems.isEmpty {
                 Text("Keine relevante Belastung")
@@ -164,35 +164,40 @@ private struct DayOverviewCard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, SpacingToken.xs)
             } else {
-                VStack(spacing: SpacingToken.sm) {
+                LazyVGrid(
+                    columns: [
+                        GridItem(
+                            .adaptive(minimum: HomeOverviewToken.allergenGridMinimumWidth),
+                            spacing: SpacingToken.xs
+                        )
+                    ],
+                    alignment: .leading,
+                    spacing: SpacingToken.xs
+                ) {
                     ForEach(day.allergenItems) { item in
-                        AllergenLoadRow(item: item)
+                        AllergenLoadBadge(item: item)
                     }
                 }
             }
-
-            WeatherSummary(day: day)
         }
         .padding(.horizontal, SpacingToken.md)
-        .padding(.vertical, SpacingToken.md)
-        .background(ColorToken.cardMutedBackground.opacity(0.56))
+        .padding(.vertical, SpacingToken.sm)
+        .background(ColorToken.cardMutedBackground.opacity(SurfaceOpacityToken.mutedCard))
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusMedium, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(day.accessibilityText)
     }
 }
 
-private struct AllergenLoadRow: View {
+private struct AllergenLoadBadge: View {
     let item: ForecastDayAllergenItem
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: SpacingToken.md) {
+        HStack(alignment: .firstTextBaseline, spacing: SpacingToken.xs) {
             Text(item.title)
                 .font(TypographyToken.footnote)
                 .foregroundStyle(ColorToken.textPrimary)
                 .lineLimit(nil)
-
-            Spacer(minLength: SpacingToken.sm)
 
             Text(item.levelText)
                 .font(TypographyToken.caption.weight(.semibold))
@@ -203,6 +208,7 @@ private struct AllergenLoadRow: View {
                 .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
                 .fixedSize(horizontal: false, vertical: true)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -214,18 +220,26 @@ private struct WeatherSummary: View {
             Image(systemName: day.weatherSystemImageName)
                 .font(.system(.footnote, design: .rounded).weight(.medium))
                 .foregroundStyle(ColorToken.accentPrimary)
-                .frame(width: 28, height: 28)
-                .background(ColorToken.accentSoft.opacity(0.72))
+                .frame(width: HomeOverviewToken.weatherIconSize, height: HomeOverviewToken.weatherIconSize)
+                .background(ColorToken.accentSoft.opacity(SurfaceOpacityToken.accentProminent))
                 .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
                 .accessibilityHidden(true)
 
-            Text("\(day.temperatureText), \(day.weatherText)")
+            Text(summaryText)
                 .font(TypographyToken.caption)
                 .foregroundStyle(ColorToken.textSecondary)
                 .lineLimit(nil)
 
             Spacer(minLength: SpacingToken.sm)
         }
+    }
+
+    private var summaryText: String {
+        if day.temperatureText == "--" {
+            return "Wetter noch nicht verfügbar"
+        }
+
+        return "\(day.temperatureText), \(day.weatherText)"
     }
 }
 
@@ -245,7 +259,13 @@ private struct CompactNavigationButtonStyle: ButtonStyle {
             .foregroundStyle(ColorToken.accentPrimary)
             .padding(.horizontal, SpacingToken.sm)
             .padding(.vertical, SpacingToken.xs)
-            .background(ColorToken.accentSoft.opacity(configuration.isPressed ? 0.72 : 0.52))
+            .background(
+                ColorToken.accentSoft.opacity(
+                    configuration.isPressed
+                        ? SurfaceOpacityToken.accentProminent
+                        : SurfaceOpacityToken.accentSubtle
+                )
+            )
             .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
     }
 }
@@ -257,8 +277,8 @@ struct ForecastAttributionView: View {
     var body: some View {
         Text(attributionText)
             .multilineTextAlignment(.leading)
-            .font(TypographyToken.caption)
-            .foregroundStyle(ColorToken.textSecondary)
+            .font(.system(.caption2))
+            .foregroundStyle(ColorToken.textTertiary)
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityLabel(attributionText)
     }
@@ -268,14 +288,14 @@ private struct FeelingCTAView: View {
     let action: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.lg) {
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
             VStack(alignment: .leading, spacing: SpacingToken.xs) {
                 Text("Wie fühlst du dich?")
-                    .font(TypographyToken.title)
+                    .font(TypographyToken.headline)
                     .foregroundStyle(ColorToken.textPrimary)
 
                 Text("Ein kurzer Check-in genügt.")
-                    .font(TypographyToken.body)
+                    .font(TypographyToken.footnote)
                     .foregroundStyle(ColorToken.textSecondary)
             }
 
@@ -287,15 +307,15 @@ private struct FeelingCTAView: View {
             .buttonStyle(FeelingCTAButtonStyle())
             .accessibilityLabel("Symptome erfassen")
         }
-        .padding(CardToken.padding)
+        .padding(SpacingToken.lg)
         .background {
             RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous)
                 .fill(ColorToken.cardMutedBackground)
                 .overlay {
                     LinearGradient(
                         colors: [
-                            ColorToken.accentSoft.opacity(0.52),
-                            ColorToken.cardMutedBackground.opacity(0.12)
+                            ColorToken.accentSoft.opacity(SurfaceOpacityToken.accentSubtle),
+                            ColorToken.cardMutedBackground.opacity(SurfaceOpacityToken.backgroundWash)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -311,13 +331,13 @@ private struct FeelingCTAButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(ColorToken.cardBackground)
-            .padding(.horizontal, SpacingToken.xl)
-            .padding(.vertical, SpacingToken.lg)
-            .frame(minHeight: SpacingToken.xxl + SpacingToken.xl)
+            .padding(.horizontal, SpacingToken.lg)
+            .padding(.vertical, SpacingToken.md)
+            .frame(minHeight: SymptomCheckInToken.buttonMinHeight)
             .background(ColorToken.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous))
-            .opacity(configuration.isPressed ? 0.9 : 1)
-            .scaleEffect(configuration.isPressed ? 0.99 : 1)
-            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
+            .opacity(configuration.isPressed ? PressFeedbackToken.prominentOpacity : 1)
+            .scaleEffect(configuration.isPressed ? PressFeedbackToken.prominentScale : 1)
+            .animation(.easeInOut(duration: PressFeedbackToken.animationDuration), value: configuration.isPressed)
     }
 }

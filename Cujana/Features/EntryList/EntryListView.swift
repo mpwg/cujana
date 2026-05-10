@@ -222,7 +222,11 @@ private struct FlexiblePollenChips: View {
     var body: some View {
         LazyVGrid(
             columns: [
-                GridItem(.adaptive(minimum: 132), spacing: SpacingToken.sm, alignment: .leading)
+                GridItem(
+                    .adaptive(minimum: EntryListToken.pollenChipGridMinimumWidth),
+                    spacing: SpacingToken.sm,
+                    alignment: .leading
+                )
             ],
             alignment: .leading,
             spacing: SpacingToken.sm

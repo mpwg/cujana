@@ -34,7 +34,7 @@ private struct ForecastDetailDayView: View {
                 Image(systemName: "leaf")
                     .font(.system(.title3, design: .rounded).weight(.light))
                     .foregroundStyle(ColorToken.accentPrimary)
-                    .frame(width: 42, height: 42)
+                    .frame(width: ForecastDetailToken.dayIconSize, height: ForecastDetailToken.dayIconSize)
                     .background(ColorToken.accentSoft)
                     .clipShape(Circle())
                     .accessibilityHidden(true)
@@ -71,7 +71,7 @@ private struct ForecastDetailDayView: View {
             DetailWeatherContext(day: day)
         }
         .padding(CardToken.padding)
-        .background(ColorToken.cardBackground.opacity(0.94))
+        .background(ColorToken.cardBackground.opacity(SurfaceOpacityToken.primaryCard))
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous))
         .softShadow(ShadowToken.card)
     }
@@ -84,7 +84,7 @@ private struct DetailWeatherContext: View {
         HStack(spacing: SpacingToken.sm) {
             Image(systemName: day.weatherSystemImageName)
                 .foregroundStyle(ColorToken.accentPrimary)
-                .frame(width: 24)
+                .frame(width: ForecastDetailToken.weatherIconWidth)
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: SpacingToken.xs) {
@@ -151,7 +151,7 @@ private struct DetailPollenRow: View {
         }
         .padding(.horizontal, SpacingToken.md)
         .padding(.vertical, SpacingToken.sm)
-        .background(ColorToken.cardMutedBackground.opacity(0.48))
+        .background(ColorToken.cardMutedBackground.opacity(SurfaceOpacityToken.mutedRow))
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusMedium, style: .continuous))
     }
 }
@@ -165,7 +165,15 @@ private struct DetailHourlyRiskSection: View {
                 .font(TypographyToken.bodyEmphasized)
                 .foregroundStyle(ColorToken.textPrimary)
 
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 92), spacing: SpacingToken.sm)], spacing: SpacingToken.sm) {
+            LazyVGrid(
+                columns: [
+                    GridItem(
+                        .adaptive(minimum: ForecastDetailToken.hourlyRiskGridMinimumWidth),
+                        spacing: SpacingToken.sm
+                    )
+                ],
+                spacing: SpacingToken.sm
+            ) {
                 ForEach(items) { item in
                     VStack(alignment: .leading, spacing: SpacingToken.xs) {
                         Text(item.hourText)

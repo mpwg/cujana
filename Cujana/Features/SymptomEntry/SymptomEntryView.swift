@@ -152,7 +152,7 @@ struct SymptomEntryView: View {
         }
         .buttonStyle(PrimaryButtonStyle())
         .disabled(!viewModel.canSubmit)
-        .opacity(viewModel.canSubmit ? 1 : ButtonToken.Primary.disabledOpacity)
+        .opacity(viewModel.canSubmit ? ButtonToken.Primary.enabledOpacity : ButtonToken.Primary.disabledOpacity)
     }
 }
 
