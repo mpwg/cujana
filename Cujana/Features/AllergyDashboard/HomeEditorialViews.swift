@@ -27,7 +27,7 @@ struct PersonalLoadStatusCard: View {
     var body: some View {
         HStack(spacing: SpacingToken.md) {
             Image(systemName: "allergens")
-                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .font(.system(.title2, design: .rounded).weight(.semibold))
                 .foregroundStyle(SemanticColorToken.foreground(for: severityText))
                 .frame(
                     width: HomeOverviewToken.personalStatusIconSize,
@@ -39,13 +39,14 @@ struct PersonalLoadStatusCard: View {
 
             VStack(alignment: .leading, spacing: SpacingToken.xs) {
                 Text(statusTitle)
-                    .font(TypographyToken.bodyEmphasized)
+                    .font(TypographyToken.personalStatusTitle)
+                    .tracking(HomeOverviewToken.personalStatusTitleTracking)
                     .foregroundStyle(ColorToken.textPrimary)
                     .lineLimit(2)
 
                 Text(statusSubtitle)
                     .font(TypographyToken.secondaryBody)
-                    .foregroundStyle(ColorToken.textSecondary)
+                    .foregroundStyle(ColorToken.textSecondary.opacity(HomeOverviewToken.personalStatusSubtitleOpacity))
                     .lineLimit(1)
             }
 
@@ -99,7 +100,8 @@ struct FeelingCTAView: View {
         VStack(alignment: .leading, spacing: SpacingToken.lg) {
             VStack(alignment: .leading, spacing: SpacingToken.sm) {
                 Text("Heute")
-                    .font(TypographyToken.severityPill)
+                    .font(TypographyToken.ctaLabel)
+                    .tracking(HomeOverviewToken.ctaLabelTracking)
                     .foregroundStyle(HomeOverviewToken.ctaLabelText)
 
                 Text("Wie fühlst du dich heute?")
@@ -110,8 +112,8 @@ struct FeelingCTAView: View {
                     .minimumScaleFactor(HomeOverviewToken.weatherDescriptionMinimumScale)
 
                 Text("Ein kurzer Check-in hilft dir, Muster und Trigger besser zu verstehen.")
-                    .font(TypographyToken.secondaryBody)
-                    .foregroundStyle(ColorToken.textSecondary)
+                    .font(TypographyToken.ctaSupporting)
+                    .foregroundStyle(ColorToken.textSecondary.opacity(HomeOverviewToken.ctaSupportingOpacity))
                     .frame(maxWidth: HomeOverviewToken.ctaSupportingMaxWidth, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
             }

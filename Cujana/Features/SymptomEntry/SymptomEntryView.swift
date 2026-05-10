@@ -10,7 +10,7 @@ struct SymptomEntryView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: SpacingToken.xxl) {
+                VStack(alignment: .leading, spacing: SymptomCheckInToken.sectionSpacing) {
                     header
                     symptomSection
                     severitySection
@@ -18,8 +18,8 @@ struct SymptomEntryView: View {
                     noteSection
                     statusMessage
                 }
-                .padding(.horizontal, SpacingToken.xl)
-                .padding(.top, SpacingToken.xl)
+                .padding(.horizontal, SymptomCheckInToken.screenHorizontalPadding)
+                .padding(.top, SymptomCheckInToken.sectionSpacing)
                 .padding(.bottom, SpacingToken.lg)
                 .safeAreaPadding(.bottom, SymptomCheckInToken.scrollBottomPadding)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -27,7 +27,7 @@ struct SymptomEntryView: View {
             .background(ColorToken.backgroundPrimary.ignoresSafeArea())
             .safeAreaInset(edge: .bottom) {
                 saveButton
-                    .padding(.horizontal, SpacingToken.xl)
+                    .padding(.horizontal, SymptomCheckInToken.screenHorizontalPadding)
                     .padding(.top, SpacingToken.md)
                     .padding(.bottom, SpacingToken.md)
                     .background(ColorToken.backgroundPrimary.opacity(SymptomCheckInToken.bottomBarBackgroundOpacity))
@@ -49,13 +49,13 @@ struct SymptomEntryView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: SpacingToken.sm) {
             Text("Welche Symptome spürst du?")
-                .font(TypographyToken.sheetHeading)
-                .tracking(-0.8)
+                .font(TypographyToken.symptomHeading)
+                .tracking(-0.9)
                 .foregroundStyle(ColorToken.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Text("Dokumentiere Symptome und mögliche allergische Reaktionen.")
-                .font(TypographyToken.body)
+                .font(TypographyToken.symptomText)
                 .foregroundStyle(ColorToken.textSecondary)
                 .frame(maxWidth: SymptomCheckInToken.introMaxWidth, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
@@ -208,13 +208,16 @@ private struct SymptomChip: View {
         Button(action: action) {
             HStack(spacing: SpacingToken.sm) {
                 Image(systemName: option.systemImageName)
-                    .font(.system(size: ChipToken.iconSize, weight: .medium, design: .rounded))
+                    .font(.system(size: SymptomCheckInToken.symptomIconSize, weight: .medium, design: .rounded))
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(ColorToken.accentPrimary.opacity(SymptomCheckInToken.symptomIconOpacity))
-                    .frame(width: ChipToken.iconSize, height: ChipToken.iconSize)
+                    .frame(
+                        width: SymptomCheckInToken.symptomIconSize,
+                        height: SymptomCheckInToken.symptomIconSize
+                    )
 
                 Text(option.title)
-                    .font(TypographyToken.secondaryBody.weight(.medium))
+                    .font(TypographyToken.symptomPill)
                     .foregroundStyle(ColorToken.textPrimary)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
@@ -249,7 +252,7 @@ private struct SeverityButton: View {
     var body: some View {
         Button(action: action) {
             Text(option.title)
-                .font(TypographyToken.caption.weight(.semibold))
+                .font(TypographyToken.footnote.weight(.semibold))
                 .foregroundStyle(isSelected ? SelectionToken.selectedText : SymptomCheckInToken.severityUnselectedText)
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)

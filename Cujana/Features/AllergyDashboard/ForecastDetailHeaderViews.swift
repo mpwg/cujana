@@ -59,21 +59,25 @@ struct WeatherContextRow: View {
         VStack(alignment: .leading, spacing: SpacingToken.md) {
             VStack(alignment: .leading, spacing: SpacingToken.xs) {
                 Text(statusHeadline)
-                    .font(TypographyToken.weatherDescription)
+                    .font(TypographyToken.detailStatusTitle)
+                    .tracking(-0.6)
                     .foregroundStyle(ColorToken.textPrimary)
                     .lineLimit(2)
                     .minimumScaleFactor(ForecastDetailToken.weatherTextMinimumScale)
                     .opacity(DetailColorToken.weatherDescriptionText)
 
                 Text(statusSubtitle)
-                    .font(TypographyToken.secondaryBody)
+                    .font(TypographyToken.detailStatusSubtitle)
                     .foregroundStyle(ColorToken.textSecondary)
                     .lineLimit(1)
             }
 
             Text(weatherContextText)
-                .font(TypographyToken.severityPill)
-                .foregroundStyle(ForecastDetailToken.allergyWeatherContextText)
+                .font(TypographyToken.caption)
+                .foregroundStyle(
+                    ForecastDetailToken.allergyWeatherContextText
+                        .opacity(ForecastDetailToken.allergyWeatherContextOpacity)
+                )
                 .lineLimit(1)
                 .minimumScaleFactor(ForecastDetailToken.weatherTextMinimumScale)
         }

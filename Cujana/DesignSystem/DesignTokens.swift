@@ -161,12 +161,21 @@ enum TypographyToken {
     static let sheetTitle = Font.system(size: 20, weight: .semibold, design: .rounded)
     static let sheetHeading = Font.system(size: 26, weight: .semibold, design: .rounded)
     static let title = Font.system(size: 28, weight: .semibold, design: .rounded)
-    static let ctaHeroTitle = Font.system(size: 32, weight: .semibold, design: .rounded)
+    static let ctaHeroTitle = Font.system(size: 28, weight: .semibold, design: .rounded)
+    static let ctaLabel = Font.system(size: 13, weight: .medium, design: .rounded)
+    static let ctaSupporting = Font.system(size: 16, weight: .regular, design: .rounded)
     static let headline = Font.system(size: 22, weight: .semibold, design: .rounded)
     static let weatherTemperature = Font.system(size: 42, weight: .semibold, design: .rounded)
     static let weatherDescription = Font.system(size: 18, weight: .medium, design: .rounded)
-    static let forecastSectionTitle = Font.system(size: 24, weight: .semibold, design: .rounded)
-    static let loadHeadline = Font.system(size: 22, weight: .semibold, design: .rounded)
+    static let forecastSectionTitle = Font.system(size: 22, weight: .semibold, design: .rounded)
+    static let loadHeadline = Font.system(size: 20, weight: .semibold, design: .rounded)
+    static let personalStatusTitle = Font.system(size: 20, weight: .semibold, design: .rounded)
+    static let detailStatusTitle = Font.system(size: 22, weight: .semibold, design: .rounded)
+    static let detailStatusSubtitle = Font.system(size: 16, weight: .regular, design: .rounded)
+    static let allergenTitle = Font.system(size: 18, weight: .semibold, design: .rounded)
+    static let symptomHeading = Font.system(size: 28, weight: .semibold, design: .rounded)
+    static let symptomText = Font.system(size: 16, weight: .regular, design: .rounded)
+    static let symptomPill = Font.system(size: 16, weight: .medium, design: .rounded)
     static let dayTemperature = Font.system(size: 18, weight: .medium, design: .rounded)
 
     static let body = Font.system(size: 17, weight: .regular, design: .rounded)
@@ -207,9 +216,9 @@ struct ShadowTokenValue {
 
 enum ShadowToken {
     static let card = ShadowTokenValue(
-        color: Color.black.opacity(0.04),
-        radius: 24,
-        y: 10
+        color: Color.black.opacity(0.03),
+        radius: 18,
+        y: 6
     )
 
     static let modal = ShadowTokenValue(
@@ -225,8 +234,8 @@ enum ShadowToken {
     )
 
     static let ctaButton = ShadowTokenValue(
-        color: Color.black.opacity(0.05),
-        radius: 12,
+        color: Color.black.opacity(0.035),
+        radius: 10,
         y: 4
     )
 }

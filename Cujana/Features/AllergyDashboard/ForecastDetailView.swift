@@ -134,7 +134,7 @@ private struct AllergenFocusRow: View {
 
             VStack(alignment: .leading, spacing: ForecastDetailToken.allergenTextSpacing) {
                 Text(item.title)
-                    .font(TypographyToken.bodyEmphasized)
+                    .font(TypographyToken.allergenTitle)
                     .foregroundStyle(ColorToken.textPrimary)
                     .lineLimit(1)
 
@@ -162,7 +162,7 @@ struct RiskBadge: View {
 
     var body: some View {
         Text(text)
-            .font(TypographyToken.caption.weight(.semibold))
+            .font(TypographyToken.footnote.weight(.semibold))
             .foregroundStyle(SemanticColorToken.foreground(for: text))
             .lineLimit(1)
             .minimumScaleFactor(ForecastDetailToken.badgeTextMinimumScale)
@@ -278,7 +278,7 @@ private struct HourlyRiskChip: View {
     var body: some View {
         VStack(spacing: ForecastDetailToken.hourlyChipContentSpacing) {
             Text(isCurrentHour ? "Jetzt" : item.hourText)
-                .font(TypographyToken.severityPill)
+                .font(TypographyToken.caption)
                 .foregroundStyle(isCurrentHour ? ColorToken.textPrimary : ColorToken.textSecondary)
                 .monospacedDigit()
 
@@ -313,15 +313,15 @@ private struct HourlyRiskChip: View {
         if isCurrentHour {
             LinearGradient(
                 colors: [
-                    DetailColorToken.hourlyActiveTop,
-                    DetailColorToken.hourlyActiveBottom
+                    SemanticColorToken.highSeverityBackground.opacity(ForecastDetailToken.hourlyActiveTopOpacity),
+                    SemanticColorToken.highSeverityBackground.opacity(ForecastDetailToken.hourlyActiveBottomOpacity)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
             )
         } else {
             SemanticColorToken.highSeverityBackground
-                .opacity(DetailColorToken.hourlyInactiveBackground)
+                .opacity(ForecastDetailToken.hourlyInactiveBackgroundOpacity)
         }
     }
 

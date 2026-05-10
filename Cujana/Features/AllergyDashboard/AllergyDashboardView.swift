@@ -153,7 +153,7 @@ private struct DayOverviewCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: SpacingToken.sm) {
             Text(day.title)
-                .font(TypographyToken.caption)
+                .font(TypographyToken.attribution.weight(.semibold))
                 .tracking(HomeOverviewToken.dayLabelTracking)
                 .textCase(.uppercase)
                 .foregroundStyle(ColorToken.textSecondary)
@@ -204,7 +204,7 @@ private struct DayOverviewCard: View {
 
             Text(weatherContextText)
                 .font(TypographyToken.caption)
-                .foregroundStyle(HomeOverviewToken.weatherContextText)
+                .foregroundStyle(HomeOverviewToken.weatherContextText.opacity(HomeOverviewToken.weatherContextOpacity))
                 .lineLimit(1)
                 .minimumScaleFactor(HomeOverviewToken.weatherDescriptionMinimumScale)
         }
