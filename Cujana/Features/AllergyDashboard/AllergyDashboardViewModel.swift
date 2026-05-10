@@ -93,6 +93,11 @@ final class AllergyDashboardViewModel {
                 pollenForecasts: overview.pollenForecasts,
                 currentDate: currentDate
             ),
+            forecastDetailDays: makeForecastDetailDays(
+                weatherForecasts: overview.weatherForecasts,
+                pollenForecasts: overview.pollenForecasts,
+                currentDate: currentDate
+            ),
             pollenItems: makePollenItems(from: overview.pollenForecasts, currentDate: currentDate),
             symptomItems: makeSymptomItems(from: overview.symptomEntries),
             generatedAtText: "Aktualisiert \(relativeText(for: overview.generatedAt, currentDate: currentDate))"
@@ -156,6 +161,40 @@ final class AllergyDashboardViewModel {
 
         return days.count == Constant.visibleHomeForecastDays ? days : []
     }
+
+    private func makeForecastDetailDays(
+        weatherForecasts: [WeatherForecast],
+        pollenForecasts: [PollenForecast],
+        currentDate: Date
+    ) -> [ForecastDetailDayItem] {
+        (0..<Constant.visibleHomeForecastDays).compactMap { dayOffset -> ForecastDetailDayItem? in
+            guard let date = calendar.date(byAdding: .day, value: dayOffset, to: currentDate) else {
+                return nil
+            }
+
+            let weather = weatherCondition(from: weatherForecasts, for: date)
+            let pollenItems = detailPollenItems(from: pollenForecasts, for: date)
+            let allergyRisk = allergyRisk(from: pollenForecasts, for: date)
+            guard weather != nil || pollenItems.isEmpty == false || allergyRisk != nil else {
+                return nil
+            }
+
+            return ForecastDetailDayItem(
+                id: dayOffset == 0 ? "today" : "tomorrow",
+                title: dayOffset == 0 ? "Heute" : "Morgen",
+                temperatureText: weather.map { formattedTemperatureText(for: $0.temperature) } ?? "--",
+                weatherText: weather.map {
+                    weatherDescription(for: $0.conditionCode)
+                } ?? "Wetter aktuell nicht verfügbar",
+                weatherSystemImageName: weather.map {
+                    systemImageName(forWeatherCode: $0.conditionCode)
+                } ?? "cloud.sun",
+                pollenItems: pollenItems,
+                allergyRiskText: allergyRisk.map { "Allergierisiko: \(shortLevelText(for: $0.level))" },
+                hourlyAllergyRiskItems: allergyRisk.map(hourlyAllergyRiskItems(for:)) ?? []
+            )
+        }
+    }
 }
 
 private extension AllergyDashboardViewModel {
@@ -201,6 +240,17 @@ private extension AllergyDashboardViewModel {
 
         let hourText = String(format: "%02d:00", peak.offset)
         return "Höchster Stundenwert ab \(hourText): \(shortLevelText(for: peak.element))"
+    }
+
+    private func hourlyAllergyRiskItems(for risk: PollenForecast.DailyAllergyRisk) -> [ForecastDetailHourlyRiskItem] {
+        risk.hourlyLevels.enumerated().map { hour, level in
+            ForecastDetailHourlyRiskItem(
+                hour: hour,
+                hourText: String(format: "%02d:00", hour),
+                levelText: AllergyDashboardPresentationState.levelText(for: level),
+                background: AllergyDashboardPresentationState.pollenBackground(for: level)
+            )
+        }
     }
 
     private func shortLevelText(for level: PollenLevel) -> String {
@@ -293,6 +343,32 @@ private extension AllergyDashboardViewModel {
                     levelText: AllergyDashboardPresentationState.levelText(for: level.level),
                     levelDescription: AllergyDashboardPresentationState.levelDescription(for: level.level),
                     systemImageName: "leaf",
+                    background: AllergyDashboardPresentationState.pollenBackground(for: level.level)
+                )
+            }
+    }
+
+    private func detailPollenItems(
+        from forecasts: [PollenForecast],
+        for date: Date
+    ) -> [ForecastDetailPollenItem] {
+        forecasts
+            .flatMap(\.dailyLevels)
+            .filter { calendar.isDate($0.date, inSameDayAs: date) }
+            .sorted { first, second in
+                if first.level == second.level {
+                    return AllergyDashboardPresentationState.title(for: first.pollenType)
+                        < AllergyDashboardPresentationState.title(for: second.pollenType)
+                }
+
+                return first.level > second.level
+            }
+            .map { level in
+                ForecastDetailPollenItem(
+                    type: level.pollenType,
+                    title: AllergyDashboardPresentationState.title(for: level.pollenType),
+                    levelText: AllergyDashboardPresentationState.levelText(for: level.level),
+                    levelDescription: AllergyDashboardPresentationState.levelDescription(for: level.level),
                     background: AllergyDashboardPresentationState.pollenBackground(for: level.level)
                 )
             }

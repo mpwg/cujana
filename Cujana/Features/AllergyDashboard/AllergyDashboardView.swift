@@ -37,14 +37,16 @@ struct AllergyDashboardView: View {
         switch viewModel.state {
         case .idle, .loading:
             VStack(spacing: SpacingToken.xl) {
-                ForecastSummaryCard(days: [], isLoading: true)
+                AllergenFocusCard(items: [], isLoading: true)
+                ForecastSummaryCard(days: [], detailDays: [], isLoading: true)
                 FeelingCTAView(action: onStartSymptomEntry)
             }
         case .empty(let dashboardContent), .loaded(let dashboardContent):
             dashboard(for: dashboardContent)
         case .failure:
             VStack(spacing: SpacingToken.xl) {
-                ForecastSummaryCard(days: [], isLoading: false)
+                AllergenFocusCard(items: [], isLoading: false)
+                ForecastSummaryCard(days: [], detailDays: [], isLoading: false)
                 FeelingCTAView(action: onStartSymptomEntry)
             }
         }
@@ -52,7 +54,15 @@ struct AllergyDashboardView: View {
 
     private func dashboard(for dashboardContent: AllergyDashboardContent) -> some View {
         VStack(spacing: SpacingToken.xl) {
-            ForecastSummaryCard(days: dashboardContent.forecastDays, isLoading: false)
+            AllergenFocusCard(
+                items: dashboardContent.pollenItems,
+                isLoading: false
+            )
+            ForecastSummaryCard(
+                days: dashboardContent.forecastDays,
+                detailDays: dashboardContent.forecastDetailDays,
+                isLoading: false
+            )
             FeelingCTAView(action: onStartSymptomEntry)
         }
     }
@@ -60,18 +70,34 @@ struct AllergyDashboardView: View {
 
 private struct ForecastSummaryCard: View {
     let days: [ForecastDaySummaryItem]
+    let detailDays: [ForecastDetailDayItem]
     let isLoading: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: SpacingToken.md) {
-            VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                Text("Heute & Morgen")
-                    .font(TypographyToken.title)
-                    .foregroundStyle(ColorToken.textPrimary)
+            HStack(alignment: .firstTextBaseline, spacing: SpacingToken.md) {
+                VStack(alignment: .leading, spacing: SpacingToken.xs) {
+                    Text("Heute & Morgen")
+                        .font(TypographyToken.title)
+                        .foregroundStyle(ColorToken.textPrimary)
 
-                Text("Wetter und Pollen auf einen Blick")
-                    .font(TypographyToken.footnote)
-                    .foregroundStyle(ColorToken.textSecondary)
+                    Text("Allergenrisiko mit Wetter als Kontext")
+                        .font(TypographyToken.footnote)
+                        .foregroundStyle(ColorToken.textSecondary)
+                }
+
+                Spacer(minLength: SpacingToken.sm)
+
+                if detailDays.isEmpty == false {
+                    NavigationLink {
+                        ForecastDetailView(days: detailDays)
+                    } label: {
+                        Label("Alle Details", systemImage: "leaf")
+                            .font(TypographyToken.footnote.weight(.semibold))
+                    }
+                    .buttonStyle(CompactNavigationButtonStyle())
+                    .accessibilityLabel("Alle Details anzeigen")
+                }
             }
 
             if isLoading {
@@ -110,11 +136,11 @@ private struct ForecastDaySummaryView: View {
     var body: some View {
         HStack(alignment: .center, spacing: SpacingToken.md) {
             Image(systemName: day.weatherSystemImageName)
-                .font(.system(.title3, design: .rounded).weight(.light))
+                .font(.system(.footnote, design: .rounded).weight(.medium))
                 .foregroundStyle(ColorToken.accentPrimary)
-                .frame(width: 42, height: 42)
-                .background(ColorToken.accentSoft)
-                .clipShape(Circle())
+                .frame(width: 30, height: 30)
+                .background(ColorToken.accentSoft.opacity(0.72))
+                .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: SpacingToken.xs) {
@@ -123,7 +149,7 @@ private struct ForecastDaySummaryView: View {
                     .foregroundStyle(ColorToken.textPrimary)
 
                 Text(day.weatherText)
-                    .font(TypographyToken.footnote)
+                    .font(TypographyToken.caption)
                     .foregroundStyle(ColorToken.textSecondary)
 
                 Text(day.pollenText)
@@ -169,7 +195,18 @@ private struct ForecastEmptyState: View {
     }
 }
 
-private struct ForecastAttributionView: View {
+private struct CompactNavigationButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(ColorToken.accentPrimary)
+            .padding(.horizontal, SpacingToken.sm)
+            .padding(.vertical, SpacingToken.xs)
+            .background(ColorToken.accentSoft.opacity(configuration.isPressed ? 0.72 : 0.52))
+            .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
+    }
+}
+
+struct ForecastAttributionView: View {
     private let attributionText = "Wetterdaten: Apple Weather. Pollen- und Allergierisiko: "
         + "Österreichischer Polleninformationsdienst, www.polleninformation.at."
 

@@ -74,6 +74,14 @@ struct AllergyDashboardViewModelTests {
         #expect(content.forecastDays.last?.weatherText == "regnerisch")
         #expect(content.forecastDays.last?.pollenText == "Gräser: mittel")
         #expect(content.forecastDays.last?.allergyRiskText == "Allergierisiko: mittel")
+        #expect(content.forecastDetailDays.map(\.title) == ["Heute", "Morgen"])
+        #expect(content.forecastDetailDays.first?.pollenItems.map(\.title) == ["Birke", "Gräser"])
+        #expect(content.forecastDetailDays.first?.hourlyAllergyRiskItems.map(\.hourText) == ["00:00", "01:00", "02:00"])
+        #expect(content.forecastDetailDays.first?.hourlyAllergyRiskItems.map(\.levelText) == [
+            "Niedrig",
+            "Hoch",
+            "Sehr hoch"
+        ])
         #expect(content.pollenItems.map(\.title) == ["Birke", "Gräser"])
         #expect(content.pollenItems.first?.levelText == "Hoch")
         #expect(content.symptomItems.first?.title == "Juckende Augen")
