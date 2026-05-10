@@ -5,9 +5,17 @@ struct AllergyDashboardContent: Equatable {
     let subtitle: String
     let forecastDays: [ForecastDaySummaryItem]
     let forecastDetailDays: [ForecastDetailDayItem]
-    let pollenItems: [PollenDashboardItem]
     let symptomItems: [SymptomDashboardItem]
     let generatedAtText: String
+
+    var hasOverviewData: Bool {
+        symptomItems.isEmpty == false
+            || forecastDays.contains { day in
+                day.allergenItems.isEmpty == false
+                    || day.temperatureText != "--"
+                    || day.allergyRiskText != nil
+            }
+    }
 }
 
 struct ForecastDaySummaryItem: Identifiable, Equatable {
@@ -16,10 +24,22 @@ struct ForecastDaySummaryItem: Identifiable, Equatable {
     let temperatureText: String
     let weatherText: String
     let weatherSystemImageName: String
+    let allergenItems: [ForecastDayAllergenItem]
     let pollenText: String
     let allergyRiskText: String?
     let hourlyAllergyRiskText: String?
     let accessibilityText: String
+}
+
+struct ForecastDayAllergenItem: Identifiable, Equatable {
+    let type: PollenType
+    let title: String
+    let levelText: String
+    let background: Color
+
+    var id: PollenType {
+        type
+    }
 }
 
 struct ForecastDetailDayItem: Identifiable, Equatable {
@@ -53,19 +73,6 @@ struct ForecastDetailHourlyRiskItem: Identifiable, Equatable {
 
     var id: Int {
         hour
-    }
-}
-
-struct PollenDashboardItem: Identifiable, Equatable {
-    let type: PollenType
-    let title: String
-    let levelText: String
-    let levelDescription: String
-    let systemImageName: String
-    let background: Color
-
-    var id: PollenType {
-        type
     }
 }
 
