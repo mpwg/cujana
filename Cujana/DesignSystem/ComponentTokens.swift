@@ -102,7 +102,7 @@ enum HomeOverviewToken {
 }
 
 enum AllergenLoadToken {
-    static let backgroundOpacity = 0.86
+    static let backgroundOpacity = 0.62
 }
 
 enum ForecastDetailToken {

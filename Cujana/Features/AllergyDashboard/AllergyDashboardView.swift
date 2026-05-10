@@ -10,7 +10,7 @@ struct AllergyDashboardView: View {
                 content
                     .padding(.horizontal, SpacingToken.xl)
                     .padding(.top, SpacingToken.sm)
-                    .padding(.bottom, SpacingToken.xl)
+                    .padding(.bottom, SpacingToken.lg)
             }
             .scrollIndicators(.hidden)
             .background(ColorToken.backgroundPrimary.ignoresSafeArea())
@@ -167,16 +167,7 @@ private struct DayOverviewCard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, SpacingToken.xs)
             } else {
-                LazyVGrid(
-                    columns: [
-                        GridItem(
-                            .adaptive(minimum: HomeOverviewToken.allergenGridMinimumWidth),
-                            spacing: SpacingToken.xs
-                        )
-                    ],
-                    alignment: .leading,
-                    spacing: SpacingToken.xs
-                ) {
+                WrappingChipLayout(spacing: SpacingToken.xs) {
                     ForEach(day.allergenItems) { item in
                         AllergenLoadBadge(item: item)
                     }
@@ -214,7 +205,6 @@ private struct AllergenLoadBadge: View {
         }
         .padding(.horizontal, SpacingToken.sm)
         .padding(.vertical, SpacingToken.xs)
-        .frame(maxWidth: .infinity, alignment: .leading)
         .background(ColorToken.cardBackground.opacity(AllergenLoadToken.backgroundOpacity))
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
     }
@@ -329,13 +319,92 @@ private struct FeelingCTAView: View {
                         endPoint: .bottomTrailing
                     )
                 }
-                .overlay {
-                    RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous)
-                        .stroke(ColorToken.accentPrimary.opacity(SurfaceOpacityToken.accentSubtle))
-                }
         }
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous))
         .softShadow(ShadowToken.card)
+    }
+}
+
+private struct WrappingChipLayout: Layout {
+    let spacing: CGFloat
+
+    func sizeThatFits(
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout Void
+    ) -> CGSize {
+        let rows = makeRows(maxWidth: proposal.width, subviews: subviews)
+        let width = proposal.width ?? rows.map(\.width).max() ?? .zero
+        let height = rows.reduce(CGFloat.zero) { result, row in
+            result + row.height
+        } + spacing * CGFloat(max(rows.count - 1, .zero))
+
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(
+        in bounds: CGRect,
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout Void
+    ) {
+        let rows = makeRows(maxWidth: bounds.width, subviews: subviews)
+        var yPosition = bounds.minY
+
+        for row in rows {
+            var xPosition = bounds.minX
+
+            for item in row.items {
+                subviews[item.index].place(
+                    at: CGPoint(x: xPosition, y: yPosition),
+                    proposal: ProposedViewSize(item.size)
+                )
+                xPosition += item.size.width + spacing
+            }
+
+            yPosition += row.height + spacing
+        }
+    }
+
+    private func makeRows(maxWidth: CGFloat?, subviews: Subviews) -> [Row] {
+        var rows: [Row] = []
+        var currentItems: [Item] = []
+        var currentWidth = CGFloat.zero
+        var currentHeight = CGFloat.zero
+        let availableWidth = maxWidth ?? .infinity
+
+        for index in subviews.indices {
+            let size = subviews[index].sizeThatFits(.unspecified)
+            let itemWidth = currentItems.isEmpty ? size.width : currentWidth + spacing + size.width
+
+            if itemWidth > availableWidth && currentItems.isEmpty == false {
+                rows.append(Row(items: currentItems, width: currentWidth, height: currentHeight))
+                currentItems = [Item(index: index, size: size)]
+                currentWidth = size.width
+                currentHeight = size.height
+            } else {
+                currentItems.append(Item(index: index, size: size))
+                currentWidth = itemWidth
+                currentHeight = max(currentHeight, size.height)
+            }
+        }
+
+        if currentItems.isEmpty == false {
+            rows.append(Row(items: currentItems, width: currentWidth, height: currentHeight))
+        }
+
+        return rows
+    }
+
+    private struct Row {
+        let items: [Item]
+        let width: CGFloat
+        let height: CGFloat
+    }
+
+    private struct Item {
+        let index: Int
+        let size: CGSize
     }
 }
 
