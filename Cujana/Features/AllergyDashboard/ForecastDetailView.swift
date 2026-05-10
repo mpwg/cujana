@@ -44,15 +44,18 @@ struct ForecastDetailView: View {
                 DetailInfoCard()
                 AttributionFooter()
             }
+            .padding(.horizontal, ForecastDetailToken.screenHorizontalPadding)
+            .padding(.top, SpacingToken.lg)
+            .padding(.bottom, SpacingToken.xl)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .containerRelativeFrame(.horizontal)
         }
-        .contentMargins(.horizontal, ForecastDetailToken.screenHorizontalPadding, for: .scrollContent)
-        .contentMargins(.top, SpacingToken.lg, for: .scrollContent)
-        .contentMargins(.bottom, SpacingToken.xl, for: .scrollContent)
         .safeAreaInset(edge: .bottom) {
             Spacer()
                 .frame(height: ForecastDetailToken.bottomInsetHeight)
         }
+        .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+        .scrollBounceBehavior(.basedOnSize, axes: .vertical)
         .scrollIndicators(.hidden)
         .background(DetailColorToken.background.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
@@ -254,6 +257,7 @@ private struct HourlyRiskScroller: View {
             .padding(.vertical, SpacingToken.xs)
         }
         .scrollIndicators(.hidden)
+        .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
     }
 
     private var displayItems: [ForecastDetailHourlyRiskItem] {
