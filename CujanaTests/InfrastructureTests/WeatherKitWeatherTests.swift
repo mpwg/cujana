@@ -17,6 +17,15 @@ struct WeatherKitWeatherTests {
               "condition": "partlyCloudy",
               "highTemperatureCelsius": 18.4
             }
+          ],
+          "hours": [
+            {
+              "date": "2026-05-08T12:00:00Z",
+              "condition": "cloudy",
+              "temperatureCelsius": 17.2,
+              "humidityPercent": 64,
+              "windSpeedKilometersPerHour": 11.5
+            }
           ]
         }
         """
@@ -31,6 +40,15 @@ struct WeatherKitWeatherTests {
                 date: try #require(isoDate("2026-05-08T00:00:00Z")),
                 condition: "partlyCloudy",
                 highTemperatureCelsius: 18.4
+            )
+        ])
+        #expect(dto.hours == [
+            WeatherKitWeatherResponseDTO.HourDTO(
+                date: try #require(isoDate("2026-05-08T12:00:00Z")),
+                condition: "cloudy",
+                temperatureCelsius: 17.2,
+                humidityPercent: 64,
+                windSpeedKilometersPerHour: 11.5
             )
         ])
     }
@@ -53,6 +71,15 @@ struct WeatherKitWeatherTests {
                     condition: "rain",
                     highTemperatureCelsius: 21.2
                 )
+            ],
+            hours: [
+                WeatherKitWeatherResponseDTO.HourDTO(
+                    date: firstDate.addingTimeInterval(3_600),
+                    condition: "cloudy",
+                    temperatureCelsius: 17.8,
+                    humidityPercent: 61,
+                    windSpeedKilometersPerHour: 9.4
+                )
             ]
         )
 
@@ -64,6 +91,15 @@ struct WeatherKitWeatherTests {
         #expect(forecasts[0].dailyConditions == [
             WeatherForecast.DailyCondition(date: firstDate, temperature: 18.4, conditionCode: 2),
             WeatherForecast.DailyCondition(date: secondDate, temperature: 21.2, conditionCode: 61)
+        ])
+        #expect(forecasts[0].hourlyConditions == [
+            WeatherForecast.HourlyCondition(
+                date: firstDate.addingTimeInterval(3_600),
+                temperature: 17.8,
+                conditionCode: 3,
+                humidityPercent: 61,
+                windSpeedKilometersPerHour: 9.4
+            )
         ])
     }
 
@@ -107,6 +143,24 @@ struct WeatherKitWeatherTests {
 
         #expect(forecasts.first?.dailyConditions.first?.temperature == 20.1)
         #expect(forecasts.first?.dailyConditions.first?.conditionCode == 3)
+    }
+
+    @Test func serviceClientNormalizesForecastRangeToFutureDaysWithBuffer() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .current
+        let now = try #require(isoDate("2026-05-10T13:00:00Z"))
+        let startDate = try #require(isoDate("2026-05-03T13:00:00Z"))
+        let endDate = try #require(isoDate("2026-05-13T13:00:00Z"))
+
+        let range = WeatherKitWeatherServiceClient.forecastDateRange(
+            from: startDate,
+            to: endDate,
+            now: now,
+            calendar: calendar
+        )
+
+        #expect(range.startDate == (try #require(isoDate("2026-05-10T00:00:00Z"))))
+        #expect(range.endDate == (try #require(isoDate("2026-05-14T00:00:00Z"))))
     }
 
     private func isoDate(_ string: String) -> Date? {

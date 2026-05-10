@@ -9,9 +9,8 @@ final class AllergyDashboardViewModel {
     private enum Constant {
         static let forecastDays = 3
         static let symptomHistoryDays = 7
-        static let visiblePollenCount = 4
         static let visibleSymptomCount = 3
-        static let visibleHomeForecastDays = 2
+        static let visibleHomeForecastDays = 3
     }
 
     private let loadUseCase: LoadAllergyOverviewUseCase
@@ -64,7 +63,7 @@ final class AllergyDashboardViewModel {
             }
             let content = makeContent(from: overview, currentDate: currentDate)
 
-            state = content.forecastDays.isEmpty ? .empty(content) : .loaded(content)
+            state = content.hasOverviewData ? .loaded(content) : .empty(content)
         } catch {
             AppObservability.log(
                 .error,
@@ -77,11 +76,8 @@ final class AllergyDashboardViewModel {
     }
 
     private func currentCoordinate() async -> LocationCoordinate? {
-        if let locationProvider {
-            return await locationProvider.currentCoordinate()
-        }
-
-        return previewCoordinate
+        guard let locationProvider else { return previewCoordinate }
+        return await locationProvider.currentCoordinate()
     }
 
     private func makeContent(from overview: AllergyOverview, currentDate: Date) -> AllergyDashboardContent {
@@ -93,7 +89,11 @@ final class AllergyDashboardViewModel {
                 pollenForecasts: overview.pollenForecasts,
                 currentDate: currentDate
             ),
-            pollenItems: makePollenItems(from: overview.pollenForecasts, currentDate: currentDate),
+            forecastDetailDays: makeForecastDetailDays(
+                weatherForecasts: overview.weatherForecasts,
+                pollenForecasts: overview.pollenForecasts,
+                currentDate: currentDate
+            ),
             symptomItems: makeSymptomItems(from: overview.symptomEntries),
             generatedAtText: "Aktualisiert \(relativeText(for: overview.generatedAt, currentDate: currentDate))"
         )
@@ -110,19 +110,16 @@ final class AllergyDashboardViewModel {
             }
 
             let weather = weatherCondition(from: weatherForecasts, for: date)
-            let topPollen = topPollenLevel(from: pollenForecasts, for: date)
+            let allergenItems = forecastAllergenItems(from: pollenForecasts, for: date)
+            let topPollen = allergenItems.first
             let allergyRisk = allergyRisk(from: pollenForecasts, for: date)
-            guard weather != nil || topPollen != nil || allergyRisk != nil else {
-                return nil
-            }
-
-            let dayTitle = dayOffset == 0 ? "Heute" : "Morgen"
-            let pollenText = topPollen.map { level in
-                "\(AllergyDashboardPresentationState.title(for: level.pollenType)): \(shortLevelText(for: level.level))"
+            let dayTitle = titleForForecastDay(offset: dayOffset)
+            let pollenText = topPollen.map { item in
+                "\(item.title): \(item.levelText.lowercased())"
             } ?? "Keine Polleninformationen für diesen Standort."
             let weatherText = weather.map {
                 weatherDescription(for: $0.conditionCode)
-            } ?? "Wetter aktuell nicht verfügbar"
+            } ?? "Wetter noch nicht verfügbar"
             let temperatureText = weather.map { formattedTemperatureText(for: $0.temperature) } ?? "--"
             let weatherSystemImageName = weather.map {
                 systemImageName(forWeatherCode: $0.conditionCode)
@@ -138,14 +135,14 @@ final class AllergyDashboardViewModel {
                 temperatureText: temperatureText,
                 weatherText: weatherText,
                 weatherSystemImageName: weatherSystemImageName,
+                allergenItems: allergenItems,
                 pollenText: pollenText,
                 allergyRiskText: allergyRiskText,
                 hourlyAllergyRiskText: hourlyAllergyRiskText,
                 accessibilityText: [
                     dayTitle,
-                    temperatureText,
-                    weatherText,
-                    pollenText,
+                    temperatureText == "--" ? weatherText : "\(temperatureText), \(weatherText)",
+                    allergenAccessibilityText(for: allergenItems),
                     allergyRiskText,
                     hourlyAllergyRiskText
                 ]
@@ -154,7 +151,43 @@ final class AllergyDashboardViewModel {
             )
         }
 
-        return days.count == Constant.visibleHomeForecastDays ? days : []
+        return days
+    }
+
+    private func makeForecastDetailDays(
+        weatherForecasts: [WeatherForecast],
+        pollenForecasts: [PollenForecast],
+        currentDate: Date
+    ) -> [ForecastDetailDayItem] {
+        (0..<Constant.visibleHomeForecastDays).compactMap { dayOffset -> ForecastDetailDayItem? in
+            guard let date = calendar.date(byAdding: .day, value: dayOffset, to: currentDate) else {
+                return nil
+            }
+
+            let weather = weatherCondition(from: weatherForecasts, for: date)
+            let hourlyWeather = hourlyWeatherConditions(from: weatherForecasts, for: date)
+            let pollenItems = detailPollenItems(from: pollenForecasts, for: date)
+            let allergyRisk = allergyRisk(from: pollenForecasts, for: date)
+
+            return ForecastDetailDayItem(
+                id: "day-\(dayOffset)",
+                title: titleForForecastDay(offset: dayOffset),
+                temperatureText: weather.map { formattedTemperatureText(for: $0.temperature) } ?? "--",
+                weatherText: weather.map {
+                    weatherDescription(for: $0.conditionCode)
+                } ?? "Wetter aktuell nicht verfügbar",
+                weatherSystemImageName: weather.map {
+                    systemImageName(forWeatherCode: $0.conditionCode)
+                } ?? "cloud.sun",
+                humidityText: weather.flatMap { formattedHumidityText(for: $0.humidityPercent) },
+                windText: weather.flatMap { formattedWindText(for: $0.windSpeedKilometersPerHour) },
+                pollenItems: pollenItems,
+                allergyRiskText: allergyRisk.map { "Allergierisiko: \(shortLevelText(for: $0.level))" },
+                hourlyAllergyRiskItems: allergyRisk.map {
+                    hourlyAllergyRiskItems(for: $0, hourlyWeather: hourlyWeather, fallbackWeather: weather)
+                } ?? []
+            )
+        }
     }
 }
 
@@ -163,35 +196,21 @@ private extension AllergyDashboardViewModel {
         from forecasts: [WeatherForecast],
         for date: Date
     ) -> WeatherForecast.DailyCondition? {
-        forecasts
-            .flatMap(\.dailyConditions)
-            .first { calendar.isDate($0.date, inSameDayAs: date) }
-    }
-
-    private func topPollenLevel(
-        from forecasts: [PollenForecast],
-        for date: Date
-    ) -> PollenForecast.DailyLevel? {
-        forecasts
-            .flatMap(\.dailyLevels)
-            .filter { calendar.isDate($0.date, inSameDayAs: date) }
-            .max { first, second in
-                if first.level == second.level {
-                    return AllergyDashboardPresentationState.title(for: first.pollenType)
-                        > AllergyDashboardPresentationState.title(for: second.pollenType)
-                }
-
-                return first.level < second.level
-            }
+        forecasts.flatMap(\.dailyConditions).first { calendar.isDate($0.date, inSameDayAs: date) }
     }
 
     private func allergyRisk(
         from forecasts: [PollenForecast],
         for date: Date
     ) -> PollenForecast.DailyAllergyRisk? {
-        forecasts
-            .flatMap(\.dailyAllergyRisks)
-            .first { calendar.isDate($0.date, inSameDayAs: date) }
+        forecasts.flatMap(\.dailyAllergyRisks).first { calendar.isDate($0.date, inSameDayAs: date) }
+    }
+
+    private func hourlyWeatherConditions(
+        from forecasts: [WeatherForecast],
+        for date: Date
+    ) -> [WeatherForecast.HourlyCondition] {
+        forecasts.flatMap(\.hourlyConditions).filter { calendar.isDate($0.date, inSameDayAs: date) }
     }
 
     private func hourlyAllergyRiskText(for risk: PollenForecast.DailyAllergyRisk) -> String? {
@@ -201,6 +220,85 @@ private extension AllergyDashboardViewModel {
 
         let hourText = String(format: "%02d:00", peak.offset)
         return "Höchster Stundenwert ab \(hourText): \(shortLevelText(for: peak.element))"
+    }
+
+    private func hourlyAllergyRiskItems(
+        for risk: PollenForecast.DailyAllergyRisk,
+        hourlyWeather: [WeatherForecast.HourlyCondition],
+        fallbackWeather: WeatherForecast.DailyCondition?
+    ) -> [ForecastDetailHourlyRiskItem] {
+        risk.hourlyLevels.enumerated().map { hour, level in
+            let weather = hourlyWeather.first { calendar.component(.hour, from: $0.date) == hour }
+            let temperatureText = weather.map { formattedTemperatureText(for: $0.temperature) }
+                ?? fallbackWeather.map { formattedTemperatureText(for: $0.temperature) }
+                ?? "--"
+            return ForecastDetailHourlyRiskItem(
+                hour: hour,
+                hourText: String(format: "%02d:00", hour),
+                levelText: AllergyDashboardPresentationState.levelText(for: level),
+                temperatureText: temperatureText,
+                background: AllergyDashboardPresentationState.pollenBackground(for: level)
+            )
+        }
+    }
+
+    private func forecastAllergenItems(
+        from forecasts: [PollenForecast],
+        for date: Date
+    ) -> [ForecastDayAllergenItem] {
+        sortedRelevantDailyLevels(from: forecasts, for: date).map { level in
+            ForecastDayAllergenItem(
+                type: level.pollenType,
+                title: AllergyDashboardPresentationState.title(for: level.pollenType),
+                levelText: AllergyDashboardPresentationState.levelText(for: level.level),
+                background: AllergyDashboardPresentationState.pollenBackground(for: level.level)
+            )
+        }
+    }
+
+    private func sortedRelevantDailyLevels(
+        from forecasts: [PollenForecast],
+        for date: Date
+    ) -> [PollenForecast.DailyLevel] {
+        forecasts
+            .flatMap(\.dailyLevels)
+            .filter { calendar.isDate($0.date, inSameDayAs: date) }
+            .filter { isRelevantPollenLevel($0.level) }
+            .sorted { first, second in
+                if first.level == second.level {
+                    return AllergyDashboardPresentationState.title(for: first.pollenType)
+                        < AllergyDashboardPresentationState.title(for: second.pollenType)
+                }
+
+                return first.level > second.level
+            }
+    }
+
+    private func isRelevantPollenLevel(_ level: PollenLevel) -> Bool {
+        level.rawValue > PollenLevel.none.rawValue
+    }
+
+    private func allergenAccessibilityText(for items: [ForecastDayAllergenItem]) -> String {
+        guard items.isEmpty == false else {
+            return "Keine relevante Belastung"
+        }
+
+        return items
+            .map { "\($0.title), \($0.levelText)" }
+            .joined(separator: ", ")
+    }
+
+    private func titleForForecastDay(offset: Int) -> String {
+        switch offset {
+        case 0:
+            "Heute"
+        case 1:
+            "Morgen"
+        case 2:
+            "Übermorgen"
+        default:
+            "Tag \(offset + 1)"
+        }
     }
 
     private func shortLevelText(for level: PollenLevel) -> String {
@@ -222,10 +320,18 @@ private extension AllergyDashboardViewModel {
         "\(Int(temperature.rounded()))°"
     }
 
+    private func formattedHumidityText(for humidityPercent: Double?) -> String? {
+        humidityPercent.map { "\(Int($0.rounded()))%" }
+    }
+
+    private func formattedWindText(for windSpeedKilometersPerHour: Double?) -> String? {
+        windSpeedKilometersPerHour.map { "\(Int($0.rounded())) km/h" }
+    }
+
     private func weatherDescription(for code: Int) -> String {
         switch code {
         case 0:
-            "klar"
+            "sonnig"
         case 1:
             "überwiegend klar"
         case 2:
@@ -270,13 +376,13 @@ private extension AllergyDashboardViewModel {
         }
     }
 
-    private func makePollenItems(
+    private func detailPollenItems(
         from forecasts: [PollenForecast],
-        currentDate: Date
-    ) -> [PollenDashboardItem] {
+        for date: Date
+    ) -> [ForecastDetailPollenItem] {
         forecasts
             .flatMap(\.dailyLevels)
-            .filter { calendar.isDate($0.date, inSameDayAs: currentDate) }
+            .filter { calendar.isDate($0.date, inSameDayAs: date) }
             .sorted { first, second in
                 if first.level == second.level {
                     return AllergyDashboardPresentationState.title(for: first.pollenType)
@@ -285,14 +391,12 @@ private extension AllergyDashboardViewModel {
 
                 return first.level > second.level
             }
-            .prefix(Constant.visiblePollenCount)
             .map { level in
-                PollenDashboardItem(
+                ForecastDetailPollenItem(
                     type: level.pollenType,
                     title: AllergyDashboardPresentationState.title(for: level.pollenType),
                     levelText: AllergyDashboardPresentationState.levelText(for: level.level),
                     levelDescription: AllergyDashboardPresentationState.levelDescription(for: level.level),
-                    systemImageName: "leaf",
                     background: AllergyDashboardPresentationState.pollenBackground(for: level.level)
                 )
             }
@@ -316,46 +420,22 @@ private extension AllergyDashboardViewModel {
     }
 
     private func startOfHistory(for date: Date) -> Date {
-        guard let historyDate = calendar.date(
-            byAdding: .day,
-            value: -Constant.symptomHistoryDays,
-            to: date
-        ) else {
-            return date
-        }
-
+        let historyDate = calendar.date(byAdding: .day, value: -Constant.symptomHistoryDays, to: date) ?? date
         return calendar.startOfDay(for: historyDate)
     }
 
     private func forecastEndDate(from date: Date) -> Date {
-        guard let endDate = calendar.date(
-            byAdding: .day,
-            value: Constant.forecastDays,
-            to: date
-        ) else {
-            return date
-        }
-
-        return endDate
+        calendar.date(byAdding: .day, value: Constant.forecastDays, to: date) ?? date
     }
 
     private func dateText(for date: Date) -> String {
-        if calendar.isDateInToday(date) {
-            return "Heute"
-        }
-
-        if calendar.isDateInYesterday(date) {
-            return "Gestern"
-        }
-
+        if calendar.isDateInToday(date) { return "Heute" }
+        if calendar.isDateInYesterday(date) { return "Gestern" }
         return date.formatted(.dateTime.day().month(.wide))
     }
 
     private func relativeText(for date: Date, currentDate: Date) -> String {
-        if calendar.isDate(date, inSameDayAs: currentDate) {
-            return "heute"
-        }
-
+        if calendar.isDate(date, inSameDayAs: currentDate) { return "heute" }
         return date.formatted(.dateTime.day().month(.abbreviated))
     }
 

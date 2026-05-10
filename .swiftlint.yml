@@ -156,6 +156,56 @@ custom_rules:
     message: "Use RadiusToken"
     severity: error
 
+  no_magic_frame_size:
+    name: "No magic frame size"
+    included:
+      - "Cujana/.*\\.swift"
+    excluded:
+      - "Cujana/DesignSystem/.*"
+    regex: "\\.frame\\([^\\n]*(width|height|minWidth|minHeight|maxWidth|maxHeight):\\s*[0-9]"
+    message: "Move fixed frame sizes into semantic design or component tokens."
+    severity: error
+
+  no_magic_grid_minimum:
+    name: "No magic grid minimum"
+    included:
+      - "Cujana/.*\\.swift"
+    excluded:
+      - "Cujana/DesignSystem/.*"
+    regex: "minimum:\\s*[0-9]"
+    message: "Move adaptive grid minimums into semantic design or component tokens."
+    severity: error
+
+  no_magic_opacity:
+    name: "No magic opacity"
+    included:
+      - "Cujana/.*\\.swift"
+    excluded:
+      - "Cujana/DesignSystem/.*"
+    regex: "\\.opacity\\(\\s*([0-9]|[^\\n]*\\?\\s*[0-9])"
+    message: "Move opacity values into semantic design or component tokens."
+    severity: error
+
+  no_magic_scale_effect:
+    name: "No magic scale effect"
+    included:
+      - "Cujana/.*\\.swift"
+    excluded:
+      - "Cujana/DesignSystem/.*"
+    regex: "\\.scaleEffect\\([^\\n]*[0-9]+\\.[0-9]+"
+    message: "Move scale effect values into semantic design or component tokens."
+    severity: error
+
+  no_magic_animation_duration:
+    name: "No magic animation duration"
+    included:
+      - "Cujana/.*\\.swift"
+    excluded:
+      - "Cujana/DesignSystem/.*"
+    regex: "duration:\\s*[0-9]"
+    message: "Move animation durations into semantic design or component tokens."
+    severity: error
+
   no_direct_shadow:
     included:
       - "Cujana/.*\\.swift"

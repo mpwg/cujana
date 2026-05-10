@@ -24,6 +24,7 @@ enum ButtonToken {
         static let radius = RadiusToken.full
         static let paddingH = SpacingToken.lg
         static let paddingV = SpacingToken.md
+        static let enabledOpacity = 1.0
         static let disabledOpacity = 0.56
     }
 
@@ -82,6 +83,84 @@ enum StatusToken {
     static let errorText = ColorToken.accentNegative
     static let radius = RadiusToken.radiusSmall
     static let padding = SpacingToken.md
+}
+
+enum SurfaceOpacityToken {
+    static let primaryCard = 0.94
+    static let mutedCard = 0.56
+    static let mutedRow = 0.48
+    static let backgroundWash = 0.12
+    static let accentProminent = 0.72
+    static let accentSubtle = 0.52
+}
+
+enum HomeOverviewToken {
+    static let allergenGridMinimumWidth: CGFloat = 116
+    static let weatherIconSize: CGFloat = 28
+    static let scrollBottomPadding = SpacingToken.lg
+    static let largeTextScrollBottomPadding: CGFloat = 96
+    static let titleLayoutPriority = 1.0
+    static let detailsButtonLayoutPriority = 2.0
+}
+
+enum AllergenLoadToken {
+    static let backgroundOpacity = 0.62
+    static let levelLayoutPriority = 2.0
+}
+
+enum ForecastDetailToken {
+    static let dayIconSize: CGFloat = 42
+    static let weatherIconWidth: CGFloat = 24
+    static let hourlyRiskGridMinimumWidth: CGFloat = 92
+    static let screenHorizontalPadding: CGFloat = 20
+    static let sectionSpacing: CGFloat = 32
+    static let contextSpacing: CGFloat = 10
+    static let cardHorizontalPadding: CGFloat = 18
+    static let compactCardVerticalPadding: CGFloat = 8
+    static let bottomInsetHeight: CGFloat = 56
+    static let dayPickerMinHeight: CGFloat = 38
+    static let dayPickerPadding: CGFloat = 4
+    static let weatherIconSize: CGFloat = 36
+    static let weatherMinHeight: CGFloat = 80
+    static let allergenIconSize: CGFloat = 30
+    static let allergenRowMinHeight: CGFloat = 62
+    static let badgeVerticalPadding: CGFloat = 3
+    static let noRiskMinHeight: CGFloat = 40
+    static let hairlineStrokeWidth: CGFloat = 0.5
+    static let dayPickerTextMinimumScale = 0.82
+    static let weatherTextMinimumScale = 0.84
+    static let badgeTextMinimumScale = 0.84
+    static let hourlyTextMinimumScale = 0.74
+    static let noRiskVerticalPadding: CGFloat = 6
+    static let allergenTextSpacing: CGFloat = 4
+    static let hourlyChipCornerRadius: CGFloat = 12
+    static let hourlyChipContentSpacing: CGFloat = 5
+    static let hourlyChipSpacing: CGFloat = 5
+    static let hourlyScrollerHorizontalPadding: CGFloat = 1
+    static let hourlyDotSize: CGFloat = 5
+    static let hourlyCurrentDotSize: CGFloat = 6
+    static let hourlyChipWidth: CGFloat = 46
+    static let hourlyCurrentChipWidth: CGFloat = 50
+    static let hourlyChipMinHeight: CGFloat = 68
+    static let hourlyCurrentChipMinHeight: CGFloat = 72
+    static let hourlyCurrentScale: CGFloat = 1.005
+    static let subtleNavigationRowMinHeight: CGFloat = 42
+    static let subtleNavigationHorizontalPadding: CGFloat = 14
+    static let overviewDotSize: CGFloat = 8
+}
+
+enum EntryListToken {
+    static let pollenChipGridMinimumWidth: CGFloat = 132
+}
+
+enum PressFeedbackToken {
+    static let prominentOpacity = 0.9
+    static let prominentScale = 0.99
+    static let animationDuration = 0.12
+}
+
+enum SymptomCheckInToken {
+    static let buttonMinHeight: CGFloat = 48
 }
 
 struct SoftShadowModifier: ViewModifier {

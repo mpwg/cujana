@@ -72,11 +72,26 @@ enum AppDemoData {
                 coordinate: coordinate,
                 generatedAt: now,
                 dailyConditions: [
-                    WeatherForecast.DailyCondition(date: now, temperature: 22, conditionCode: 3),
+                    WeatherForecast.DailyCondition(
+                        date: now,
+                        temperature: 22,
+                        conditionCode: 3,
+                        humidityPercent: 54,
+                        windSpeedKilometersPerHour: 12
+                    ),
                     WeatherForecast.DailyCondition(
                         date: makeRelativeDate(daysOffset: 1, hour: 9, minute: 41),
                         temperature: 19,
-                        conditionCode: 61
+                        conditionCode: 61,
+                        humidityPercent: 68,
+                        windSpeedKilometersPerHour: 18
+                    ),
+                    WeatherForecast.DailyCondition(
+                        date: makeRelativeDate(daysOffset: 2, hour: 9, minute: 41),
+                        temperature: 21,
+                        conditionCode: 2,
+                        humidityPercent: 49,
+                        windSpeedKilometersPerHour: 10
                     )
                 ]
             )

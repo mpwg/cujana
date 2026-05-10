@@ -4,9 +4,18 @@ struct AllergyDashboardContent: Equatable {
     let title: String
     let subtitle: String
     let forecastDays: [ForecastDaySummaryItem]
-    let pollenItems: [PollenDashboardItem]
+    let forecastDetailDays: [ForecastDetailDayItem]
     let symptomItems: [SymptomDashboardItem]
     let generatedAtText: String
+
+    var hasOverviewData: Bool {
+        symptomItems.isEmpty == false
+            || forecastDays.contains { day in
+                day.allergenItems.isEmpty == false
+                    || day.temperatureText != "--"
+                    || day.allergyRiskText != nil
+            }
+    }
 }
 
 struct ForecastDaySummaryItem: Identifiable, Equatable {
@@ -15,22 +24,58 @@ struct ForecastDaySummaryItem: Identifiable, Equatable {
     let temperatureText: String
     let weatherText: String
     let weatherSystemImageName: String
+    let allergenItems: [ForecastDayAllergenItem]
     let pollenText: String
     let allergyRiskText: String?
     let hourlyAllergyRiskText: String?
     let accessibilityText: String
 }
 
-struct PollenDashboardItem: Identifiable, Equatable {
+struct ForecastDayAllergenItem: Identifiable, Equatable {
     let type: PollenType
     let title: String
     let levelText: String
-    let levelDescription: String
-    let systemImageName: String
     let background: Color
 
     var id: PollenType {
         type
+    }
+}
+
+struct ForecastDetailDayItem: Identifiable, Equatable {
+    let id: String
+    let title: String
+    let temperatureText: String
+    let weatherText: String
+    let weatherSystemImageName: String
+    let humidityText: String?
+    let windText: String?
+    let pollenItems: [ForecastDetailPollenItem]
+    let allergyRiskText: String?
+    let hourlyAllergyRiskItems: [ForecastDetailHourlyRiskItem]
+}
+
+struct ForecastDetailPollenItem: Identifiable, Equatable {
+    let type: PollenType
+    let title: String
+    let levelText: String
+    let levelDescription: String
+    let background: Color
+
+    var id: PollenType {
+        type
+    }
+}
+
+struct ForecastDetailHourlyRiskItem: Identifiable, Equatable {
+    let hour: Int
+    let hourText: String
+    let levelText: String
+    let temperatureText: String
+    let background: Color
+
+    var id: Int {
+        hour
     }
 }
 

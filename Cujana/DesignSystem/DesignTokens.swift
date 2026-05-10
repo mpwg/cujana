@@ -44,6 +44,71 @@ enum ColorToken {
     static let separatorSoft = Raw.separatorSoft.opacity(0.55)
 }
 
+enum DetailColorToken {
+    fileprivate enum Raw {
+        static let background = Color(hex: "#F4F1EA")
+        static let mutedSurface = Color(hex: "#E9E4DA")
+        static let sage = Color(hex: "#56665B")
+        static let sageSoft = Color(hex: "#DEE5DA")
+        static let neutralStroke = Color(hex: "#DDD6CC")
+        static let warningSoft = Color(hex: "#EEE4D0")
+        static let alertSoft = Color(hex: "#EEDBD7")
+    }
+
+    static let background = Raw.background
+    static let surface = ColorToken.cardBackground.opacity(0.78)
+    static let mutedSurface = Raw.mutedSurface.opacity(0.52)
+    static let sage = Raw.sage
+    static let sageSoft = Raw.sageSoft
+    static let neutralStroke = Raw.neutralStroke.opacity(0.34)
+    static let warningSoft = Raw.warningSoft
+    static let alertSoft = Raw.alertSoft
+
+    static let sageQuiet = Raw.sage.opacity(0.68)
+    static let sageTertiary = Raw.sage.opacity(0.72)
+    static let sageAccentBorder = Raw.sage.opacity(0.16)
+    static let selectedPickerBackground = Raw.sageSoft.opacity(0.58)
+    static let weatherIconBackground = Raw.sageSoft.opacity(0.46)
+    static let riskBackground = 0.34
+    static let currentRiskBackground = 0.38
+    static let quietRiskBackground = 0.24
+    static let overviewRiskBackground = 0.34
+    static let primaryTextSubtle = 0.96
+    static let secondaryTextSubtle = 0.96
+    static let secondaryTextReadable = 1.0
+    static let weatherDescriptionText = 1.0
+    static let weatherMetricText = 1.0
+    static let hourlyPrimaryText = 0.92
+    static let attributionText = 0.82
+    static let contextText = 0.9
+    static let quietStroke = 0.62
+    static let softStroke = 0.68
+    static let rowStroke = 0.72
+    static let navigationSurface = 0.66
+
+    static func riskBackground(for text: String) -> Color {
+        switch text {
+        case "Keine Belastung", "Niedrig":
+            sageSoft.opacity(riskBackground)
+        case "Mittel":
+            warningSoft.opacity(riskBackground)
+        default:
+            alertSoft.opacity(riskBackground)
+        }
+    }
+
+    static func riskDot(for text: String) -> Color {
+        switch text {
+        case "Keine Belastung", "Niedrig":
+            sageQuiet
+        case "Mittel":
+            ColorToken.accentWarning.opacity(0.78)
+        default:
+            ColorToken.accentNegative.opacity(0.78)
+        }
+    }
+}
+
 enum TypographyToken {
     static let largeTitle = Font.system(.largeTitle, design: .rounded).weight(.semibold)
     static let title = Font.system(.title, design: .rounded).weight(.regular)
@@ -84,9 +149,9 @@ struct ShadowTokenValue {
 
 enum ShadowToken {
     static let card = ShadowTokenValue(
-        color: ColorToken.separatorSoft.opacity(0.24),
-        radius: 10,
-        y: 4
+        color: ColorToken.separatorSoft.opacity(0.14),
+        radius: 8,
+        y: 2
     )
 
     static let modal = ShadowTokenValue(
@@ -96,10 +161,14 @@ enum ShadowToken {
     )
 
     static let floating = ShadowTokenValue(
-        color: ColorToken.accentPrimary.opacity(0.1),
-        radius: 16,
-        y: 8
+        color: ColorToken.accentPrimary.opacity(0.05),
+        radius: 10,
+        y: 3
     )
+}
+
+enum MotionToken {
+    static let detailSelection = Animation.spring(response: 0.36, dampingFraction: 0.96)
 }
 
 private extension Color {
