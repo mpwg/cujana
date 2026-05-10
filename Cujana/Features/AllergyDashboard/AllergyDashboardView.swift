@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct AllergyDashboardView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Bindable var viewModel: AllergyDashboardViewModel
     let onStartSymptomEntry: () -> Void
 
@@ -10,7 +11,7 @@ struct AllergyDashboardView: View {
                 content
                     .padding(.horizontal, SpacingToken.xl)
                     .padding(.top, SpacingToken.sm)
-                    .padding(.bottom, SpacingToken.lg)
+                    .padding(.bottom, scrollBottomPadding)
             }
             .scrollIndicators(.hidden)
             .background(ColorToken.backgroundPrimary.ignoresSafeArea())
@@ -67,6 +68,14 @@ struct AllergyDashboardView: View {
             )
             FeelingCTAView(action: onStartSymptomEntry)
         }
+    }
+
+    private var scrollBottomPadding: CGFloat {
+        if dynamicTypeSize >= .xxLarge {
+            return HomeOverviewToken.largeTextScrollBottomPadding
+        }
+
+        return HomeOverviewToken.scrollBottomPadding
     }
 }
 

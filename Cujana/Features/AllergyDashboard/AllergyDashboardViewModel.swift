@@ -122,7 +122,7 @@ final class AllergyDashboardViewModel {
             } ?? "Keine Polleninformationen für diesen Standort."
             let weatherText = weather.map {
                 weatherDescription(for: $0.conditionCode)
-            } ?? "Wetter aktuell nicht verfügbar"
+            } ?? "Wetter noch nicht verfügbar"
             let temperatureText = weather.map { formattedTemperatureText(for: $0.temperature) } ?? "--"
             let weatherSystemImageName = weather.map {
                 systemImageName(forWeatherCode: $0.conditionCode)
@@ -144,8 +144,7 @@ final class AllergyDashboardViewModel {
                 hourlyAllergyRiskText: hourlyAllergyRiskText,
                 accessibilityText: [
                     dayTitle,
-                    temperatureText,
-                    weatherText,
+                    temperatureText == "--" ? weatherText : "\(temperatureText), \(weatherText)",
                     allergenAccessibilityText(for: allergenItems),
                     allergyRiskText,
                     hourlyAllergyRiskText
