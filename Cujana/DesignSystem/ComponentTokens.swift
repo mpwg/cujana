@@ -112,6 +112,34 @@ enum ForecastDetailToken {
     static let dayIconSize: CGFloat = 42
     static let weatherIconWidth: CGFloat = 24
     static let hourlyRiskGridMinimumWidth: CGFloat = 92
+    static let screenHorizontalPadding: CGFloat = 22
+    static let sectionSpacing: CGFloat = 32
+    static let cardHorizontalPadding: CGFloat = 20
+    static let compactCardVerticalPadding: CGFloat = 14
+    static let bottomPadding: CGFloat = 36
+    static let safeAreaBottomPadding: CGFloat = 28
+    static let navigationButtonSize: CGFloat = 52
+    static let navigationHeaderMinHeight: CGFloat = 56
+    static let dayPickerMinHeight: CGFloat = 42
+    static let dayPickerPadding: CGFloat = 5
+    static let weatherIconSize: CGFloat = 42
+    static let weatherMinHeight: CGFloat = 88
+    static let allergenIconSize: CGFloat = 32
+    static let allergenRowMinHeight: CGFloat = 68
+    static let badgeVerticalPadding: CGFloat = 5
+    static let noRiskMinHeight: CGFloat = 44
+    static let hourlyChipSpacing: CGFloat = 7
+    static let hourlyScrollerHorizontalPadding: CGFloat = 1
+    static let hourlyDotSize: CGFloat = 6
+    static let hourlyCurrentDotSize: CGFloat = 8
+    static let hourlyChipWidth: CGFloat = 58
+    static let hourlyCurrentChipWidth: CGFloat = 66
+    static let hourlyChipMinHeight: CGFloat = 84
+    static let hourlyCurrentChipMinHeight: CGFloat = 92
+    static let subtleNavigationRowMinHeight: CGFloat = 46
+    static let overviewDotSize: CGFloat = 8
+    static let allergenSheetIconSize: CGFloat = 44
+    static let allergenSheetHeight: CGFloat = 260
 }
 
 enum EntryListToken {

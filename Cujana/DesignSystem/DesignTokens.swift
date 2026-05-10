@@ -44,6 +44,63 @@ enum ColorToken {
     static let separatorSoft = Raw.separatorSoft.opacity(0.55)
 }
 
+enum DetailColorToken {
+    fileprivate enum Raw {
+        static let background = Color(hex: "#F5F2EC")
+        static let mutedSurface = Color(hex: "#ECE8DF")
+        static let sage = Color(hex: "#607565")
+        static let sageSoft = Color(hex: "#DCE6DA")
+        static let neutralStroke = Color(hex: "#E3DDD4")
+        static let warningSoft = Color(hex: "#EFE3C8")
+        static let alertSoft = Color(hex: "#F0D8D4")
+    }
+
+    static let background = Raw.background
+    static let surface = ColorToken.cardBackground.opacity(0.74)
+    static let mutedSurface = Raw.mutedSurface.opacity(0.62)
+    static let sage = Raw.sage
+    static let sageSoft = Raw.sageSoft
+    static let neutralStroke = Raw.neutralStroke.opacity(0.58)
+    static let warningSoft = Raw.warningSoft
+    static let alertSoft = Raw.alertSoft
+
+    static let sageQuiet = Raw.sage.opacity(0.72)
+    static let sageTertiary = Raw.sage.opacity(0.78)
+    static let sageAccentBorder = Raw.sage.opacity(0.22)
+    static let selectedPickerBackground = Raw.sageSoft.opacity(0.78)
+    static let weatherIconBackground = Raw.sageSoft.opacity(0.62)
+    static let riskBackground = 0.72
+    static let currentRiskBackground = 0.62
+    static let quietRiskBackground = 0.36
+    static let overviewRiskBackground = 0.46
+    static let primaryTextSubtle = 0.86
+    static let secondaryTextSubtle = 0.88
+    static let hourlyPrimaryText = 0.82
+    static let attributionText = 0.72
+
+    static func riskBackground(for text: String) -> Color {
+        switch text {
+        case "Keine Belastung", "Niedrig":
+            sageSoft.opacity(riskBackground)
+        case "Mittel":
+            warningSoft.opacity(riskBackground)
+        default:
+            alertSoft.opacity(riskBackground)
+        }
+    }
+
+    static func riskDot(for text: String) -> Color {
+        switch text {
+        case "Keine Belastung", "Niedrig":
+            sageQuiet
+        case "Mittel":
+            ColorToken.accentWarning.opacity(hourlyPrimaryText)
+        default:
+            ColorToken.accentNegative.opacity(hourlyPrimaryText)
+        }
+    }
+}
+
 enum TypographyToken {
     static let largeTitle = Font.system(.largeTitle, design: .rounded).weight(.semibold)
     static let title = Font.system(.title, design: .rounded).weight(.regular)

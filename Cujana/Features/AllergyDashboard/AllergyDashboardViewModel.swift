@@ -76,11 +76,8 @@ final class AllergyDashboardViewModel {
     }
 
     private func currentCoordinate() async -> LocationCoordinate? {
-        if let locationProvider {
-            return await locationProvider.currentCoordinate()
-        }
-
-        return previewCoordinate
+        guard let locationProvider else { return previewCoordinate }
+        return await locationProvider.currentCoordinate()
     }
 
     private func makeContent(from overview: AllergyOverview, currentDate: Date) -> AllergyDashboardContent {
@@ -309,19 +306,11 @@ private extension AllergyDashboardViewModel {
     }
 
     private func formattedHumidityText(for humidityPercent: Double?) -> String? {
-        guard let humidityPercent else {
-            return nil
-        }
-
-        return "\(Int(humidityPercent.rounded()))%"
+        humidityPercent.map { "\(Int($0.rounded()))%" }
     }
 
     private func formattedWindText(for windSpeedKilometersPerHour: Double?) -> String? {
-        guard let windSpeedKilometersPerHour else {
-            return nil
-        }
-
-        return "\(Int(windSpeedKilometersPerHour.rounded())) km/h"
+        windSpeedKilometersPerHour.map { "\(Int($0.rounded())) km/h" }
     }
 
     private func weatherDescription(for code: Int) -> String {
@@ -416,46 +405,30 @@ private extension AllergyDashboardViewModel {
     }
 
     private func startOfHistory(for date: Date) -> Date {
-        guard let historyDate = calendar.date(
+        let historyDate = calendar.date(
             byAdding: .day,
             value: -Constant.symptomHistoryDays,
             to: date
-        ) else {
-            return date
-        }
-
+        ) ?? date
         return calendar.startOfDay(for: historyDate)
     }
 
     private func forecastEndDate(from date: Date) -> Date {
-        guard let endDate = calendar.date(
+        calendar.date(
             byAdding: .day,
             value: Constant.forecastDays,
             to: date
-        ) else {
-            return date
-        }
-
-        return endDate
+        ) ?? date
     }
 
     private func dateText(for date: Date) -> String {
-        if calendar.isDateInToday(date) {
-            return "Heute"
-        }
-
-        if calendar.isDateInYesterday(date) {
-            return "Gestern"
-        }
-
+        if calendar.isDateInToday(date) { return "Heute" }
+        if calendar.isDateInYesterday(date) { return "Gestern" }
         return date.formatted(.dateTime.day().month(.wide))
     }
 
     private func relativeText(for date: Date, currentDate: Date) -> String {
-        if calendar.isDate(date, inSameDayAs: currentDate) {
-            return "heute"
-        }
-
+        if calendar.isDate(date, inSameDayAs: currentDate) { return "heute" }
         return date.formatted(.dateTime.day().month(.abbreviated))
     }
 
