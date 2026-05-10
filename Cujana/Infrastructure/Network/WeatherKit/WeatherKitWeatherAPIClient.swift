@@ -47,34 +47,7 @@ nonisolated public struct WeatherKitWeatherServiceClient: WeatherKitWeatherAPICl
                     now: now(),
                     calendar: calendar
                 )
-                let dailyForecast = try await service.weather(
-                    for: location,
-                    including: .daily(startDate: dateRange.startDate, endDate: dateRange.endDate)
-                )
-                let days = dailyForecast.forecast.filter { day in
-                    calendar.compare(day.date, to: dateRange.startDate, toGranularity: .day) != .orderedAscending
-                        && calendar.compare(day.date, to: dateRange.endDate, toGranularity: .day) != .orderedDescending
-                }
-
-                AppObservability.log(
-                    .info,
-                    "WeatherKit Forecast geladen.",
-                    category: "WeatherKit",
-                    metadata: ["dayCount": "\(days.count)"]
-                )
-
-                return WeatherKitWeatherResponseDTO(
-                    coordinate: coordinate,
-                    days: days.map { day in
-                        WeatherKitWeatherDayDTO(
-                            date: calendar.startOfDay(for: day.date),
-                            condition: day.condition.rawValue,
-                            highTemperatureCelsius: day.highTemperature.converted(to: .celsius).value,
-                            humidityPercent: day.maximumHumidity * 100,
-                            windSpeedKilometersPerHour: day.wind.speed.converted(to: .kilometersPerHour).value
-                        )
-                    }
-                )
+                return try await makeResponse(for: coordinate, location: location, dateRange: dateRange)
             } catch let error as WeatherDataError {
                 throw error
             } catch {
@@ -87,6 +60,75 @@ nonisolated public struct WeatherKitWeatherServiceClient: WeatherKitWeatherAPICl
                 throw WeatherDataError.networkFailure
             }
         }
+    }
+
+    private func makeResponse(
+        for coordinate: LocationCoordinate,
+        location: CLLocation,
+        dateRange: WeatherKitForecastDateRange
+    ) async throws -> WeatherKitWeatherResponseDTO {
+        let dailyForecast = try await service.weather(
+            for: location,
+            including: .daily(startDate: dateRange.startDate, endDate: dateRange.endDate)
+        )
+        let hourlyForecast = try await service.weather(
+            for: location,
+            including: .hourly(startDate: dateRange.startDate, endDate: dateRange.endDate)
+        )
+        let days = filteredDays(dailyForecast.forecast, in: dateRange)
+        let hours = filteredHours(hourlyForecast.forecast, in: dateRange)
+
+        AppObservability.log(
+            .info,
+            "WeatherKit Forecast geladen.",
+            category: "WeatherKit",
+            metadata: [
+                "dayCount": "\(days.count)",
+                "hourCount": "\(hours.count)"
+            ]
+        )
+
+        return WeatherKitWeatherResponseDTO(
+            coordinate: coordinate,
+            days: days.map(mapDay(_:)),
+            hours: hours.map(mapHour(_:))
+        )
+    }
+
+    private func filteredDays(_ days: [DayWeather], in dateRange: WeatherKitForecastDateRange) -> [DayWeather] {
+        days.filter { day in
+            calendar.compare(day.date, to: dateRange.startDate, toGranularity: .day) != .orderedAscending
+                && calendar.compare(day.date, to: dateRange.endDate, toGranularity: .day) != .orderedDescending
+        }
+    }
+
+    private func filteredHours(
+        _ hours: [HourWeather],
+        in dateRange: WeatherKitForecastDateRange
+    ) -> [HourWeather] {
+        hours.filter { hour in
+            hour.date >= dateRange.startDate && hour.date <= dateRange.endDate
+        }
+    }
+
+    private func mapDay(_ day: DayWeather) -> WeatherKitWeatherDayDTO {
+        WeatherKitWeatherDayDTO(
+            date: calendar.startOfDay(for: day.date),
+            condition: day.condition.rawValue,
+            highTemperatureCelsius: day.highTemperature.converted(to: .celsius).value,
+            humidityPercent: day.maximumHumidity * 100,
+            windSpeedKilometersPerHour: day.wind.speed.converted(to: .kilometersPerHour).value
+        )
+    }
+
+    private func mapHour(_ hour: HourWeather) -> WeatherKitWeatherResponseDTO.HourDTO {
+        WeatherKitWeatherResponseDTO.HourDTO(
+            date: hour.date,
+            condition: hour.condition.rawValue,
+            temperatureCelsius: hour.temperature.converted(to: .celsius).value,
+            humidityPercent: hour.humidity * 100,
+            windSpeedKilometersPerHour: hour.wind.speed.converted(to: .kilometersPerHour).value
+        )
     }
 
     nonisolated static func forecastDateRange(

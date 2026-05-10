@@ -165,6 +165,7 @@ final class AllergyDashboardViewModel {
             }
 
             let weather = weatherCondition(from: weatherForecasts, for: date)
+            let hourlyWeather = hourlyWeatherConditions(from: weatherForecasts, for: date)
             let pollenItems = detailPollenItems(from: pollenForecasts, for: date)
             let allergyRisk = allergyRisk(from: pollenForecasts, for: date)
 
@@ -182,7 +183,9 @@ final class AllergyDashboardViewModel {
                 windText: weather.flatMap { formattedWindText(for: $0.windSpeedKilometersPerHour) },
                 pollenItems: pollenItems,
                 allergyRiskText: allergyRisk.map { "Allergierisiko: \(shortLevelText(for: $0.level))" },
-                hourlyAllergyRiskItems: allergyRisk.map(hourlyAllergyRiskItems(for:)) ?? []
+                hourlyAllergyRiskItems: allergyRisk.map {
+                    hourlyAllergyRiskItems(for: $0, hourlyWeather: hourlyWeather, fallbackWeather: weather)
+                } ?? []
             )
         }
     }
@@ -193,18 +196,21 @@ private extension AllergyDashboardViewModel {
         from forecasts: [WeatherForecast],
         for date: Date
     ) -> WeatherForecast.DailyCondition? {
-        forecasts
-            .flatMap(\.dailyConditions)
-            .first { calendar.isDate($0.date, inSameDayAs: date) }
+        forecasts.flatMap(\.dailyConditions).first { calendar.isDate($0.date, inSameDayAs: date) }
     }
 
     private func allergyRisk(
         from forecasts: [PollenForecast],
         for date: Date
     ) -> PollenForecast.DailyAllergyRisk? {
-        forecasts
-            .flatMap(\.dailyAllergyRisks)
-            .first { calendar.isDate($0.date, inSameDayAs: date) }
+        forecasts.flatMap(\.dailyAllergyRisks).first { calendar.isDate($0.date, inSameDayAs: date) }
+    }
+
+    private func hourlyWeatherConditions(
+        from forecasts: [WeatherForecast],
+        for date: Date
+    ) -> [WeatherForecast.HourlyCondition] {
+        forecasts.flatMap(\.hourlyConditions).filter { calendar.isDate($0.date, inSameDayAs: date) }
     }
 
     private func hourlyAllergyRiskText(for risk: PollenForecast.DailyAllergyRisk) -> String? {
@@ -216,12 +222,21 @@ private extension AllergyDashboardViewModel {
         return "Höchster Stundenwert ab \(hourText): \(shortLevelText(for: peak.element))"
     }
 
-    private func hourlyAllergyRiskItems(for risk: PollenForecast.DailyAllergyRisk) -> [ForecastDetailHourlyRiskItem] {
+    private func hourlyAllergyRiskItems(
+        for risk: PollenForecast.DailyAllergyRisk,
+        hourlyWeather: [WeatherForecast.HourlyCondition],
+        fallbackWeather: WeatherForecast.DailyCondition?
+    ) -> [ForecastDetailHourlyRiskItem] {
         risk.hourlyLevels.enumerated().map { hour, level in
-            ForecastDetailHourlyRiskItem(
+            let weather = hourlyWeather.first { calendar.component(.hour, from: $0.date) == hour }
+            let temperatureText = weather.map { formattedTemperatureText(for: $0.temperature) }
+                ?? fallbackWeather.map { formattedTemperatureText(for: $0.temperature) }
+                ?? "--"
+            return ForecastDetailHourlyRiskItem(
                 hour: hour,
                 hourText: String(format: "%02d:00", hour),
                 levelText: AllergyDashboardPresentationState.levelText(for: level),
+                temperatureText: temperatureText,
                 background: AllergyDashboardPresentationState.pollenBackground(for: level)
             )
         }
@@ -405,20 +420,12 @@ private extension AllergyDashboardViewModel {
     }
 
     private func startOfHistory(for date: Date) -> Date {
-        let historyDate = calendar.date(
-            byAdding: .day,
-            value: -Constant.symptomHistoryDays,
-            to: date
-        ) ?? date
+        let historyDate = calendar.date(byAdding: .day, value: -Constant.symptomHistoryDays, to: date) ?? date
         return calendar.startOfDay(for: historyDate)
     }
 
     private func forecastEndDate(from date: Date) -> Date {
-        calendar.date(
-            byAdding: .day,
-            value: Constant.forecastDays,
-            to: date
-        ) ?? date
+        calendar.date(byAdding: .day, value: Constant.forecastDays, to: date) ?? date
     }
 
     private func dateText(for date: Date) -> String {

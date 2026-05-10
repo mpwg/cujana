@@ -71,6 +71,7 @@ struct ForecastDetailHourlyRiskItem: Identifiable, Equatable {
     let hour: Int
     let hourText: String
     let levelText: String
+    let temperatureText: String
     let background: Color
 
     var id: Int {

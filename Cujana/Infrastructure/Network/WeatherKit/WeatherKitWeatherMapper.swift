@@ -11,6 +11,15 @@ nonisolated public enum WeatherKitWeatherMapper {
                 windSpeedKilometersPerHour: day.windSpeedKilometersPerHour
             )
         }
+        let hourlyConditions = dto.hours.map { hour in
+            WeatherForecast.HourlyCondition(
+                date: hour.date,
+                temperature: hour.temperatureCelsius,
+                conditionCode: conditionCode(for: hour.condition),
+                humidityPercent: hour.humidityPercent,
+                windSpeedKilometersPerHour: hour.windSpeedKilometersPerHour
+            )
+        }
 
         guard dailyConditions.isEmpty == false else {
             return []
@@ -20,7 +29,8 @@ nonisolated public enum WeatherKitWeatherMapper {
             WeatherForecast(
                 coordinate: dto.coordinate,
                 generatedAt: generatedAt,
-                dailyConditions: dailyConditions
+                dailyConditions: dailyConditions,
+                hourlyConditions: hourlyConditions
             )
         ]
     }

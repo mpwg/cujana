@@ -87,6 +87,11 @@ struct AllergyDashboardViewModelTests {
             "Hoch",
             "Sehr hoch"
         ])
+        #expect(content.forecastDetailDays.first?.hourlyAllergyRiskItems.map(\.temperatureText) == [
+            "17°",
+            "18°",
+            "19°"
+        ])
         #expect(content.symptomItems.first?.title == "Juckende Augen")
         #expect(content.symptomItems.first?.severityText == "Sehr stark")
         #expect(content.symptomItems.first?.noteText == "Abends stärker.")
@@ -329,6 +334,19 @@ private extension AllergyDashboardViewModelTests {
                     date: date.addingTimeInterval(172_800),
                     temperature: 19.1,
                     conditionCode: 0
+                )
+            ],
+            hourlyConditions: [
+                WeatherForecast.HourlyCondition(date: date, temperature: 17.2, conditionCode: 2),
+                WeatherForecast.HourlyCondition(
+                    date: date.addingTimeInterval(3_600),
+                    temperature: 18.1,
+                    conditionCode: 3
+                ),
+                WeatherForecast.HourlyCondition(
+                    date: date.addingTimeInterval(7_200),
+                    temperature: 19.3,
+                    conditionCode: 3
                 )
             ]
         )

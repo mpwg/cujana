@@ -1,38 +1,28 @@
 import SwiftUI
 
-struct DetailNavigationHeader: View {
+struct DetailBackButton: View {
     let onBack: () -> Void
 
     var body: some View {
-        ZStack {
-            Text("Alle Details")
-                .font(TypographyToken.headline)
+        Button(action: onBack) {
+            Image(systemName: "chevron.left")
+                .font(.system(.body, design: .rounded).weight(.semibold))
                 .foregroundStyle(ColorToken.textPrimary)
-                .frame(maxWidth: .infinity)
-
-            HStack {
-                Button(action: onBack) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
-                        .foregroundStyle(ColorToken.textPrimary)
-                        .frame(
-                            width: ForecastDetailToken.navigationButtonSize,
-                            height: ForecastDetailToken.navigationButtonSize
-                        )
-                        .background(.thinMaterial)
-                        .clipShape(Circle())
-                        .overlay {
-                            Circle()
-                                .stroke(DetailColorToken.neutralStroke, lineWidth: 1)
-                        }
+                .frame(
+                    width: ForecastDetailToken.navigationButtonSize,
+                    height: ForecastDetailToken.navigationButtonSize
+                )
+                .background(.ultraThinMaterial)
+                .background(DetailColorToken.toolbarOverlay)
+                .clipShape(Circle())
+                .overlay {
+                    Circle()
+                        .stroke(DetailColorToken.toolbarStrokeColor, lineWidth: 1)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Zurück")
-
-                Spacer()
-            }
         }
-        .frame(minHeight: ForecastDetailToken.navigationHeaderMinHeight)
+        .buttonStyle(.plain)
+        .accessibilityLabel("Zurück")
+        .softShadow(ShadowToken.floating)
     }
 }
 
@@ -100,7 +90,7 @@ struct WeatherContextRow: View {
 
             VStack(alignment: .leading, spacing: SpacingToken.xs) {
                 Text(day.weatherText.capitalized)
-                    .font(TypographyToken.bodyEmphasized)
+                    .font(.system(.title3, design: .rounded).weight(.medium))
                     .foregroundStyle(ColorToken.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.84)
@@ -149,5 +139,39 @@ struct WeatherContextRow: View {
         ]
         .compactMap(\.self)
         .joined(separator: ", ")
+    }
+}
+
+struct DetailContextLine: View {
+    let day: ForecastDetailDayItem
+
+    var body: some View {
+        Text(text)
+            .font(TypographyToken.footnote)
+            .foregroundStyle(ColorToken.textSecondary.opacity(DetailColorToken.contextText))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityLabel(text)
+    }
+
+    private var text: String {
+        if let focusedAllergen {
+            return "\(day.title) \(focusedAllergen.levelAdjective) Belastung durch \(focusedAllergen.title)"
+        }
+
+        if let peakHour {
+            return "Um \(peakHour.hourText) ist der Verlauf am auffälligsten."
+        }
+
+        return "Die Werte können sich im Tagesverlauf ändern."
+    }
+
+    private var focusedAllergen: ForecastDetailPollenItem? {
+        day.pollenItems.first { $0.isRelevant }
+    }
+
+    private var peakHour: ForecastDetailHourlyRiskItem? {
+        day.hourlyAllergyRiskItems.max { first, second in
+            first.levelSortValue < second.levelSortValue
+        }
     }
 }

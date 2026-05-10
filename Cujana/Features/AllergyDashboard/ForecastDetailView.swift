@@ -18,10 +18,6 @@ struct ForecastDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: ForecastDetailToken.sectionSpacing) {
-                DetailNavigationHeader {
-                    dismiss()
-                }
-
                 if let selectedDay {
                     DetailDayPicker(
                         days: days,
@@ -29,13 +25,17 @@ struct ForecastDetailView: View {
                         namespace: dayPickerNamespace
                     )
 
+                    VStack(alignment: .leading, spacing: ForecastDetailToken.contextSpacing) {
+                        WeatherContextRow(day: selectedDay)
+                            .transition(.opacity)
+
+                        DetailContextLine(day: selectedDay)
+                    }
+
                     AllergenFocusSection(day: selectedDay)
                         .transition(.opacity)
 
                     HourlyRiskSection(day: selectedDay)
-                        .transition(.opacity)
-
-                    WeatherContextRow(day: selectedDay)
                         .transition(.opacity)
                 } else {
                     DetailEmptyState()
@@ -44,17 +44,32 @@ struct ForecastDetailView: View {
                 DetailInfoCard()
                 AttributionFooter()
             }
-            .padding(.horizontal, ForecastDetailToken.screenHorizontalPadding)
             .padding(.top, SpacingToken.sm)
-            .padding(.bottom, ForecastDetailToken.bottomPadding)
         }
-        .safeAreaPadding(.bottom, ForecastDetailToken.safeAreaBottomPadding)
+        .contentMargins(.horizontal, ForecastDetailToken.screenHorizontalPadding, for: .scrollContent)
+        .safeAreaInset(edge: .bottom) {
+            Spacer()
+                .frame(height: ForecastDetailToken.bottomInsetHeight)
+        }
         .scrollIndicators(.hidden)
         .background(DetailColorToken.background.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
 #if os(iOS)
-        .toolbar(.hidden, for: .navigationBar)
+        .toolbarBackground(.hidden, for: .navigationBar)
 #endif
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                DetailBackButton {
+                    dismiss()
+                }
+            }
+
+            ToolbarItem(placement: .principal) {
+                Text("Alle Details")
+                    .font(TypographyToken.headline)
+                    .foregroundStyle(ColorToken.textPrimary)
+            }
+        }
         .onAppear {
             if selectedDayID == nil {
                 selectedDayID = days.first?.id
@@ -156,6 +171,7 @@ private struct AllergenFocusRow: View {
                 RoundedRectangle(cornerRadius: RadiusToken.radiusMedium, style: .continuous)
                     .stroke(DetailColorToken.neutralStroke, lineWidth: 1)
             }
+            .softShadow(ShadowToken.card)
         }
         .buttonStyle(SoftPressButtonStyle())
         .accessibilityLabel("\(item.title), \(item.levelText). \(item.levelDescription)")
@@ -180,7 +196,7 @@ struct RiskBadge: View {
 
 private struct CompactNoRiskCard: View {
     let items: [ForecastDetailPollenItem]
-    @State private var isExpanded = false
+    @State private var showsDetails = false
 
     private var allergenText: String {
         items.map(\.title).joined(separator: ", ")
@@ -188,38 +204,20 @@ private struct CompactNoRiskCard: View {
 
     var body: some View {
         Button {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.92)) {
-                isExpanded.toggle()
-            }
+            showsDetails = true
         } label: {
-            VStack(alignment: .leading, spacing: isExpanded ? SpacingToken.xs : 0) {
-                HStack(spacing: SpacingToken.sm) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(.footnote, design: .rounded).weight(.semibold))
-                        .foregroundStyle(DetailColorToken.sageTertiary)
-                        .accessibilityHidden(true)
+            HStack(spacing: SpacingToken.sm) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(.footnote, design: .rounded).weight(.semibold))
+                    .foregroundStyle(DetailColorToken.sageTertiary)
+                    .accessibilityHidden(true)
 
-                    Text("\(items.count) Allergene aktuell ohne Belastung")
-                        .font(TypographyToken.footnote.weight(.medium))
-                        .foregroundStyle(ColorToken.textSecondary)
-                        .lineLimit(1)
+                Text("\(items.count) Allergene aktuell ohne Belastung")
+                    .font(TypographyToken.footnote.weight(.medium))
+                    .foregroundStyle(ColorToken.textSecondary)
+                    .lineLimit(1)
 
-                    Spacer(minLength: SpacingToken.sm)
-
-                    Image(systemName: "chevron.down")
-                        .font(.system(.caption2, design: .rounded).weight(.semibold))
-                        .foregroundStyle(ColorToken.textTertiary)
-                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                        .accessibilityHidden(true)
-                }
-
-                if isExpanded {
-                    Text(allergenText)
-                        .font(TypographyToken.caption)
-                        .foregroundStyle(ColorToken.textTertiary)
-                        .lineLimit(3)
-                        .transition(.opacity)
-                }
+                Spacer(minLength: SpacingToken.sm)
             }
             .frame(minHeight: ForecastDetailToken.noRiskMinHeight)
             .padding(.horizontal, SpacingToken.md)
@@ -229,6 +227,11 @@ private struct CompactNoRiskCard: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Keine Belastung: \(allergenText)")
+        .sheet(isPresented: $showsDetails) {
+            NoRiskAllergenSheet(items: items)
+                .presentationDetents([.height(ForecastDetailToken.noRiskSheetHeight)])
+                .presentationDragIndicator(.visible)
+        }
     }
 }
 
@@ -264,11 +267,10 @@ private struct HourlyRiskScroller: View {
     var body: some View {
         ScrollView(.horizontal) {
             HStack(spacing: ForecastDetailToken.hourlyChipSpacing) {
-                ForEach(day.hourlyAllergyRiskItems) { item in
+                ForEach(displayItems) { item in
                     HourlyRiskChip(
                         item: item,
-                        temperatureText: day.temperatureText,
-                        isCurrentHour: isCurrentHour(item)
+                        isCurrentHour: isNow(item)
                     )
                 }
             }
@@ -278,21 +280,39 @@ private struct HourlyRiskScroller: View {
         .scrollIndicators(.hidden)
     }
 
+    private var displayItems: [ForecastDetailHourlyRiskItem] {
+        guard day.title == "Heute" else {
+            return day.hourlyAllergyRiskItems
+        }
+
+        let currentHour = Calendar.current.component(.hour, from: Date())
+        let upcoming = day.hourlyAllergyRiskItems.filter { $0.hour >= currentHour }
+        let earlier = day.hourlyAllergyRiskItems.filter { $0.hour < currentHour }
+        return upcoming + earlier
+    }
+
     private func isCurrentHour(_ item: ForecastDetailHourlyRiskItem) -> Bool {
         day.title == "Heute" && item.hour == Calendar.current.component(.hour, from: Date())
+    }
+
+    private func isNow(_ item: ForecastDetailHourlyRiskItem) -> Bool {
+        guard day.title == "Heute" else {
+            return false
+        }
+
+        return isCurrentHour(item) || item.id == displayItems.first?.id
     }
 }
 
 private struct HourlyRiskChip: View {
     let item: ForecastDetailHourlyRiskItem
-    let temperatureText: String
     let isCurrentHour: Bool
 
     var body: some View {
         VStack(spacing: 5) {
-            Text(item.hourText)
+            Text(isCurrentHour ? "Jetzt" : item.hourText)
                 .font(.system(.caption2, design: .rounded).weight(.medium))
-                .foregroundStyle(ColorToken.textSecondary)
+                .foregroundStyle(isCurrentHour ? ColorToken.textPrimary : ColorToken.textSecondary)
                 .monospacedDigit()
 
             Circle()
@@ -306,7 +326,7 @@ private struct HourlyRiskChip: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.74)
 
-            Text(temperatureText)
+            Text(item.temperatureText)
                 .font(.system(.caption2, design: .rounded))
                 .foregroundStyle(ColorToken.textSecondary)
                 .monospacedDigit()
@@ -315,12 +335,13 @@ private struct HourlyRiskChip: View {
         .frame(minHeight: chipMinHeight)
         .background(chipBackground)
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
+        .scaleEffect(isCurrentHour ? ForecastDetailToken.hourlyCurrentScale : 1)
         .overlay {
             RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous)
                 .stroke(strokeColor, lineWidth: 1)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(item.hourText), Risiko \(item.levelText), \(temperatureText)")
+        .accessibilityLabel("\(item.hourText), Risiko \(item.levelText), \(item.temperatureText)")
     }
 
     private var chipBackground: Color {

@@ -27,7 +27,7 @@ struct HourlyRiskOverviewView: View {
 
                         Spacer()
 
-                        Text(day.temperatureText)
+                        Text(item.temperatureText)
                             .font(TypographyToken.bodyEmphasized)
                             .foregroundStyle(ColorToken.textPrimary)
                             .monospacedDigit()
@@ -179,6 +179,45 @@ struct AllergenDetailSheet: View {
     }
 }
 
+struct NoRiskAllergenSheet: View {
+    let items: [ForecastDetailPollenItem]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SpacingToken.lg) {
+            HStack(spacing: SpacingToken.md) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(.title3, design: .rounded).weight(.semibold))
+                    .foregroundStyle(DetailColorToken.sageTertiary)
+                    .frame(
+                        width: ForecastDetailToken.allergenSheetIconSize,
+                        height: ForecastDetailToken.allergenSheetIconSize
+                    )
+                    .background(DetailColorToken.mutedSurface)
+                    .clipShape(Circle())
+
+                VStack(alignment: .leading, spacing: SpacingToken.xs) {
+                    Text("Keine Belastung")
+                        .font(TypographyToken.headline)
+                        .foregroundStyle(ColorToken.textPrimary)
+
+                    Text("\(items.count) Allergene")
+                        .font(TypographyToken.footnote)
+                        .foregroundStyle(ColorToken.textSecondary)
+                }
+            }
+
+            Text(items.map(\.title).joined(separator: ", "))
+                .font(TypographyToken.body)
+                .foregroundStyle(ColorToken.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer()
+        }
+        .padding(SpacingToken.xl)
+        .background(DetailColorToken.background)
+    }
+}
+
 struct DetailEmptyState: View {
     var body: some View {
         Text("Keine Detailprognose verfügbar.")
@@ -203,5 +242,39 @@ struct SoftPressButtonStyle: ButtonStyle {
 extension ForecastDetailPollenItem {
     var isRelevant: Bool {
         levelText != "Keine Belastung"
+    }
+
+    var levelAdjective: String {
+        switch levelText {
+        case "Niedrig":
+            "niedrige"
+        case "Mittel":
+            "mittlere"
+        case "Hoch":
+            "hohe"
+        case "Sehr hoch":
+            "sehr hohe"
+        default:
+            "auffällige"
+        }
+    }
+}
+
+extension ForecastDetailHourlyRiskItem {
+    var levelSortValue: Int {
+        switch levelText {
+        case "Keine Belastung":
+            0
+        case "Niedrig":
+            1
+        case "Mittel":
+            2
+        case "Hoch":
+            3
+        case "Sehr hoch":
+            4
+        default:
+            5
+        }
     }
 }
