@@ -3,7 +3,6 @@ import SwiftUI
 struct ForecastDetailView: View {
     let days: [ForecastDetailDayItem]
 
-    @Environment(\.dismiss) private var dismiss
     @State private var selectedDayID: ForecastDetailDayItem.ID?
     @Namespace private var dayPickerNamespace
 
@@ -58,23 +57,11 @@ struct ForecastDetailView: View {
         .scrollBounceBehavior(.basedOnSize, axes: .vertical)
         .scrollIndicators(.hidden)
         .background(DetailColorToken.background.ignoresSafeArea())
-        .navigationBarBackButtonHidden(true)
+        .navigationTitle("Alle Details")
         #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
         #endif
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    DetailBackButton {
-                        dismiss()
-                    }
-                }
-
-                ToolbarItem(placement: .principal) {
-                    Text("Alle Details")
-                        .font(TypographyToken.headline)
-                        .foregroundStyle(ColorToken.textPrimary)
-                }
-            }
             .onAppear {
                 if selectedDayID == nil {
                     selectedDayID = days.first?.id
@@ -136,15 +123,15 @@ private struct AllergenFocusRow: View {
                 .clipShape(Circle())
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: ForecastDetailToken.allergenTextSpacing) {
                 Text(item.title)
-                    .font(TypographyToken.bodyEmphasized)
+                    .font(TypographyToken.body)
                     .foregroundStyle(ColorToken.textPrimary)
                     .lineLimit(1)
 
                 Text(item.levelDescription)
-                    .font(TypographyToken.footnote)
-                    .foregroundStyle(ColorToken.textSecondary)
+                    .font(TypographyToken.caption)
+                    .foregroundStyle(ColorToken.textSecondary.opacity(DetailColorToken.secondaryTextReadable))
                     .lineLimit(1)
             }
 
@@ -199,7 +186,7 @@ private struct CompactNoRiskCard: View {
 
             Text("\(items.count) Allergene aktuell ohne Belastung")
                 .font(TypographyToken.footnote.weight(.medium))
-                .foregroundStyle(ColorToken.textSecondary)
+                .foregroundStyle(ColorToken.textSecondary.opacity(DetailColorToken.secondaryTextReadable))
                 .lineLimit(1)
 
             Spacer(minLength: SpacingToken.sm)
@@ -289,7 +276,7 @@ private struct HourlyRiskChip: View {
     let isCurrentHour: Bool
 
     var body: some View {
-        VStack(spacing: 5) {
+        VStack(spacing: ForecastDetailToken.hourlyChipContentSpacing) {
             Text(isCurrentHour ? "Jetzt" : item.hourText)
                 .font(.system(.caption2, design: .rounded).weight(.medium))
                 .foregroundStyle(isCurrentHour ? ColorToken.textPrimary : ColorToken.textSecondary)
@@ -372,7 +359,7 @@ private struct SubtleNavigationRow<Destination: View>: View {
                     .accessibilityHidden(true)
             }
             .frame(minHeight: ForecastDetailToken.subtleNavigationRowMinHeight)
-            .padding(.horizontal, SpacingToken.lg)
+            .padding(.horizontal, ForecastDetailToken.subtleNavigationHorizontalPadding)
             .background(.ultraThinMaterial)
             .background(DetailColorToken.mutedSurface.opacity(DetailColorToken.navigationSurface))
             .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))

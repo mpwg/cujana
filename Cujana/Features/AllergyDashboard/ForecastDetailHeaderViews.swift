@@ -1,34 +1,5 @@
 import SwiftUI
 
-struct DetailBackButton: View {
-    let onBack: () -> Void
-
-    var body: some View {
-        Button(action: onBack) {
-            Image(systemName: "chevron.left")
-                .font(.system(.body, design: .rounded).weight(.semibold))
-                .foregroundStyle(ColorToken.textPrimary)
-                .frame(
-                    width: ForecastDetailToken.navigationButtonSize,
-                    height: ForecastDetailToken.navigationButtonSize
-                )
-                .background(.ultraThinMaterial)
-                .background(DetailColorToken.toolbarOverlay)
-                .clipShape(Circle())
-                .overlay {
-                    Circle()
-                        .stroke(
-                            DetailColorToken.toolbarStrokeColor,
-                            lineWidth: ForecastDetailToken.hairlineStrokeWidth
-                        )
-                }
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Zurück")
-        .softShadow(ShadowToken.floating)
-    }
-}
-
 struct DetailDayPicker: View {
     let days: [ForecastDetailDayItem]
     @Binding var selectedDayID: ForecastDetailDayItem.ID?
@@ -89,21 +60,22 @@ struct WeatherContextRow: View {
                 .accessibilityHidden(true)
 
             Text(day.temperatureText)
-                .font(.system(.largeTitle, design: .rounded).weight(.bold))
+                .font(.system(.title, design: .rounded).weight(.semibold))
                 .foregroundStyle(ColorToken.textPrimary)
                 .monospacedDigit()
                 .accessibilityLabel("Temperatur \(day.temperatureText)")
 
             VStack(alignment: .leading, spacing: SpacingToken.xs) {
                 Text(day.weatherText.capitalized)
-                    .font(.system(.title3, design: .rounded).weight(.medium))
+                    .font(.system(.body, design: .rounded).weight(.regular))
                     .foregroundStyle(ColorToken.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(ForecastDetailToken.weatherTextMinimumScale)
+                    .opacity(DetailColorToken.weatherDescriptionText)
 
                 Text(metricText)
-                    .font(TypographyToken.footnote)
-                    .foregroundStyle(ColorToken.textSecondary)
+                    .font(TypographyToken.caption)
+                    .foregroundStyle(ColorToken.textSecondary.opacity(DetailColorToken.weatherMetricText))
                     .lineLimit(1)
             }
 

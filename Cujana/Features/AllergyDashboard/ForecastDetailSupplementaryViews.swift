@@ -82,7 +82,7 @@ struct AttributionFooter: View {
             .lineLimit(2)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, SpacingToken.sm)
+            .padding(.horizontal, SpacingToken.xs)
             .accessibilityLabel(text)
     }
 }
@@ -103,13 +103,21 @@ struct SectionTitle: View {
 
     var body: some View {
         Text(title)
-            .font(prominence == .primary ? TypographyToken.headline : TypographyToken.bodyEmphasized)
+            .font(prominence == .primary ? primaryFont : secondaryFont)
             .foregroundStyle(
                 prominence == .primary
                     ? ColorToken.textPrimary
                     : ColorToken.textPrimary.opacity(DetailColorToken.secondaryTextSubtle)
             )
             .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var primaryFont: Font {
+        Font.system(.headline, design: .rounded).weight(.semibold)
+    }
+
+    private var secondaryFont: Font {
+        Font.system(.subheadline, design: .rounded).weight(.semibold)
     }
 }
 
