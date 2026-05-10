@@ -103,6 +103,7 @@ enum HomeOverviewToken {
 
 enum AllergenLoadToken {
     static let backgroundOpacity = 0.62
+    static let levelLayoutPriority = 2.0
 }
 
 enum ForecastDetailToken {

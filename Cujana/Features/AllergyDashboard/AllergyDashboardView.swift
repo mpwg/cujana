@@ -197,16 +197,19 @@ private struct AllergenLoadBadge: View {
             Text(item.levelText)
                 .font(TypographyToken.caption.weight(.semibold))
                 .foregroundStyle(ColorToken.textPrimary)
+                .lineLimit(1)
                 .padding(.horizontal, SpacingToken.sm)
                 .padding(.vertical, SpacingToken.xs)
                 .background(item.background)
                 .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
-                .fixedSize(horizontal: false, vertical: true)
+                .fixedSize(horizontal: true, vertical: false)
+                .layoutPriority(AllergenLoadToken.levelLayoutPriority)
         }
         .padding(.horizontal, SpacingToken.sm)
         .padding(.vertical, SpacingToken.xs)
         .background(ColorToken.cardBackground.opacity(AllergenLoadToken.backgroundOpacity))
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
 
