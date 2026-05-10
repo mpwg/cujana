@@ -156,26 +156,35 @@ enum SemanticColorToken {
 
 enum TypographyToken {
     static let largeTitle = Font.system(size: 34, weight: .semibold, design: .rounded)
-    static let detailTitle = Font.system(size: 30, weight: .semibold, design: .rounded)
+    static let detailTitle = Font.system(size: 28, weight: .semibold, design: .rounded)
     static let heroTitle = Font.system(size: 28, weight: .semibold, design: .rounded)
     static let sheetTitle = Font.system(size: 20, weight: .semibold, design: .rounded)
     static let sheetHeading = Font.system(size: 26, weight: .semibold, design: .rounded)
     static let title = Font.system(size: 28, weight: .semibold, design: .rounded)
-    static let ctaHeroTitle = Font.system(size: 28, weight: .semibold, design: .rounded)
+    static let ctaHeroTitle = Font.system(size: 26, weight: .semibold, design: .rounded)
     static let ctaLabel = Font.system(size: 13, weight: .medium, design: .rounded)
-    static let ctaSupporting = Font.system(size: 16, weight: .regular, design: .rounded)
+    static let ctaSupporting = Font.system(size: 15, weight: .regular, design: .rounded)
+    static let ctaButton = Font.system(size: 17, weight: .semibold, design: .rounded)
     static let headline = Font.system(size: 22, weight: .semibold, design: .rounded)
     static let weatherTemperature = Font.system(size: 42, weight: .semibold, design: .rounded)
     static let weatherDescription = Font.system(size: 18, weight: .medium, design: .rounded)
     static let forecastSectionTitle = Font.system(size: 22, weight: .semibold, design: .rounded)
-    static let loadHeadline = Font.system(size: 20, weight: .semibold, design: .rounded)
-    static let personalStatusTitle = Font.system(size: 20, weight: .semibold, design: .rounded)
-    static let detailStatusTitle = Font.system(size: 22, weight: .semibold, design: .rounded)
-    static let detailStatusSubtitle = Font.system(size: 16, weight: .regular, design: .rounded)
-    static let allergenTitle = Font.system(size: 18, weight: .semibold, design: .rounded)
-    static let symptomHeading = Font.system(size: 28, weight: .semibold, design: .rounded)
-    static let symptomText = Font.system(size: 16, weight: .regular, design: .rounded)
-    static let symptomPill = Font.system(size: 16, weight: .medium, design: .rounded)
+    static let loadHeadline = Font.system(size: 18, weight: .semibold, design: .rounded)
+    static let personalStatusTitle = Font.system(size: 18, weight: .semibold, design: .rounded)
+    static let personalStatusSubtitle = Font.system(size: 14, weight: .regular, design: .rounded)
+    static let detailStatusTitle = Font.system(size: 20, weight: .semibold, design: .rounded)
+    static let detailStatusSubtitle = Font.system(size: 15, weight: .regular, design: .rounded)
+    static let detailSegment = Font.system(size: 16, weight: .medium, design: .rounded)
+    static let allergenTitle = Font.system(size: 17, weight: .semibold, design: .rounded)
+    static let allergenDescription = Font.system(size: 14, weight: .regular, design: .rounded)
+    static let symptomHeading = Font.system(size: 24, weight: .semibold, design: .rounded)
+    static let symptomText = Font.system(size: 15, weight: .regular, design: .rounded)
+    static let symptomPill = Font.system(size: 15, weight: .medium, design: .rounded)
+    static let symptomSectionTitle = Font.system(size: 18, weight: .semibold, design: .rounded)
+    static let symptomSectionDescription = Font.system(size: 14, weight: .regular, design: .rounded)
+    static let severityControl = Font.system(size: 14, weight: .semibold, design: .rounded)
+    static let hourlyHour = Font.system(size: 12, weight: .medium, design: .rounded)
+    static let hourlySeverity = Font.system(size: 14, weight: .semibold, design: .rounded)
     static let dayTemperature = Font.system(size: 18, weight: .medium, design: .rounded)
 
     static let body = Font.system(size: 17, weight: .regular, design: .rounded)
@@ -184,6 +193,7 @@ enum TypographyToken {
 
     static let caption = Font.system(size: 13, weight: .medium, design: .rounded)
     static let attribution = Font.system(size: 12, weight: .regular, design: .rounded)
+    static let tinyMeta = Font.system(size: 11, weight: .regular, design: .rounded)
     static let severityPill = Font.system(size: 14, weight: .medium, design: .rounded)
     static let footnote = Font.system(size: 15, weight: .regular, design: .rounded)
 
@@ -195,9 +205,9 @@ enum SpacingToken {
     static let sm: CGFloat = 8
     static let md: CGFloat = 12
     static let lg: CGFloat = 16
-    static let xl: CGFloat = 24
+    static let xl: CGFloat = 22
     static let xxl: CGFloat = 32
-    static let section: CGFloat = 22
+    static let section: CGFloat = 20
 }
 
 enum RadiusToken {

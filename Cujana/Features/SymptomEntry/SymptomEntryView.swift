@@ -188,12 +188,13 @@ private struct SectionHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: SpacingToken.xs) {
             Text(title)
-                .font(TypographyToken.headline)
+                .font(TypographyToken.symptomSectionTitle)
+                .tracking(-0.4)
                 .foregroundStyle(ColorToken.textPrimary)
 
             Text(subtitle)
-                .font(TypographyToken.secondaryBody)
-                .foregroundStyle(ColorToken.textSecondary)
+                .font(TypographyToken.symptomSectionDescription)
+                .foregroundStyle(ColorToken.textSecondary.opacity(SymptomCheckInToken.sectionDescriptionOpacity))
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -252,7 +253,7 @@ private struct SeverityButton: View {
     var body: some View {
         Button(action: action) {
             Text(option.title)
-                .font(TypographyToken.footnote.weight(.semibold))
+                .font(TypographyToken.severityControl)
                 .foregroundStyle(isSelected ? SelectionToken.selectedText : SymptomCheckInToken.severityUnselectedText)
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)

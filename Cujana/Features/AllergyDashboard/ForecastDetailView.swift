@@ -139,7 +139,7 @@ private struct AllergenFocusRow: View {
                     .lineLimit(1)
 
                 Text(item.symptomImpactText)
-                    .font(TypographyToken.secondaryBody)
+                    .font(TypographyToken.allergenDescription)
                     .foregroundStyle(ColorToken.textSecondary.opacity(DetailColorToken.secondaryTextReadable))
                     .lineLimit(2)
             }
@@ -162,7 +162,7 @@ struct RiskBadge: View {
 
     var body: some View {
         Text(text)
-            .font(TypographyToken.footnote.weight(.semibold))
+            .font(TypographyToken.severityPill.weight(.semibold))
             .foregroundStyle(SemanticColorToken.foreground(for: text))
             .lineLimit(1)
             .minimumScaleFactor(ForecastDetailToken.badgeTextMinimumScale)
@@ -278,7 +278,7 @@ private struct HourlyRiskChip: View {
     var body: some View {
         VStack(spacing: ForecastDetailToken.hourlyChipContentSpacing) {
             Text(isCurrentHour ? "Jetzt" : item.hourText)
-                .font(TypographyToken.caption)
+                .font(TypographyToken.hourlyHour)
                 .foregroundStyle(isCurrentHour ? ColorToken.textPrimary : ColorToken.textSecondary)
                 .monospacedDigit()
 
@@ -288,13 +288,13 @@ private struct HourlyRiskChip: View {
                 .accessibilityHidden(true)
 
             Text(item.levelText)
-                .font(TypographyToken.footnote.weight(.semibold))
+                .font(TypographyToken.hourlySeverity)
                 .foregroundStyle(ColorToken.textPrimary.opacity(DetailColorToken.hourlyPrimaryText))
                 .lineLimit(1)
                 .minimumScaleFactor(ForecastDetailToken.hourlyTextMinimumScale)
 
             Text(item.temperatureText)
-                .font(TypographyToken.attribution)
+                .font(TypographyToken.tinyMeta)
                 .foregroundStyle(ColorToken.textSecondary.opacity(ForecastDetailToken.hourlyWeatherTextOpacity))
                 .monospacedDigit()
         }

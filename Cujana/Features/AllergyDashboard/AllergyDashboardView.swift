@@ -203,7 +203,7 @@ private struct DayOverviewCard: View {
             Spacer(minLength: 0)
 
             Text(weatherContextText)
-                .font(TypographyToken.caption)
+                .font(TypographyToken.tinyMeta)
                 .foregroundStyle(HomeOverviewToken.weatherContextText.opacity(HomeOverviewToken.weatherContextOpacity))
                 .lineLimit(1)
                 .minimumScaleFactor(HomeOverviewToken.weatherDescriptionMinimumScale)

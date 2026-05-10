@@ -16,7 +16,7 @@ struct DetailDayPicker: View {
                     selectedDayID = day.id
                 } label: {
                     Label(day.title, systemImage: "leaf")
-                        .font(TypographyToken.footnote.weight(.medium))
+                        .font(TypographyToken.detailSegment)
                         .lineLimit(1)
                         .minimumScaleFactor(ForecastDetailToken.dayPickerTextMinimumScale)
                         .foregroundStyle(isSelected ? ColorToken.accentDark : ColorToken.textSecondary)
@@ -73,7 +73,7 @@ struct WeatherContextRow: View {
             }
 
             Text(weatherContextText)
-                .font(TypographyToken.caption)
+                .font(TypographyToken.attribution)
                 .foregroundStyle(
                     ForecastDetailToken.allergyWeatherContextText
                         .opacity(ForecastDetailToken.allergyWeatherContextOpacity)

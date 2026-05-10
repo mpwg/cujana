@@ -45,16 +45,17 @@ struct PersonalLoadStatusCard: View {
                     .lineLimit(2)
 
                 Text(statusSubtitle)
-                    .font(TypographyToken.secondaryBody)
+                    .font(TypographyToken.personalStatusSubtitle)
                     .foregroundStyle(ColorToken.textSecondary.opacity(HomeOverviewToken.personalStatusSubtitleOpacity))
                     .lineLimit(1)
             }
 
             Spacer(minLength: SpacingToken.sm)
 
-            RiskBadge(text: severityText)
+            HomeRiskBadge(text: severityText)
         }
-        .padding(CardToken.padding)
+        .padding(.horizontal, CardToken.padding)
+        .padding(.vertical, HomeOverviewToken.personalStatusVerticalPadding)
         .frame(height: HomeOverviewToken.personalStatusHeight)
         .premiumSurface(cornerRadius: HomeOverviewToken.personalStatusCornerRadius)
         .accessibilityElement(children: .combine)
@@ -93,12 +94,32 @@ struct PersonalLoadStatusCard: View {
     }
 }
 
+private struct HomeRiskBadge: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(TypographyToken.severityPill.weight(.semibold))
+            .foregroundStyle(SemanticColorToken.foreground(for: text))
+            .lineLimit(1)
+            .padding(.horizontal, HomeOverviewToken.personalStatusBadgePaddingH)
+            .frame(height: HomeOverviewToken.personalStatusBadgeHeight)
+            .background(SemanticColorToken.background(for: text))
+            .clipShape(
+                RoundedRectangle(
+                    cornerRadius: HomeOverviewToken.personalStatusBadgeCornerRadius,
+                    style: .continuous
+                )
+            )
+    }
+}
+
 struct FeelingCTAView: View {
     let action: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.lg) {
-            VStack(alignment: .leading, spacing: SpacingToken.sm) {
+        VStack(alignment: .leading, spacing: SpacingToken.xs) {
+            VStack(alignment: .leading, spacing: SpacingToken.xs) {
                 Text("Heute")
                     .font(TypographyToken.ctaLabel)
                     .tracking(HomeOverviewToken.ctaLabelTracking)
@@ -114,8 +135,9 @@ struct FeelingCTAView: View {
                 Text("Ein kurzer Check-in hilft dir, Muster und Trigger besser zu verstehen.")
                     .font(TypographyToken.ctaSupporting)
                     .foregroundStyle(ColorToken.textSecondary.opacity(HomeOverviewToken.ctaSupportingOpacity))
+                    .lineLimit(1)
+                    .minimumScaleFactor(HomeOverviewToken.weatherDescriptionMinimumScale)
                     .frame(maxWidth: HomeOverviewToken.ctaSupportingMaxWidth, alignment: .leading)
-                    .fixedSize(horizontal: false, vertical: true)
             }
 
             Button(action: action) {
@@ -129,7 +151,7 @@ struct FeelingCTAView: View {
                         .accessibilityHidden(true)
 
                     Text("Symptome erfassen")
-                        .font(TypographyToken.button)
+                        .font(TypographyToken.ctaButton)
                 }
                 .frame(maxWidth: .infinity)
             }
