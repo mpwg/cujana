@@ -348,14 +348,14 @@ private struct SubtleNavigationRow<Destination: View>: View {
         } label: {
             HStack(spacing: SpacingToken.md) {
                 Text(title)
-                    .font(TypographyToken.footnote.weight(.medium))
+                    .font(TypographyToken.footnote.weight(.semibold))
                     .foregroundStyle(ColorToken.textPrimary.opacity(DetailColorToken.primaryTextSubtle))
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
                     .font(.system(.caption2, design: .rounded).weight(.semibold))
-                    .foregroundStyle(ColorToken.textTertiary)
+                    .foregroundStyle(ColorToken.textSecondary)
                     .accessibilityHidden(true)
             }
             .frame(minHeight: ForecastDetailToken.subtleNavigationRowMinHeight)

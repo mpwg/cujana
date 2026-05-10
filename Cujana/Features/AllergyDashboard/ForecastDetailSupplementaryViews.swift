@@ -78,7 +78,7 @@ struct AttributionFooter: View {
     var body: some View {
         Text(text)
             .font(.system(.footnote, design: .rounded))
-            .foregroundStyle(ColorToken.textTertiary.opacity(DetailColorToken.attributionText))
+            .foregroundStyle(ColorToken.textSecondary.opacity(DetailColorToken.attributionText))
             .lineLimit(2)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)

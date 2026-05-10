@@ -56,35 +56,35 @@ enum DetailColorToken {
     }
 
     static let background = Raw.background
-    static let surface = ColorToken.cardBackground.opacity(0.52)
-    static let mutedSurface = Raw.mutedSurface.opacity(0.3)
+    static let surface = ColorToken.cardBackground.opacity(0.78)
+    static let mutedSurface = Raw.mutedSurface.opacity(0.52)
     static let sage = Raw.sage
     static let sageSoft = Raw.sageSoft
-    static let neutralStroke = Raw.neutralStroke.opacity(0.2)
+    static let neutralStroke = Raw.neutralStroke.opacity(0.34)
     static let warningSoft = Raw.warningSoft
     static let alertSoft = Raw.alertSoft
 
-    static let sageQuiet = Raw.sage.opacity(0.52)
-    static let sageTertiary = Raw.sage.opacity(0.56)
-    static let sageAccentBorder = Raw.sage.opacity(0.08)
-    static let selectedPickerBackground = Raw.sageSoft.opacity(0.34)
-    static let weatherIconBackground = Raw.sageSoft.opacity(0.26)
-    static let riskBackground = 0.22
-    static let currentRiskBackground = 0.24
-    static let quietRiskBackground = 0.12
-    static let overviewRiskBackground = 0.2
-    static let primaryTextSubtle = 0.82
-    static let secondaryTextSubtle = 0.82
-    static let secondaryTextReadable = 0.88
-    static let weatherDescriptionText = 0.9
-    static let weatherMetricText = 0.84
-    static let hourlyPrimaryText = 0.7
-    static let attributionText = 0.36
-    static let contextText = 0.62
-    static let quietStroke = 0.36
-    static let softStroke = 0.42
-    static let rowStroke = 0.46
-    static let navigationSurface = 0.42
+    static let sageQuiet = Raw.sage.opacity(0.68)
+    static let sageTertiary = Raw.sage.opacity(0.72)
+    static let sageAccentBorder = Raw.sage.opacity(0.16)
+    static let selectedPickerBackground = Raw.sageSoft.opacity(0.58)
+    static let weatherIconBackground = Raw.sageSoft.opacity(0.46)
+    static let riskBackground = 0.34
+    static let currentRiskBackground = 0.38
+    static let quietRiskBackground = 0.24
+    static let overviewRiskBackground = 0.34
+    static let primaryTextSubtle = 0.96
+    static let secondaryTextSubtle = 0.96
+    static let secondaryTextReadable = 1.0
+    static let weatherDescriptionText = 1.0
+    static let weatherMetricText = 1.0
+    static let hourlyPrimaryText = 0.92
+    static let attributionText = 0.82
+    static let contextText = 0.9
+    static let quietStroke = 0.62
+    static let softStroke = 0.68
+    static let rowStroke = 0.72
+    static let navigationSurface = 0.66
 
     static func riskBackground(for text: String) -> Color {
         switch text {
@@ -102,9 +102,9 @@ enum DetailColorToken {
         case "Keine Belastung", "Niedrig":
             sageQuiet
         case "Mittel":
-            ColorToken.accentWarning.opacity(0.62)
+            ColorToken.accentWarning.opacity(0.78)
         default:
-            ColorToken.accentNegative.opacity(0.62)
+            ColorToken.accentNegative.opacity(0.78)
         }
     }
 }
@@ -149,8 +149,8 @@ struct ShadowTokenValue {
 
 enum ShadowToken {
     static let card = ShadowTokenValue(
-        color: ColorToken.separatorSoft.opacity(0.1),
-        radius: 7,
+        color: ColorToken.separatorSoft.opacity(0.14),
+        radius: 8,
         y: 2
     )
 

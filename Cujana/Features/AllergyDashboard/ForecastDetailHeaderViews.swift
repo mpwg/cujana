@@ -67,7 +67,7 @@ struct WeatherContextRow: View {
 
             VStack(alignment: .leading, spacing: SpacingToken.xs) {
                 Text(day.weatherText.capitalized)
-                    .font(.system(.body, design: .rounded).weight(.regular))
+                    .font(.system(.body, design: .rounded).weight(.medium))
                     .foregroundStyle(ColorToken.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(ForecastDetailToken.weatherTextMinimumScale)
