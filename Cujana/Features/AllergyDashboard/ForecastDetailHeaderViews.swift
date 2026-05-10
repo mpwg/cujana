@@ -64,12 +64,16 @@ struct WeatherContextRow: View {
                     .foregroundStyle(ColorToken.textPrimary)
                     .lineLimit(2)
                     .minimumScaleFactor(ForecastDetailToken.weatherTextMinimumScale)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.leading)
                     .opacity(DetailColorToken.weatherDescriptionText)
 
                 Text(statusSubtitle)
                     .font(TypographyToken.detailStatusSubtitle)
                     .foregroundStyle(ColorToken.textSecondary)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.leading)
             }
 
             Text(weatherContextText)

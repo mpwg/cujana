@@ -136,17 +136,23 @@ private struct AllergenFocusRow: View {
                 Text(item.title)
                     .font(TypographyToken.allergenTitle)
                     .foregroundStyle(ColorToken.textPrimary)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.leading)
 
                 Text(item.symptomImpactText)
                     .font(TypographyToken.allergenDescription)
                     .foregroundStyle(ColorToken.textSecondary.opacity(DetailColorToken.secondaryTextReadable))
                     .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.leading)
             }
+            .layoutPriority(1)
 
             Spacer(minLength: SpacingToken.sm)
 
             RiskBadge(text: item.levelText)
+                .layoutPriority(0)
         }
         .frame(minHeight: ForecastDetailToken.allergenRowMinHeight)
         .padding(ForecastDetailToken.allergenCardPadding)

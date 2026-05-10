@@ -25,7 +25,7 @@ struct PersonalLoadStatusCard: View {
     }
 
     var body: some View {
-        HStack(spacing: SpacingToken.md) {
+        HStack(alignment: .top, spacing: SpacingToken.md) {
             Image(systemName: "allergens")
                 .font(.system(.title2, design: .rounded).weight(.semibold))
                 .foregroundStyle(SemanticColorToken.foreground(for: severityText))
@@ -38,21 +38,28 @@ struct PersonalLoadStatusCard: View {
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                Text(statusTitle)
-                    .font(TypographyToken.personalStatusTitle)
-                    .tracking(HomeOverviewToken.personalStatusTitleTracking)
-                    .foregroundStyle(ColorToken.textPrimary)
-                    .lineLimit(2)
+                VStack(alignment: .leading, spacing: SpacingToken.xs) {
+                    Text(statusTitle)
+                        .font(TypographyToken.personalStatusTitle)
+                        .tracking(HomeOverviewToken.personalStatusTitleTracking)
+                        .foregroundStyle(ColorToken.textPrimary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .multilineTextAlignment(.leading)
 
-                Text(statusSubtitle)
-                    .font(TypographyToken.personalStatusSubtitle)
-                    .foregroundStyle(ColorToken.textSecondary.opacity(HomeOverviewToken.personalStatusSubtitleOpacity))
-                    .lineLimit(1)
+                    Text(statusSubtitle)
+                        .font(TypographyToken.personalStatusSubtitle)
+                        .foregroundStyle(
+                            ColorToken.textSecondary.opacity(HomeOverviewToken.personalStatusSubtitleOpacity)
+                        )
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .multilineTextAlignment(.leading)
+                }
+
+                HomeRiskBadge(text: severityText)
             }
-
-            Spacer(minLength: SpacingToken.sm)
-
-            HomeRiskBadge(text: severityText)
+            .layoutPriority(HomeOverviewToken.titleLayoutPriority)
         }
         .padding(.horizontal, CardToken.padding)
         .padding(.vertical, HomeOverviewToken.personalStatusVerticalPadding)
@@ -135,9 +142,11 @@ struct FeelingCTAView: View {
                 Text("Ein kurzer Check-in hilft dir, Muster und Trigger besser zu verstehen.")
                     .font(TypographyToken.ctaSupporting)
                     .foregroundStyle(ColorToken.textSecondary.opacity(HomeOverviewToken.ctaSupportingOpacity))
-                    .lineLimit(1)
+                    .lineLimit(2)
                     .minimumScaleFactor(HomeOverviewToken.weatherDescriptionMinimumScale)
-                    .frame(maxWidth: HomeOverviewToken.ctaSupportingMaxWidth, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             Button(action: action) {
@@ -153,7 +162,6 @@ struct FeelingCTAView: View {
                     Text("Symptome erfassen")
                         .font(TypographyToken.ctaButton)
                 }
-                .frame(maxWidth: .infinity)
             }
             .buttonStyle(FeelingCTAButtonStyle())
             .accessibilityLabel("Symptome erfassen")
@@ -181,7 +189,7 @@ private struct FeelingCTAButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(ColorToken.cardBackground)
-            .padding(.horizontal, SpacingToken.lg)
+            .padding(.horizontal, HomeOverviewToken.ctaButtonPaddingH)
             .frame(height: HomeOverviewToken.ctaButtonHeight)
             .background(ColorToken.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: HomeOverviewToken.ctaButtonCornerRadius, style: .continuous))

@@ -12,7 +12,7 @@ struct AllergyDashboardView: View {
                     HomeLogoHeader()
                     content
                 }
-                    .padding(.horizontal, SpacingToken.xl)
+                    .padding(.horizontal, HomeOverviewToken.screenHorizontalPadding)
                     .padding(.top, 0)
                     .padding(.bottom, scrollBottomPadding)
             }
@@ -167,8 +167,11 @@ private struct DayOverviewCard: View {
                         .tracking(HomeOverviewToken.loadHeadlineTracking)
                         .foregroundStyle(ColorToken.textPrimary)
                         .lineLimit(2)
-                        .minimumScaleFactor(HomeOverviewToken.weatherDescriptionMinimumScale)
+                        .minimumScaleFactor(HomeOverviewToken.loadHeadlineMinimumScale)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .multilineTextAlignment(.leading)
                 }
+                .layoutPriority(HomeOverviewToken.titleLayoutPriority)
 
                 Spacer(minLength: SpacingToken.sm)
 
@@ -206,7 +209,7 @@ private struct DayOverviewCard: View {
                 .font(TypographyToken.tinyMeta)
                 .foregroundStyle(HomeOverviewToken.weatherContextText.opacity(HomeOverviewToken.weatherContextOpacity))
                 .lineLimit(1)
-                .minimumScaleFactor(HomeOverviewToken.weatherDescriptionMinimumScale)
+                .minimumScaleFactor(HomeOverviewToken.weatherMetaMinimumScale)
         }
         .padding(.top, HomeOverviewToken.dayCardPadding)
         .padding(.horizontal, HomeOverviewToken.dayCardPadding)
@@ -254,10 +257,10 @@ private struct AllergenLoadBadge: View {
 
     var body: some View {
         Text("\(item.title) · \(item.levelText)")
-                .font(TypographyToken.severityPill)
+                .font(TypographyToken.caption)
                 .foregroundStyle(SemanticColorToken.foreground(for: item.levelText))
                 .lineLimit(1)
-                .minimumScaleFactor(0.82)
+                .minimumScaleFactor(HomeOverviewToken.weatherMetaMinimumScale)
                 .padding(.horizontal, HomeOverviewToken.severityPillPaddingH)
                 .frame(height: HomeOverviewToken.severityPillHeight)
                 .background(SemanticColorToken.background(for: item.levelText))
@@ -300,8 +303,10 @@ struct ForecastAttributionView: View {
             .multilineTextAlignment(.leading)
             .font(TypographyToken.attribution)
             .foregroundStyle(ColorToken.textTertiary.opacity(HomeOverviewToken.attributionOpacity))
+            .lineLimit(nil)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.top, HomeOverviewToken.attributionTopPadding)
+            .padding(.bottom, HomeOverviewToken.attributionBottomPadding)
             .accessibilityLabel(attributionText)
     }
 }

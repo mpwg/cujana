@@ -7,6 +7,10 @@ struct SymptomEntryView: View {
         GridItem(.adaptive(minimum: SymptomCheckInToken.symptomGridMinimumWidth), spacing: SpacingToken.md)
     ]
 
+    private let severityColumns = [
+        GridItem(.adaptive(minimum: SymptomCheckInToken.severityPillMinWidth), spacing: SpacingToken.sm)
+    ]
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -83,7 +87,7 @@ struct SymptomEntryView: View {
         VStack(alignment: .leading, spacing: SpacingToken.lg) {
             SectionHeader(title: "Wie belastend sind die Symptome?", subtitle: "1 ist sehr mild, 5 sehr stark.")
 
-            HStack(spacing: SpacingToken.sm) {
+            LazyVGrid(columns: severityColumns, spacing: SpacingToken.sm) {
                 ForEach(viewModel.severityOptions) { option in
                     SeverityButton(
                         option: option,
@@ -168,7 +172,7 @@ struct SymptomEntryView: View {
                 await viewModel.submit()
             }
         } label: {
-            HStack(spacing: SpacingToken.sm) {
+            HStack(spacing: SymptomCheckInToken.symptomPillSpacing) {
                 if viewModel.isSaving {
                     ProgressView()
                 }
@@ -220,6 +224,8 @@ private struct SymptomChip: View {
                 Text(option.title)
                     .font(TypographyToken.symptomPill)
                     .foregroundStyle(ColorToken.textPrimary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(SymptomCheckInToken.symptomTextMinimumScale)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -256,7 +262,7 @@ private struct SeverityButton: View {
                 .font(TypographyToken.severityControl)
                 .foregroundStyle(isSelected ? SelectionToken.selectedText : SymptomCheckInToken.severityUnselectedText)
                 .lineLimit(1)
-                .minimumScaleFactor(0.78)
+                .minimumScaleFactor(SymptomCheckInToken.severityTextMinimumScale)
                 .frame(
                     minWidth: SymptomCheckInToken.severityPillMinWidth,
                     maxWidth: .infinity,
