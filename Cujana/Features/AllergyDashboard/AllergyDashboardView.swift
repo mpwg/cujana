@@ -10,20 +10,20 @@ struct AllergyDashboardView: View {
             ScrollView {
                 content
                     .padding(.horizontal, SpacingToken.xl)
-                    .padding(.top, SpacingToken.sm)
+                    .padding(.top, SpacingToken.lg)
                     .padding(.bottom, scrollBottomPadding)
             }
             .scrollIndicators(.hidden)
             .background(ColorToken.backgroundPrimary.ignoresSafeArea())
 #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(ColorToken.backgroundPrimary, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
 #endif
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Übersicht")
-                        .font(TypographyToken.headline)
+                    Text("Cujana")
+                        .font(TypographyToken.largeTitle)
                         .foregroundStyle(ColorToken.textPrimary)
                 }
             }
@@ -60,7 +60,7 @@ struct AllergyDashboardView: View {
     }
 
     private func dashboard(for dashboardContent: AllergyDashboardContent) -> some View {
-        VStack(spacing: SpacingToken.lg) {
+        VStack(spacing: SpacingToken.section) {
             ForecastSummaryCard(
                 days: dashboardContent.forecastDays,
                 detailDays: dashboardContent.forecastDetailDays,
@@ -85,55 +85,54 @@ private struct ForecastSummaryCard: View {
     let isLoading: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.sm) {
-            HStack(alignment: .firstTextBaseline, spacing: SpacingToken.md) {
-                VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                    Text("3-Tages-Überblick")
+        VStack(alignment: .leading, spacing: SpacingToken.section) {
+            HomeHeroCard()
+
+            VStack(alignment: .leading, spacing: SpacingToken.md) {
+                HStack(alignment: .firstTextBaseline, spacing: SpacingToken.md) {
+                    Text("3-Tage-Überblick")
                         .font(TypographyToken.headline)
                         .foregroundStyle(ColorToken.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    Text("Relevante Belastungen")
-                        .font(TypographyToken.caption)
-                        .foregroundStyle(ColorToken.textSecondary)
-                }
-                .layoutPriority(HomeOverviewToken.titleLayoutPriority)
+                    Spacer(minLength: SpacingToken.sm)
 
-                Spacer(minLength: SpacingToken.sm)
-
-                if detailDays.isEmpty == false {
-                    NavigationLink {
-                        ForecastDetailView(days: detailDays)
-                    } label: {
-                        Label("Alle Details", systemImage: "leaf")
-                            .font(TypographyToken.footnote.weight(.semibold))
-                    }
-                    .buttonStyle(CompactNavigationButtonStyle())
-                    .accessibilityLabel("Alle Allergendetails anzeigen")
-                    .layoutPriority(HomeOverviewToken.detailsButtonLayoutPriority)
-                }
-            }
-
-            if isLoading {
-                ForecastLoadingState()
-            } else {
-                if days.isEmpty == false {
-                    VStack(spacing: SpacingToken.sm) {
-                        ForEach(days) { day in
-                            DayOverviewCard(day: day)
+                    if detailDays.isEmpty == false {
+                        NavigationLink {
+                            ForecastDetailView(days: detailDays)
+                        } label: {
+                            Label("Alle Details", systemImage: "chevron.right")
+                                .labelStyle(.titleAndIcon)
+                                .font(TypographyToken.caption)
                         }
+                        .buttonStyle(CompactNavigationButtonStyle())
+                        .accessibilityLabel("Alle Allergendetails anzeigen")
+                        .layoutPriority(HomeOverviewToken.detailsButtonLayoutPriority)
                     }
-                } else {
-                    ForecastEmptyState()
                 }
-            }
 
-            ForecastAttributionView()
+                if isLoading {
+                    ForecastLoadingState()
+                } else {
+                    if days.isEmpty == false {
+                        ScrollView(.horizontal) {
+                            HStack(spacing: SpacingToken.md) {
+                                ForEach(days) { day in
+                                    DayOverviewCard(day: day)
+                                }
+                            }
+                            .padding(.vertical, SpacingToken.xs)
+                        }
+                        .scrollIndicators(.hidden)
+                        .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+                    } else {
+                        ForecastEmptyState()
+                    }
+                }
+
+                ForecastAttributionView()
+            }
         }
-        .padding(SpacingToken.lg)
-        .background(ColorToken.cardBackground.opacity(SurfaceOpacityToken.primaryCard))
-        .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous))
-        .softShadow(ShadowToken.card)
     }
 }
 
@@ -156,18 +155,40 @@ private struct DayOverviewCard: View {
     let day: ForecastDaySummaryItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.sm) {
-            HStack(alignment: .top, spacing: SpacingToken.md) {
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
+            HStack(alignment: .top, spacing: SpacingToken.sm) {
                 VStack(alignment: .leading, spacing: SpacingToken.xs) {
                     Text(day.title)
-                        .font(TypographyToken.bodyEmphasized)
+                        .font(TypographyToken.caption)
+                        .textCase(.uppercase)
                         .foregroundStyle(ColorToken.textPrimary)
 
-                    WeatherSummary(day: day)
+                    Text(day.temperatureText == "--" ? "—" : day.temperatureText)
+                        .font(.system(size: 34, weight: .semibold, design: .rounded))
+                        .foregroundStyle(ColorToken.textPrimary)
+                        .monospacedDigit()
                 }
 
                 Spacer(minLength: SpacingToken.sm)
+
+                Image(systemName: day.weatherSystemImageName)
+                    .font(.system(size: 24, weight: .medium, design: .rounded))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(ColorToken.accentDark)
+                    .frame(
+                        width: HomeOverviewToken.dayWeatherIconSize,
+                        height: HomeOverviewToken.dayWeatherIconSize
+                    )
+                    .background(ColorToken.accentSoft)
+                    .clipShape(Circle())
+                    .accessibilityHidden(true)
             }
+
+            Text(day.temperatureText == "--" ? "Wetter noch nicht verfügbar" : day.weatherText.capitalized)
+                .font(TypographyToken.secondaryBody)
+                .foregroundStyle(ColorToken.textSecondary)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
 
             if day.allergenItems.isEmpty {
                 Text("Keine relevante Belastung")
@@ -177,16 +198,21 @@ private struct DayOverviewCard: View {
                     .padding(.vertical, SpacingToken.xs)
             } else {
                 WrappingChipLayout(spacing: SpacingToken.xs) {
-                    ForEach(day.allergenItems) { item in
+                    ForEach(day.allergenItems.prefix(2)) { item in
                         AllergenLoadBadge(item: item)
                     }
                 }
             }
         }
-        .padding(.horizontal, SpacingToken.md)
-        .padding(.vertical, SpacingToken.sm)
-        .background(ColorToken.cardMutedBackground.opacity(SurfaceOpacityToken.mutedCard))
-        .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusMedium, style: .continuous))
+        .padding(HomeOverviewToken.dayCardPadding)
+        .frame(
+            width: HomeOverviewToken.dayCardWidth,
+            height: HomeOverviewToken.dayCardHeight,
+            alignment: .topLeading
+        )
+        .background(ColorToken.secondarySurface)
+        .clipShape(RoundedRectangle(cornerRadius: HomeOverviewToken.dayCardCornerRadius, style: .continuous))
+        .softShadow(ShadowToken.card)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(day.accessibilityText)
     }
@@ -196,60 +222,16 @@ private struct AllergenLoadBadge: View {
     let item: ForecastDayAllergenItem
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: SpacingToken.xs) {
-            Text(item.title)
-                .font(TypographyToken.footnote)
-                .foregroundStyle(ColorToken.textPrimary)
-                .lineLimit(nil)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text(item.levelText)
+        Text("\(item.title) · \(item.levelText)")
                 .font(TypographyToken.caption.weight(.semibold))
-                .foregroundStyle(ColorToken.textPrimary)
+                .foregroundStyle(SemanticColorToken.foreground(for: item.levelText))
                 .lineLimit(1)
+                .minimumScaleFactor(0.82)
                 .padding(.horizontal, SpacingToken.sm)
                 .padding(.vertical, SpacingToken.xs)
-                .background(item.background)
-                .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
-                .fixedSize(horizontal: true, vertical: false)
-                .layoutPriority(AllergenLoadToken.levelLayoutPriority)
-        }
-        .padding(.horizontal, SpacingToken.sm)
-        .padding(.vertical, SpacingToken.xs)
-        .background(ColorToken.cardBackground.opacity(AllergenLoadToken.backgroundOpacity))
-        .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
+                .background(SemanticColorToken.background(for: item.levelText))
+                .clipShape(Capsule())
         .fixedSize(horizontal: true, vertical: false)
-    }
-}
-
-private struct WeatherSummary: View {
-    let day: ForecastDaySummaryItem
-
-    var body: some View {
-        HStack(alignment: .center, spacing: SpacingToken.sm) {
-            Image(systemName: day.weatherSystemImageName)
-                .font(.system(.footnote, design: .rounded).weight(.medium))
-                .foregroundStyle(ColorToken.accentPrimary)
-                .frame(width: HomeOverviewToken.weatherIconSize, height: HomeOverviewToken.weatherIconSize)
-                .background(ColorToken.accentSoft.opacity(SurfaceOpacityToken.accentProminent))
-                .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
-                .accessibilityHidden(true)
-
-            Text(summaryText)
-                .font(TypographyToken.caption)
-                .foregroundStyle(ColorToken.textSecondary)
-                .lineLimit(nil)
-
-            Spacer(minLength: SpacingToken.sm)
-        }
-    }
-
-    private var summaryText: String {
-        if day.temperatureText == "--" {
-            return "Wetter noch nicht verfügbar"
-        }
-
-        return "\(day.temperatureText), \(day.weatherText)"
     }
 }
 
@@ -266,17 +248,13 @@ private struct ForecastEmptyState: View {
 private struct CompactNavigationButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .foregroundStyle(ColorToken.accentPrimary)
-            .padding(.horizontal, SpacingToken.sm)
-            .padding(.vertical, SpacingToken.xs)
-            .background(
-                ColorToken.accentSoft.opacity(
-                    configuration.isPressed
-                        ? SurfaceOpacityToken.accentProminent
-                        : SurfaceOpacityToken.accentSubtle
-                )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
+            .foregroundStyle(ColorToken.accentDark)
+            .padding(.horizontal, SpacingToken.md)
+            .padding(.vertical, SpacingToken.sm)
+            .background(ColorToken.accentSoft.opacity(
+                configuration.isPressed ? HomeOverviewToken.compactButtonPressedOpacity : 1
+            ))
+            .clipShape(Capsule())
     }
 }
 
@@ -291,49 +269,6 @@ struct ForecastAttributionView: View {
             .foregroundStyle(ColorToken.textTertiary)
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityLabel(attributionText)
-    }
-}
-
-private struct FeelingCTAView: View {
-    let action: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.md) {
-            VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                Text("Wie fühlst du dich?")
-                    .font(TypographyToken.headline)
-                    .foregroundStyle(ColorToken.textPrimary)
-
-                Text("Ein kurzer Check-in genügt.")
-                    .font(TypographyToken.footnote)
-                    .foregroundStyle(ColorToken.textSecondary)
-            }
-
-            Button(action: action) {
-                Label("Symptome erfassen", systemImage: "plus.circle.fill")
-                    .font(TypographyToken.button)
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(FeelingCTAButtonStyle())
-            .accessibilityLabel("Symptome erfassen")
-        }
-        .padding(SpacingToken.lg)
-        .background {
-            RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous)
-                .fill(ColorToken.cardMutedBackground)
-                .overlay {
-                    LinearGradient(
-                        colors: [
-                            ColorToken.accentSoft.opacity(SurfaceOpacityToken.accentSubtle),
-                            ColorToken.cardMutedBackground.opacity(SurfaceOpacityToken.backgroundWash)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous))
-        .softShadow(ShadowToken.card)
     }
 }
 
@@ -417,20 +352,5 @@ private struct WrappingChipLayout: Layout {
     private struct Item {
         let index: Int
         let size: CGSize
-    }
-}
-
-private struct FeelingCTAButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .foregroundStyle(ColorToken.cardBackground)
-            .padding(.horizontal, SpacingToken.lg)
-            .padding(.vertical, SpacingToken.md)
-            .frame(minHeight: SymptomCheckInToken.buttonMinHeight)
-            .background(ColorToken.accentPrimary)
-            .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous))
-            .opacity(configuration.isPressed ? PressFeedbackToken.prominentOpacity : 1)
-            .scaleEffect(configuration.isPressed ? PressFeedbackToken.prominentScale : 1)
-            .animation(.easeInOut(duration: PressFeedbackToken.animationDuration), value: configuration.isPressed)
     }
 }

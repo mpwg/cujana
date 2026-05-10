@@ -4,8 +4,7 @@ struct SymptomEntryView: View {
     @Bindable var viewModel: SymptomEntryViewModel
 
     private let symptomColumns = [
-        GridItem(.flexible(), spacing: SpacingToken.md),
-        GridItem(.flexible(), spacing: SpacingToken.md)
+        GridItem(.adaptive(minimum: SymptomCheckInToken.symptomGridMinimumWidth), spacing: SpacingToken.md)
     ]
 
     var body: some View {
@@ -18,12 +17,19 @@ struct SymptomEntryView: View {
                     dateSection
                     noteSection
                     statusMessage
-                    saveButton
                 }
                 .padding(.horizontal, SpacingToken.xl)
                 .padding(.vertical, SpacingToken.xl)
+                .padding(.bottom, SymptomCheckInToken.scrollBottomPadding)
             }
-            .background(ColorToken.backgroundPrimary)
+            .background(ColorToken.backgroundPrimary.ignoresSafeArea())
+            .safeAreaInset(edge: .bottom) {
+                saveButton
+                    .padding(.horizontal, SpacingToken.xl)
+                    .padding(.top, SpacingToken.md)
+                    .padding(.bottom, SpacingToken.md)
+                    .background(ColorToken.backgroundPrimary.opacity(SymptomCheckInToken.bottomBarBackgroundOpacity))
+            }
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(ColorToken.backgroundPrimary, for: .navigationBar)
@@ -42,6 +48,7 @@ struct SymptomEntryView: View {
         VStack(alignment: .leading, spacing: SpacingToken.sm) {
             Text("Wie fühlst du dich?")
                 .font(TypographyToken.title)
+                .tracking(-0.4)
                 .foregroundStyle(ColorToken.textPrimary)
 
             Text("Halte fest, was du spürst. Das hilft dir, Muster ruhiger zu erkennen.")
@@ -66,7 +73,6 @@ struct SymptomEntryView: View {
                 }
             }
         }
-        .cujanaCard()
     }
 
     private var severitySection: some View {
@@ -84,33 +90,38 @@ struct SymptomEntryView: View {
                 }
             }
         }
-        .cujanaCard()
     }
 
     private var dateSection: some View {
         VStack(alignment: .leading, spacing: SpacingToken.lg) {
             SectionHeader(title: "Zeitpunkt", subtitle: "Du kannst auch frühere Einträge nachtragen.")
 
-            DatePicker(
-                "Datum",
-                selection: $viewModel.entryDate,
-                displayedComponents: .date
-            )
-            .datePickerStyle(.graphical)
-            .font(TypographyToken.body)
-            .foregroundStyle(ColorToken.textPrimary)
-            .cujanaInput()
+            VStack(spacing: SpacingToken.md) {
+                DatePicker(
+                    "Datum",
+                    selection: $viewModel.entryDate,
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.graphical)
+                .font(TypographyToken.body)
+                .foregroundStyle(ColorToken.textPrimary)
 
-            DatePicker(
-                "Uhrzeit",
-                selection: $viewModel.entryDate,
-                displayedComponents: .hourAndMinute
-            )
-            .font(TypographyToken.body)
-            .foregroundStyle(ColorToken.textPrimary)
-            .cujanaInput()
+                Divider()
+                    .overlay(ColorToken.separatorSoft)
+
+                DatePicker(
+                    "Uhrzeit",
+                    selection: $viewModel.entryDate,
+                    displayedComponents: .hourAndMinute
+                )
+                .font(TypographyToken.body)
+                .foregroundStyle(ColorToken.textPrimary)
+            }
+            .padding(SymptomCheckInToken.fieldContainerPadding)
+            .background(ColorToken.secondarySurface)
+            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .softShadow(ShadowToken.card)
         }
-        .cujanaCard()
     }
 
     private var noteSection: some View {
@@ -122,10 +133,11 @@ struct SymptomEntryView: View {
                 .foregroundStyle(ColorToken.textPrimary)
                 .frame(minHeight: InputToken.minHeight)
                 .scrollContentBackground(.hidden)
-                .cujanaInput()
+                .padding(SymptomCheckInToken.fieldContainerPadding)
+                .background(ColorToken.secondarySurface)
+                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
                 .accessibilityLabel("Notiz")
         }
-        .cujanaCard()
     }
 
     @ViewBuilder
@@ -150,9 +162,8 @@ struct SymptomEntryView: View {
                 Text(viewModel.isSaving ? "Speichern ..." : "Eintrag speichern")
             }
         }
-        .buttonStyle(PrimaryButtonStyle())
+        .buttonStyle(SymptomSaveButtonStyle(isEnabled: viewModel.canSubmit))
         .disabled(!viewModel.canSubmit)
-        .opacity(viewModel.canSubmit ? ButtonToken.Primary.enabledOpacity : ButtonToken.Primary.disabledOpacity)
     }
 }
 
@@ -167,7 +178,7 @@ private struct SectionHeader: View {
                 .foregroundStyle(ColorToken.textPrimary)
 
             Text(subtitle)
-                .font(TypographyToken.footnote)
+                .font(TypographyToken.secondaryBody)
                 .foregroundStyle(ColorToken.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -183,12 +194,13 @@ private struct SymptomChip: View {
         Button(action: action) {
             HStack(spacing: SpacingToken.sm) {
                 Image(systemName: option.systemImageName)
-                    .font(TypographyToken.bodyEmphasized)
+                    .font(.system(size: 22, weight: .regular, design: .rounded))
+                    .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(ColorToken.accentPrimary)
                     .frame(width: ChipToken.iconSize, height: ChipToken.iconSize)
 
                 Text(option.title)
-                    .font(TypographyToken.footnote)
+                    .font(TypographyToken.secondaryBody.weight(.medium))
                     .foregroundStyle(ColorToken.textPrimary)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
@@ -197,12 +209,12 @@ private struct SymptomChip: View {
             }
             .padding(.horizontal, ChipToken.paddingH)
             .padding(.vertical, ChipToken.paddingV)
-            .frame(maxWidth: .infinity, minHeight: ChipToken.minHeight, alignment: .leading)
-            .background(isSelected ? ChipToken.selectedBackground : option.background)
+            .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.symptomPillMinHeight, alignment: .leading)
+            .background(isSelected ? ColorToken.accentSoft : ColorToken.cardBackground)
             .clipShape(Capsule())
             .overlay(
                 Capsule()
-                    .stroke(isSelected ? ChipToken.selectedBorder : ChipToken.border, lineWidth: ChipToken.borderWidth)
+                    .stroke(isSelected ? Color.clear : ColorToken.separatorSoft, lineWidth: isSelected ? 0 : 1)
             )
         }
         .buttonStyle(.plain)
@@ -217,18 +229,37 @@ private struct SeverityButton: View {
 
     var body: some View {
         Button(action: action) {
-            Text("\(option.level)")
-                .font(TypographyToken.bodyEmphasized)
+            Text(option.title)
+                .font(TypographyToken.caption.weight(.semibold))
                 .foregroundStyle(isSelected ? SelectionToken.selectedText : SelectionToken.text)
-                .frame(width: SelectionToken.size, height: SelectionToken.size)
-                .background(isSelected ? SelectionToken.selectedBackground : SelectionToken.background)
-                .clipShape(Circle())
-                .overlay(
-                    Circle()
-                        .stroke(SelectionToken.border, lineWidth: SelectionToken.borderWidth)
-                )
+                .lineLimit(1)
+                .minimumScaleFactor(0.78)
+                .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.severityPillMinHeight)
+                .padding(.horizontal, SpacingToken.sm)
+                .background(isSelected ? ColorToken.accentPrimary : ColorToken.backgroundSecondary)
+                .clipShape(Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(option.title)
+    }
+}
+
+private struct SymptomSaveButtonStyle: ButtonStyle {
+    let isEnabled: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(TypographyToken.button)
+            .foregroundStyle(
+                isEnabled
+                    ? ColorToken.cardBackground
+                    : ColorToken.cardBackground.opacity(SymptomCheckInToken.disabledTextOpacity)
+            )
+            .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.saveButtonMinHeight)
+            .background(isEnabled ? ColorToken.accentPrimary : SemanticColorToken.disabledButtonBackground)
+            .clipShape(RoundedRectangle(cornerRadius: SymptomCheckInToken.saveButtonRadius, style: .continuous))
+            .opacity(configuration.isPressed ? PressFeedbackToken.prominentOpacity : 1)
+            .scaleEffect(configuration.isPressed ? PressFeedbackToken.prominentScale : 1)
+            .animation(.easeInOut(duration: PressFeedbackToken.animationDuration), value: configuration.isPressed)
     }
 }

@@ -43,6 +43,10 @@ struct ContentView: View {
         }
         .background(ColorToken.backgroundPrimary)
         .tint(ColorToken.accentPrimary)
+#if os(iOS)
+        .toolbarBackground(ColorToken.cardBackground.opacity(TabBarToken.backgroundOpacity), for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
+#endif
         .sheet(
             isPresented: $isShowingSymptomEntry,
             onDismiss: {
@@ -53,6 +57,10 @@ struct ContentView: View {
             },
             content: {
                 SymptomEntryView(viewModel: symptomEntryViewModel)
+#if os(iOS)
+                    .presentationCornerRadius(38)
+                    .presentationBackground(ColorToken.backgroundPrimary)
+#endif
             }
         )
     }

@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct DetailDayPicker: View {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
     let days: [ForecastDetailDayItem]
     @Binding var selectedDayID: ForecastDetailDayItem.ID?
     let namespace: Namespace.ID
@@ -17,13 +19,13 @@ struct DetailDayPicker: View {
                         .font(TypographyToken.footnote.weight(.medium))
                         .lineLimit(1)
                         .minimumScaleFactor(ForecastDetailToken.dayPickerTextMinimumScale)
-                        .foregroundStyle(isSelected ? DetailColorToken.sage : ColorToken.textSecondary)
+                        .foregroundStyle(isSelected ? ColorToken.accentDark : ColorToken.textSecondary)
                         .frame(maxWidth: .infinity, minHeight: ForecastDetailToken.dayPickerMinHeight)
                         .padding(.horizontal, SpacingToken.sm)
                         .background {
                             if isSelected {
                                 Capsule()
-                                    .fill(DetailColorToken.selectedPickerBackground)
+                                    .fill(ColorToken.accentSoft)
                                     .matchedGeometryEffect(id: "active-day", in: namespace)
                             }
                         }
@@ -34,15 +36,19 @@ struct DetailDayPicker: View {
             }
         }
         .padding(ForecastDetailToken.dayPickerPadding)
-        .background(.ultraThinMaterial)
-        .clipShape(Capsule())
-        .overlay {
-            Capsule()
-                .stroke(
-                    DetailColorToken.neutralStroke.opacity(DetailColorToken.quietStroke),
-                    lineWidth: ForecastDetailToken.hairlineStrokeWidth
-                )
+        .frame(height: ForecastDetailToken.dayPickerHeight)
+        .background(
+            reduceTransparency
+                ? ColorToken.secondarySurface
+                : ColorToken.cardBackground.opacity(ForecastDetailToken.dayPickerSurfaceOpacity)
+        )
+        .background {
+            if reduceTransparency == false {
+                Color.clear.background(.ultraThinMaterial)
+            }
         }
+        .clipShape(Capsule())
+        .softShadow(ShadowToken.floating)
     }
 }
 
@@ -52,15 +58,15 @@ struct WeatherContextRow: View {
     var body: some View {
         HStack(alignment: .center, spacing: SpacingToken.md) {
             Image(systemName: day.weatherSystemImageName)
-                .font(.system(.title3, design: .rounded).weight(.medium))
-                .foregroundStyle(DetailColorToken.sage)
+                .font(.system(size: 34, weight: .medium, design: .rounded))
+                .foregroundStyle(ColorToken.accentDark)
                 .frame(width: ForecastDetailToken.weatherIconSize, height: ForecastDetailToken.weatherIconSize)
-                .background(DetailColorToken.weatherIconBackground)
+                .background(ColorToken.accentSoft)
                 .clipShape(Circle())
                 .accessibilityHidden(true)
 
             Text(day.temperatureText)
-                .font(.system(.title, design: .rounded).weight(.semibold))
+                .font(.system(size: 38, weight: .semibold, design: .rounded))
                 .foregroundStyle(ColorToken.textPrimary)
                 .monospacedDigit()
                 .accessibilityLabel("Temperatur \(day.temperatureText)")
@@ -74,26 +80,18 @@ struct WeatherContextRow: View {
                     .opacity(DetailColorToken.weatherDescriptionText)
 
                 Text(metricText)
-                    .font(TypographyToken.caption)
+                    .font(TypographyToken.secondaryBody)
                     .foregroundStyle(ColorToken.textSecondary.opacity(DetailColorToken.weatherMetricText))
                     .lineLimit(1)
             }
 
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, ForecastDetailToken.cardHorizontalPadding)
-        .padding(.vertical, ForecastDetailToken.compactCardVerticalPadding)
+        .padding(ForecastDetailToken.weatherCardPadding)
         .frame(minHeight: ForecastDetailToken.weatherMinHeight, alignment: .center)
-        .background(.ultraThinMaterial)
-        .background(DetailColorToken.surface)
-        .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous)
-                .stroke(
-                    DetailColorToken.neutralStroke.opacity(DetailColorToken.softStroke),
-                    lineWidth: ForecastDetailToken.hairlineStrokeWidth
-                )
-        }
+        .background(ColorToken.secondarySurface)
+        .clipShape(RoundedRectangle(cornerRadius: ForecastDetailToken.weatherCardCornerRadius, style: .continuous))
+        .softShadow(ShadowToken.card)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(weatherAccessibilityLabel)
     }
