@@ -564,7 +564,7 @@ def build_release_ipa!(build_number:, profile_mapping:)
     output_name: "Cujana.ipa",
     export_options: {
       signingStyle: "manual",
-      iCloudContainerEnvironment: "Production",
+      "iCloudContainerEnvironment" => "Production",
       provisioningProfiles: profile_mapping,
       manageAppVersionAndBuildNumber: false,
       teamID: ENV["APPLE_DEVELOPER_TEAM_ID"]

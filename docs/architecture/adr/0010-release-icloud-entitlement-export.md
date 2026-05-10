@@ -11,6 +11,10 @@ Der TestFlight-Upload kann von App Store Connect abgelehnt werden, wenn die sign
 
 Fastlane setzt beim `build_app`-Export für App-Store-IPAs explizit `iCloudContainerEnvironment: "Production"`.
 
+Das App-Entitlements-Plist enthält `com.apple.developer.icloud-container-environment` als Build-Setting-Platzhalter. Debug-Builds setzen `ICLOUD_CONTAINER_ENVIRONMENT = Development`, Release-Builds setzen `ICLOUD_CONTAINER_ENVIRONMENT = Production`.
+
+Das App-Target verwendet das Entitlements-Plist explizit über `CODE_SIGN_ENTITLEMENTS`. Nicht benötigte Push-Entitlements bleiben aus diesem Plist entfernt, damit Distribution-Builds keine ungültigen oder doppelten Push-Schlüssel signieren.
+
 Die bestehende IPA-Entitlements-Validierung prüft zusätzlich, dass `com.apple.developer.icloud-container-environment` nicht leer oder auf einen anderen Wert gesetzt ist. Dadurch schlägt der Release-Lauf vor dem Upload fehl, falls der Export wieder ein ungültiges Entitlement erzeugt.
 
 ## Konsequenzen
