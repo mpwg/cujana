@@ -138,7 +138,7 @@ private struct AllergenFocusRow: View {
                     .foregroundStyle(ColorToken.textPrimary)
                     .lineLimit(1)
 
-                Text(item.levelDescription)
+                Text(item.symptomImpactText)
                     .font(TypographyToken.secondaryBody)
                     .foregroundStyle(ColorToken.textSecondary.opacity(DetailColorToken.secondaryTextReadable))
                     .lineLimit(2)
@@ -152,7 +152,7 @@ private struct AllergenFocusRow: View {
         .padding(ForecastDetailToken.allergenCardPadding)
         .premiumSurface(cornerRadius: ForecastDetailToken.allergenCardCornerRadius)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(item.title), \(item.levelText). \(item.levelDescription)")
+        .accessibilityLabel("\(item.title), \(item.levelText). \(item.symptomImpactText)")
     }
 
 }
@@ -206,7 +206,7 @@ private struct HourlyRiskSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: SpacingToken.md) {
-            SectionTitle("Stündlicher Verlauf", prominence: .secondary)
+            SectionTitle("Belastungsverlauf", prominence: .secondary)
 
             if day.hourlyAllergyRiskItems.isEmpty {
                 Text("Stündliche Werte sind aktuell nicht verfügbar.")
@@ -294,8 +294,8 @@ private struct HourlyRiskChip: View {
                 .minimumScaleFactor(ForecastDetailToken.hourlyTextMinimumScale)
 
             Text(item.temperatureText)
-                .font(TypographyToken.secondaryBody)
-                .foregroundStyle(ColorToken.textSecondary)
+                .font(TypographyToken.attribution)
+                .foregroundStyle(ColorToken.textSecondary.opacity(ForecastDetailToken.hourlyWeatherTextOpacity))
                 .monospacedDigit()
         }
         .frame(width: chipWidth)
@@ -305,7 +305,7 @@ private struct HourlyRiskChip: View {
         .scaleEffect(isCurrentHour ? ForecastDetailToken.hourlyCurrentScale : 1)
         .softShadow(isCurrentHour ? ShadowToken.floating : ShadowTokenValue(color: .clear, radius: 0, y: 0))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(item.hourText), Risiko \(item.levelText), \(item.temperatureText)")
+        .accessibilityLabel("\(item.hourText), Belastung \(item.levelText), \(item.temperatureText)")
     }
 
     @ViewBuilder

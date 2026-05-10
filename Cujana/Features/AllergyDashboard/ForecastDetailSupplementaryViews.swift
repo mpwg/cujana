@@ -185,6 +185,27 @@ extension ForecastDetailPollenItem {
             "auffällige"
         }
     }
+
+    var symptomImpactText: String {
+        switch levelText {
+        case "Keine Belastung":
+            "Aktuell geringe Belastung."
+        case "Niedrig":
+            "Kann leicht spürbar sein, bleibt aber meist im Hintergrund."
+        case "Mittel":
+            "Kann heute Niesen und gereizte Augen verstärken."
+        case "Hoch":
+            "Kann Symptome heute deutlich verstärken."
+        default:
+            "Kann allergische Reaktionen heute stark begünstigen."
+        }
+    }
+}
+
+extension ForecastDetailDayItem {
+    var primaryRelevantAllergen: ForecastDetailPollenItem? {
+        pollenItems.first { $0.isRelevant }
+    }
 }
 
 extension ForecastDetailHourlyRiskItem {

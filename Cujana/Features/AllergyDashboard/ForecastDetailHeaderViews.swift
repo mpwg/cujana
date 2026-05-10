@@ -56,64 +56,66 @@ struct WeatherContextRow: View {
     let day: ForecastDetailDayItem
 
     var body: some View {
-        HStack(alignment: .center, spacing: SpacingToken.md) {
-            Image(systemName: day.weatherSystemImageName)
-                .font(.system(size: ForecastDetailToken.weatherIconWidth, weight: .medium, design: .rounded))
-                .foregroundStyle(ColorToken.accentDark)
-                .frame(width: ForecastDetailToken.weatherIconSize, height: ForecastDetailToken.weatherIconSize)
-                .background(ColorToken.accentSoft)
-                .clipShape(Circle())
-                .accessibilityHidden(true)
-
-            Text(day.temperatureText)
-                .font(TypographyToken.weatherTemperature)
-                .tracking(-1.5)
-                .foregroundStyle(ColorToken.textPrimary)
-                .monospacedDigit()
-                .accessibilityLabel("Temperatur \(day.temperatureText)")
-
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
             VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                Text(day.weatherText.capitalized)
+                Text(statusHeadline)
                     .font(TypographyToken.weatherDescription)
                     .foregroundStyle(ColorToken.textPrimary)
-                    .lineLimit(1)
+                    .lineLimit(2)
                     .minimumScaleFactor(ForecastDetailToken.weatherTextMinimumScale)
                     .opacity(DetailColorToken.weatherDescriptionText)
 
-                Text(metricText)
+                Text(statusSubtitle)
                     .font(TypographyToken.secondaryBody)
-                    .foregroundStyle(ColorToken.textSecondary.opacity(DetailColorToken.weatherMetricText))
+                    .foregroundStyle(ColorToken.textSecondary)
                     .lineLimit(1)
             }
 
-            Spacer(minLength: 0)
+            Text(weatherContextText)
+                .font(TypographyToken.severityPill)
+                .foregroundStyle(ForecastDetailToken.allergyWeatherContextText)
+                .lineLimit(1)
+                .minimumScaleFactor(ForecastDetailToken.weatherTextMinimumScale)
         }
         .padding(ForecastDetailToken.weatherCardPadding)
         .frame(minHeight: ForecastDetailToken.weatherMinHeight, alignment: .center)
         .premiumSurface(cornerRadius: ForecastDetailToken.weatherCardCornerRadius)
-        .softShadow(ShadowToken.card)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(weatherAccessibilityLabel)
     }
 
-    private var metricText: String {
+    private var statusHeadline: String {
+        guard let focusedAllergen = day.primaryRelevantAllergen else {
+            return "\(day.title) keine relevante Belastung"
+        }
+
+        return "\(day.title) \(focusedAllergen.levelAdjective) Belastung durch \(focusedAllergen.title)"
+    }
+
+    private var statusSubtitle: String {
+        day.primaryRelevantAllergen == nil
+            ? "Aktuell sind allergische Trigger eher ruhig."
+            : "Symptome können heute stärker auftreten."
+    }
+
+    private var weatherContextText: String {
         let metrics = [
+            day.temperatureText == "--" ? nil : day.temperatureText,
+            day.weatherText.capitalized,
             day.humidityText,
             day.windText
         ]
         .compactMap(\.self)
-
-        if metrics.isEmpty {
-            return "Luftwerte nicht verfügbar"
-        }
 
         return metrics.joined(separator: " · ")
     }
 
     private var weatherAccessibilityLabel: String {
         [
-            day.temperatureText,
-            day.weatherText,
+            statusHeadline,
+            statusSubtitle,
+            day.temperatureText == "--" ? nil : day.temperatureText,
+            day.weatherText.capitalized,
             day.humidityText.map { "Luftfeuchtigkeit \($0)" },
             day.windText.map { "Wind \($0)" }
         ]

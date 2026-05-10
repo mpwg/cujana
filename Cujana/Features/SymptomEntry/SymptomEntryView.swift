@@ -48,13 +48,13 @@ struct SymptomEntryView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: SpacingToken.sm) {
-            Text("Wie fühlst du dich?")
+            Text("Welche Symptome spürst du?")
                 .font(TypographyToken.sheetHeading)
                 .tracking(-0.8)
                 .foregroundStyle(ColorToken.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text("Halte fest, was du spürst. Das hilft dir, Muster ruhiger zu erkennen.")
+            Text("Dokumentiere Symptome und mögliche allergische Reaktionen.")
                 .font(TypographyToken.body)
                 .foregroundStyle(ColorToken.textSecondary)
                 .frame(maxWidth: SymptomCheckInToken.introMaxWidth, alignment: .leading)
@@ -81,7 +81,7 @@ struct SymptomEntryView: View {
 
     private var severitySection: some View {
         VStack(alignment: .leading, spacing: SpacingToken.lg) {
-            SectionHeader(title: "Wie stark ist es?", subtitle: "1 ist sehr mild, 5 sehr stark.")
+            SectionHeader(title: "Wie belastend sind die Symptome?", subtitle: "1 ist sehr mild, 5 sehr stark.")
 
             HStack(spacing: SpacingToken.sm) {
                 ForEach(viewModel.severityOptions) { option in

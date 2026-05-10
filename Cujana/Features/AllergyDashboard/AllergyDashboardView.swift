@@ -34,35 +34,36 @@ struct AllergyDashboardView: View {
         switch viewModel.state {
         case .idle, .loading:
             VStack(spacing: SpacingToken.lg) {
+                FeelingCTAView(action: onStartSymptomEntry)
                 ForecastSummaryCard(
                     days: [],
                     detailDays: [],
                     isLoading: true
                 )
-                FeelingCTAView(action: onStartSymptomEntry)
             }
         case .empty(let dashboardContent), .loaded(let dashboardContent):
             dashboard(for: dashboardContent)
         case .failure:
             VStack(spacing: SpacingToken.lg) {
+                FeelingCTAView(action: onStartSymptomEntry)
                 ForecastSummaryCard(
                     days: [],
                     detailDays: [],
                     isLoading: false
                 )
-                FeelingCTAView(action: onStartSymptomEntry)
             }
         }
     }
 
     private func dashboard(for dashboardContent: AllergyDashboardContent) -> some View {
         VStack(spacing: SpacingToken.section) {
+            FeelingCTAView(action: onStartSymptomEntry)
+            PersonalLoadStatusCard(days: dashboardContent.forecastDays)
             ForecastSummaryCard(
                 days: dashboardContent.forecastDays,
                 detailDays: dashboardContent.forecastDetailDays,
                 isLoading: false
             )
-            FeelingCTAView(action: onStartSymptomEntry)
         }
     }
 
@@ -75,23 +76,6 @@ struct AllergyDashboardView: View {
     }
 }
 
-private struct HomeLogoHeader: View {
-    var body: some View {
-        Image("Cujana")
-            .resizable()
-            .scaledToFit()
-            .frame(
-                width: HomeOverviewToken.navigationLogoWidth,
-                height: HomeOverviewToken.navigationLogoHeight
-            )
-            .opacity(HomeOverviewToken.navigationLogoOpacity)
-            .padding(.top, HomeOverviewToken.navigationLogoTopPadding)
-            .padding(.bottom, HomeOverviewToken.navigationLogoBottomPadding)
-            .frame(maxWidth: .infinity)
-            .accessibilityLabel("Cujana")
-    }
-}
-
 private struct ForecastSummaryCard: View {
     let days: [ForecastDaySummaryItem]
     let detailDays: [ForecastDetailDayItem]
@@ -101,8 +85,9 @@ private struct ForecastSummaryCard: View {
         VStack(alignment: .leading, spacing: SpacingToken.section) {
             VStack(alignment: .leading, spacing: SpacingToken.md) {
                 HStack(alignment: .firstTextBaseline, spacing: SpacingToken.md) {
-                    Text("3-Tage-Überblick")
-                        .font(TypographyToken.headline)
+                    Text("Belastungsausblick")
+                        .font(TypographyToken.forecastSectionTitle)
+                        .tracking(HomeOverviewToken.forecastTitleTracking)
                         .foregroundStyle(ColorToken.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
 
@@ -177,11 +162,12 @@ private struct DayOverviewCard: View {
 
             HStack(alignment: .top, spacing: SpacingToken.sm) {
                 VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                    Text(day.temperatureText)
-                        .font(TypographyToken.dayTemperature)
-                        .tracking(HomeOverviewToken.dayTemperatureTracking)
+                    Text(loadHeadline)
+                        .font(TypographyToken.loadHeadline)
+                        .tracking(HomeOverviewToken.loadHeadlineTracking)
                         .foregroundStyle(ColorToken.textPrimary)
-                        .monospacedDigit()
+                        .lineLimit(2)
+                        .minimumScaleFactor(HomeOverviewToken.weatherDescriptionMinimumScale)
                 }
 
                 Spacer(minLength: SpacingToken.sm)
@@ -190,21 +176,15 @@ private struct DayOverviewCard: View {
                     .font(.system(size: HomeOverviewToken.dayWeatherIconFontSize, weight: .medium, design: .rounded))
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(ColorToken.accentDark)
+                    .opacity(HomeOverviewToken.dayWeatherIconOpacity)
                     .frame(
-                        width: HomeOverviewToken.dayWeatherIconSize,
-                        height: HomeOverviewToken.dayWeatherIconSize
+                        width: HomeOverviewToken.dayWeatherIconSmallSize,
+                        height: HomeOverviewToken.dayWeatherIconSmallSize
                     )
                     .background(ColorToken.accentSoft.opacity(HomeOverviewToken.dayWeatherIconBackgroundOpacity))
                     .clipShape(Circle())
                     .accessibilityHidden(true)
             }
-
-            Text(day.weatherText.capitalized)
-                .font(TypographyToken.secondaryBody)
-                .foregroundStyle(ColorToken.textSecondary)
-                .lineLimit(1)
-                .minimumScaleFactor(HomeOverviewToken.weatherDescriptionMinimumScale)
-                .fixedSize(horizontal: false, vertical: true)
 
             if day.allergenItems.isEmpty {
                 Text("Keine relevante Belastung")
@@ -219,6 +199,14 @@ private struct DayOverviewCard: View {
                     }
                 }
             }
+
+            Spacer(minLength: 0)
+
+            Text(weatherContextText)
+                .font(TypographyToken.caption)
+                .foregroundStyle(HomeOverviewToken.weatherContextText)
+                .lineLimit(1)
+                .minimumScaleFactor(HomeOverviewToken.weatherDescriptionMinimumScale)
         }
         .padding(.top, HomeOverviewToken.dayCardPadding)
         .padding(.horizontal, HomeOverviewToken.dayCardPadding)
@@ -231,6 +219,33 @@ private struct DayOverviewCard: View {
         .premiumSurface(cornerRadius: HomeOverviewToken.dayCardCornerRadius)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(day.accessibilityText)
+    }
+
+    private var loadHeadline: String {
+        guard let item = day.allergenItems.first else {
+            return "Ruhige Belastung"
+        }
+
+        return "\(loadAdjective(for: item.levelText)) Belastung"
+    }
+
+    private var weatherContextText: String {
+        "\(day.temperatureText) · \(day.weatherText.capitalized)"
+    }
+
+    private func loadAdjective(for levelText: String) -> String {
+        switch levelText {
+        case "Niedrig":
+            "Niedrige"
+        case "Mittel":
+            "Mittlere"
+        case "Hoch":
+            "Hohe"
+        case "Sehr hoch":
+            "Sehr hohe"
+        default:
+            "Auffällige"
+        }
     }
 }
 

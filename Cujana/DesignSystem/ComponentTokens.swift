@@ -133,9 +133,14 @@ enum HomeOverviewToken {
     static let dayCardCornerRadius: CGFloat = 30
     static let dayLabelTracking = 1.2
     static let dayWeatherIconSize: CGFloat = 44
-    static let dayWeatherIconFontSize: CGFloat = 24
+    static let dayWeatherIconSmallSize: CGFloat = 34
+    static let dayWeatherIconFontSize: CGFloat = 18
+    static let dayWeatherIconOpacity = 0.7
     static let dayWeatherIconBackgroundOpacity = 0.72
-    static let dayTemperatureTracking = -1.2
+    static let dayTemperatureTracking = 0.0
+    static let loadHeadlineTracking = -0.5
+    static let forecastTitleTracking = -0.6
+    static let weatherContextText = Color(hex: "#8E8A84")
     static let weatherDescriptionMinimumScale = 0.82
     static let severityPillHeight: CGFloat = 28
     static let severityPillPaddingH: CGFloat = 12
@@ -145,13 +150,20 @@ enum HomeOverviewToken {
     static let attributionTopPadding: CGFloat = 8
     static let compactButtonPressedOpacity = 0.72
     static let ctaPadding = SpacingToken.lg
-    static let ctaHeight: CGFloat = 132
-    static let ctaCornerRadius: CGFloat = 30
-    static let ctaBackgroundOpacity = 0.12
-    static let ctaArtworkBlur: CGFloat = 1.6
-    static let ctaButtonHeight: CGFloat = 52
+    static let ctaHeight: CGFloat = 176
+    static let ctaCornerRadius: CGFloat = 34
+    static let ctaLabelText = Color(hex: "#6E6A63")
+    static let ctaTitleTracking = -1.0
+    static let ctaSupportingMaxWidth: CGFloat = 280
+    static let ctaBackgroundOpacity = 0.08
+    static let ctaArtworkBlur: CGFloat = 2
+    static let ctaButtonHeight: CGFloat = 56
+    static let ctaButtonCornerRadius: CGFloat = 22
     static let ctaButtonIconSpacing: CGFloat = 10
     static let ctaButtonIconSize: CGFloat = 18
+    static let personalStatusHeight: CGFloat = 96
+    static let personalStatusCornerRadius: CGFloat = 28
+    static let personalStatusIconSize: CGFloat = 44
 }
 
 enum AllergenLoadToken {
@@ -177,7 +189,7 @@ enum ForecastDetailToken {
     static let dayPickerPadding: CGFloat = 4
     static let dayPickerCornerRadius: CGFloat = 26
     static let weatherIconSize: CGFloat = 52
-    static let weatherMinHeight: CGFloat = 112
+    static let weatherMinHeight: CGFloat = 132
     static let weatherCardPadding: CGFloat = 18
     static let weatherCardCornerRadius: CGFloat = 30
     static let allergenIconSize: CGFloat = 30
@@ -210,6 +222,8 @@ enum ForecastDetailToken {
     static let hourlyCurrentChipMinHeight: CGFloat = 126
     static let hourlyCurrentScale: CGFloat = 1.02
     static let hourlyInactiveOpacity = 0.82
+    static let hourlyWeatherTextOpacity = 0.7
+    static let allergyWeatherContextText = Color(hex: "#7C7871")
     static let subtleNavigationRowMinHeight: CGFloat = 42
     static let subtleNavigationHorizontalPadding: CGFloat = 14
     static let overviewDotSize: CGFloat = 8
@@ -238,8 +252,8 @@ enum SymptomCheckInToken {
     static let fieldContainerPadding: CGFloat = 18
     static let symptomPillMinHeight: CGFloat = 54
     static let symptomPillPaddingH: CGFloat = 18
-    static let symptomBorderOpacity = 0.14
-    static let symptomSelectedBackground = Color(hex: "#E4EFE5")
+    static let symptomBorderOpacity = 0.16
+    static let symptomSelectedBackground = Color(hex: "#E7F0E7")
     static let symptomIconOpacity = 0.92
     static let severityPillMinHeight: CGFloat = 52
     static let severityPillMinWidth: CGFloat = 44
