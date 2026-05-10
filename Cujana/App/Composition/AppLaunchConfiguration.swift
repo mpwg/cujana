@@ -1,16 +1,16 @@
 import Foundation
 
 #if DEBUG
-enum AppLaunchConfiguration {
+enum AppLaunchConfiguration: Equatable {
     case standard
     case screenshot(AppScreenshotScreen)
 
     static func current(arguments: [String] = ProcessInfo.processInfo.arguments) -> AppLaunchConfiguration {
-        guard arguments.contains("-FASTLANE_SNAPSHOT") || arguments.contains("-cujana_screenshot_screen") else {
+        guard let screenshotScreen = AppScreenshotScreen(arguments: arguments) else {
             return .standard
         }
 
-        return .screenshot(AppScreenshotScreen(arguments: arguments) ?? .dashboard)
+        return .screenshot(screenshotScreen)
     }
 }
 

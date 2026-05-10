@@ -13,13 +13,16 @@ nonisolated public protocol WeatherKitWeatherAPIClient: Sendable {
 nonisolated public struct WeatherKitWeatherServiceClient: WeatherKitWeatherAPIClient {
     private let service: WeatherService
     private let calendar: Calendar
+    private let now: @Sendable () -> Date
 
     public init(
         service: WeatherService = .shared,
-        calendar: Calendar = Calendar(identifier: .gregorian)
+        calendar: Calendar = Calendar(identifier: .gregorian),
+        now: @escaping @Sendable () -> Date = Date.init
     ) {
         self.service = service
         self.calendar = calendar
+        self.now = now
     }
 
     public func weatherResponse(
@@ -38,13 +41,19 @@ nonisolated public struct WeatherKitWeatherServiceClient: WeatherKitWeatherAPICl
         ) {
             do {
                 let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+                let dateRange = Self.forecastDateRange(
+                    from: startDate,
+                    to: endDate,
+                    now: now(),
+                    calendar: calendar
+                )
                 let dailyForecast = try await service.weather(
                     for: location,
-                    including: .daily(startDate: startDate, endDate: endDate)
+                    including: .daily(startDate: dateRange.startDate, endDate: dateRange.endDate)
                 )
                 let days = dailyForecast.forecast.filter { day in
-                    calendar.compare(day.date, to: startDate, toGranularity: .day) != .orderedAscending
-                        && calendar.compare(day.date, to: endDate, toGranularity: .day) != .orderedDescending
+                    calendar.compare(day.date, to: dateRange.startDate, toGranularity: .day) != .orderedAscending
+                        && calendar.compare(day.date, to: dateRange.endDate, toGranularity: .day) != .orderedDescending
                 }
 
                 AppObservability.log(
@@ -77,4 +86,27 @@ nonisolated public struct WeatherKitWeatherServiceClient: WeatherKitWeatherAPICl
             }
         }
     }
+
+    nonisolated static func forecastDateRange(
+        from startDate: Date,
+        to endDate: Date,
+        now: Date,
+        calendar: Calendar
+    ) -> WeatherKitForecastDateRange {
+        let today = calendar.startOfDay(for: now)
+        let requestedStart = calendar.startOfDay(for: startDate)
+        let normalizedStart = max(requestedStart, today)
+        let requestedEnd = calendar.startOfDay(for: endDate)
+        let paddedEnd = calendar.date(byAdding: .day, value: 1, to: requestedEnd) ?? endDate
+
+        return WeatherKitForecastDateRange(
+            startDate: normalizedStart,
+            endDate: max(paddedEnd, normalizedStart)
+        )
+    }
+}
+
+nonisolated struct WeatherKitForecastDateRange: Equatable {
+    let startDate: Date
+    let endDate: Date
 }

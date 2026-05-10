@@ -109,6 +109,24 @@ struct WeatherKitWeatherTests {
         #expect(forecasts.first?.dailyConditions.first?.conditionCode == 3)
     }
 
+    @Test func serviceClientNormalizesForecastRangeToFutureDaysWithBuffer() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .current
+        let now = try #require(isoDate("2026-05-10T13:00:00Z"))
+        let startDate = try #require(isoDate("2026-05-03T13:00:00Z"))
+        let endDate = try #require(isoDate("2026-05-13T13:00:00Z"))
+
+        let range = WeatherKitWeatherServiceClient.forecastDateRange(
+            from: startDate,
+            to: endDate,
+            now: now,
+            calendar: calendar
+        )
+
+        #expect(range.startDate == (try #require(isoDate("2026-05-10T00:00:00Z"))))
+        #expect(range.endDate == (try #require(isoDate("2026-05-14T00:00:00Z"))))
+    }
+
     private func isoDate(_ string: String) -> Date? {
         ISO8601DateFormatter().date(from: string)
     }

@@ -77,6 +77,11 @@ enum AppDemoData {
                         date: makeRelativeDate(daysOffset: 1, hour: 9, minute: 41),
                         temperature: 19,
                         conditionCode: 61
+                    ),
+                    WeatherForecast.DailyCondition(
+                        date: makeRelativeDate(daysOffset: 2, hour: 9, minute: 41),
+                        temperature: 21,
+                        conditionCode: 2
                     )
                 ]
             )
