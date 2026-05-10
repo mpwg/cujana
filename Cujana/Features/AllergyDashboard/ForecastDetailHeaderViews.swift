@@ -17,7 +17,10 @@ struct DetailBackButton: View {
                 .clipShape(Circle())
                 .overlay {
                     Circle()
-                        .stroke(DetailColorToken.toolbarStrokeColor, lineWidth: 1)
+                        .stroke(
+                            DetailColorToken.toolbarStrokeColor,
+                            lineWidth: ForecastDetailToken.hairlineStrokeWidth
+                        )
                 }
         }
         .buttonStyle(.plain)
@@ -40,9 +43,9 @@ struct DetailDayPicker: View {
                     selectedDayID = day.id
                 } label: {
                     Label(day.title, systemImage: "leaf")
-                        .font(TypographyToken.footnote.weight(.semibold))
+                        .font(TypographyToken.footnote.weight(.medium))
                         .lineLimit(1)
-                        .minimumScaleFactor(0.82)
+                        .minimumScaleFactor(ForecastDetailToken.dayPickerTextMinimumScale)
                         .foregroundStyle(isSelected ? DetailColorToken.sage : ColorToken.textSecondary)
                         .frame(maxWidth: .infinity, minHeight: ForecastDetailToken.dayPickerMinHeight)
                         .padding(.horizontal, SpacingToken.sm)
@@ -64,7 +67,10 @@ struct DetailDayPicker: View {
         .clipShape(Capsule())
         .overlay {
             Capsule()
-                .stroke(DetailColorToken.neutralStroke, lineWidth: 1)
+                .stroke(
+                    DetailColorToken.neutralStroke.opacity(DetailColorToken.quietStroke),
+                    lineWidth: ForecastDetailToken.hairlineStrokeWidth
+                )
         }
     }
 }
@@ -93,7 +99,7 @@ struct WeatherContextRow: View {
                     .font(.system(.title3, design: .rounded).weight(.medium))
                     .foregroundStyle(ColorToken.textPrimary)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.84)
+                    .minimumScaleFactor(ForecastDetailToken.weatherTextMinimumScale)
 
                 Text(metricText)
                     .font(TypographyToken.footnote)
@@ -106,11 +112,15 @@ struct WeatherContextRow: View {
         .padding(.horizontal, ForecastDetailToken.cardHorizontalPadding)
         .padding(.vertical, ForecastDetailToken.compactCardVerticalPadding)
         .frame(minHeight: ForecastDetailToken.weatherMinHeight, alignment: .center)
-        .background(.thinMaterial)
+        .background(.ultraThinMaterial)
+        .background(DetailColorToken.surface)
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous)
-                .stroke(DetailColorToken.neutralStroke, lineWidth: 1)
+                .stroke(
+                    DetailColorToken.neutralStroke.opacity(DetailColorToken.softStroke),
+                    lineWidth: ForecastDetailToken.hairlineStrokeWidth
+                )
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(weatherAccessibilityLabel)

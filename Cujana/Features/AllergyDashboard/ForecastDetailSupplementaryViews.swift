@@ -45,9 +45,9 @@ struct HourlyRiskOverviewView: View {
         }
         .background(DetailColorToken.background.ignoresSafeArea())
         .navigationTitle("24h-Übersicht")
-#if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-#endif
+        #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 }
 
@@ -82,6 +82,7 @@ struct AttributionFooter: View {
             .lineLimit(2)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, SpacingToken.sm)
             .accessibilityLabel(text)
     }
 }
@@ -137,84 +138,11 @@ struct CalmEmptyAllergenState: View {
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusMedium, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: RadiusToken.radiusMedium, style: .continuous)
-                .stroke(DetailColorToken.neutralStroke, lineWidth: 1)
+                .stroke(
+                    DetailColorToken.neutralStroke.opacity(DetailColorToken.rowStroke),
+                    lineWidth: ForecastDetailToken.hairlineStrokeWidth
+                )
         }
-    }
-}
-
-struct AllergenDetailSheet: View {
-    let item: ForecastDetailPollenItem
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.lg) {
-            HStack(spacing: SpacingToken.md) {
-                Image(systemName: "leaf.fill")
-                    .font(.system(.title3, design: .rounded).weight(.semibold))
-                    .foregroundStyle(DetailColorToken.sage)
-                    .frame(
-                        width: ForecastDetailToken.allergenSheetIconSize,
-                        height: ForecastDetailToken.allergenSheetIconSize
-                    )
-                    .background(DetailColorToken.riskBackground(for: item.levelText))
-                    .clipShape(Circle())
-
-                VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                    Text(item.title)
-                        .font(TypographyToken.headline)
-                        .foregroundStyle(ColorToken.textPrimary)
-
-                    RiskBadge(text: item.levelText)
-                }
-            }
-
-            Text(item.levelDescription)
-                .font(TypographyToken.body)
-                .foregroundStyle(ColorToken.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Spacer()
-        }
-        .padding(SpacingToken.xl)
-        .background(DetailColorToken.background)
-    }
-}
-
-struct NoRiskAllergenSheet: View {
-    let items: [ForecastDetailPollenItem]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.lg) {
-            HStack(spacing: SpacingToken.md) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(.title3, design: .rounded).weight(.semibold))
-                    .foregroundStyle(DetailColorToken.sageTertiary)
-                    .frame(
-                        width: ForecastDetailToken.allergenSheetIconSize,
-                        height: ForecastDetailToken.allergenSheetIconSize
-                    )
-                    .background(DetailColorToken.mutedSurface)
-                    .clipShape(Circle())
-
-                VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                    Text("Keine Belastung")
-                        .font(TypographyToken.headline)
-                        .foregroundStyle(ColorToken.textPrimary)
-
-                    Text("\(items.count) Allergene")
-                        .font(TypographyToken.footnote)
-                        .foregroundStyle(ColorToken.textSecondary)
-                }
-            }
-
-            Text(items.map(\.title).joined(separator: ", "))
-                .font(TypographyToken.body)
-                .foregroundStyle(ColorToken.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Spacer()
-        }
-        .padding(SpacingToken.xl)
-        .background(DetailColorToken.background)
     }
 }
 
@@ -227,15 +155,6 @@ struct DetailEmptyState: View {
             .padding(SpacingToken.lg)
             .background(DetailColorToken.surface)
             .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusMedium, style: .continuous))
-    }
-}
-
-struct SoftPressButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? PressFeedbackToken.prominentScale : 1)
-            .opacity(configuration.isPressed ? PressFeedbackToken.prominentOpacity : 1)
-            .animation(.easeOut(duration: PressFeedbackToken.animationDuration), value: configuration.isPressed)
     }
 }
 
