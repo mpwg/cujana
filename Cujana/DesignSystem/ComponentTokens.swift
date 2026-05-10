@@ -97,6 +97,12 @@ enum SurfaceOpacityToken {
 enum HomeOverviewToken {
     static let allergenGridMinimumWidth: CGFloat = 116
     static let weatherIconSize: CGFloat = 28
+    static let titleLayoutPriority = 1.0
+    static let detailsButtonLayoutPriority = 2.0
+}
+
+enum AllergenLoadToken {
+    static let backgroundOpacity = 0.86
 }
 
 enum ForecastDetailToken {

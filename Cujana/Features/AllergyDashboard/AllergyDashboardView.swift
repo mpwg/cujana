@@ -10,7 +10,7 @@ struct AllergyDashboardView: View {
                 content
                     .padding(.horizontal, SpacingToken.xl)
                     .padding(.top, SpacingToken.sm)
-                    .padding(.bottom, SpacingToken.xxl)
+                    .padding(.bottom, SpacingToken.xl)
             }
             .scrollIndicators(.hidden)
             .background(ColorToken.backgroundPrimary.ignoresSafeArea())
@@ -82,11 +82,13 @@ private struct ForecastSummaryCard: View {
                     Text("3-Tages-Überblick")
                         .font(TypographyToken.headline)
                         .foregroundStyle(ColorToken.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text("Relevante Belastungen")
                         .font(TypographyToken.caption)
                         .foregroundStyle(ColorToken.textSecondary)
                 }
+                .layoutPriority(HomeOverviewToken.titleLayoutPriority)
 
                 Spacer(minLength: SpacingToken.sm)
 
@@ -99,6 +101,7 @@ private struct ForecastSummaryCard: View {
                     }
                     .buttonStyle(CompactNavigationButtonStyle())
                     .accessibilityLabel("Alle Allergendetails anzeigen")
+                    .layoutPriority(HomeOverviewToken.detailsButtonLayoutPriority)
                 }
             }
 
@@ -198,6 +201,7 @@ private struct AllergenLoadBadge: View {
                 .font(TypographyToken.footnote)
                 .foregroundStyle(ColorToken.textPrimary)
                 .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
 
             Text(item.levelText)
                 .font(TypographyToken.caption.weight(.semibold))
@@ -208,7 +212,11 @@ private struct AllergenLoadBadge: View {
                 .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
                 .fixedSize(horizontal: false, vertical: true)
         }
+        .padding(.horizontal, SpacingToken.sm)
+        .padding(.vertical, SpacingToken.xs)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .background(ColorToken.cardBackground.opacity(AllergenLoadToken.backgroundOpacity))
+        .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
     }
 }
 
@@ -320,6 +328,10 @@ private struct FeelingCTAView: View {
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous)
+                        .stroke(ColorToken.accentPrimary.opacity(SurfaceOpacityToken.accentSubtle))
                 }
         }
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusLarge, style: .continuous))
