@@ -69,7 +69,9 @@ nonisolated public struct WeatherKitWeatherServiceClient: WeatherKitWeatherAPICl
                         WeatherKitWeatherDayDTO(
                             date: calendar.startOfDay(for: day.date),
                             condition: day.condition.rawValue,
-                            highTemperatureCelsius: day.highTemperature.converted(to: .celsius).value
+                            highTemperatureCelsius: day.highTemperature.converted(to: .celsius).value,
+                            humidityPercent: day.maximumHumidity * 100,
+                            windSpeedKilometersPerHour: day.wind.speed.converted(to: .kilometersPerHour).value
                         )
                     }
                 )

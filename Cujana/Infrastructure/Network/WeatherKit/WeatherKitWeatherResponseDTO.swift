@@ -4,11 +4,21 @@ nonisolated public struct WeatherKitWeatherDayDTO: Codable, Equatable, Sendable 
     public let date: Date
     public let condition: String
     public let highTemperatureCelsius: Double
+    public let humidityPercent: Double?
+    public let windSpeedKilometersPerHour: Double?
 
-    public init(date: Date, condition: String, highTemperatureCelsius: Double) {
+    public init(
+        date: Date,
+        condition: String,
+        highTemperatureCelsius: Double,
+        humidityPercent: Double? = nil,
+        windSpeedKilometersPerHour: Double? = nil
+    ) {
         self.date = date
         self.condition = condition
         self.highTemperatureCelsius = highTemperatureCelsius
+        self.humidityPercent = humidityPercent
+        self.windSpeedKilometersPerHour = windSpeedKilometersPerHour
     }
 }
 

@@ -9,11 +9,21 @@ nonisolated public struct WeatherForecast: Equatable, Identifiable, Sendable {
         public let date: Date
         public let temperature: Double
         public let conditionCode: Int
+        public let humidityPercent: Double?
+        public let windSpeedKilometersPerHour: Double?
 
-        public init(date: Date, temperature: Double, conditionCode: Int) {
+        public init(
+            date: Date,
+            temperature: Double,
+            conditionCode: Int,
+            humidityPercent: Double? = nil,
+            windSpeedKilometersPerHour: Double? = nil
+        ) {
             self.date = date
             self.temperature = temperature
             self.conditionCode = conditionCode
+            self.humidityPercent = humidityPercent
+            self.windSpeedKilometersPerHour = windSpeedKilometersPerHour
         }
     }
 

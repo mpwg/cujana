@@ -6,7 +6,9 @@ nonisolated public enum WeatherKitWeatherMapper {
             WeatherForecast.DailyCondition(
                 date: day.date,
                 temperature: day.highTemperatureCelsius,
-                conditionCode: conditionCode(for: day.condition)
+                conditionCode: conditionCode(for: day.condition),
+                humidityPercent: day.humidityPercent,
+                windSpeedKilometersPerHour: day.windSpeedKilometersPerHour
             )
         }
 

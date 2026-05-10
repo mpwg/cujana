@@ -181,6 +181,8 @@ final class AllergyDashboardViewModel {
                 weatherSystemImageName: weather.map {
                     systemImageName(forWeatherCode: $0.conditionCode)
                 } ?? "cloud.sun",
+                humidityText: weather.flatMap { formattedHumidityText(for: $0.humidityPercent) },
+                windText: weather.flatMap { formattedWindText(for: $0.windSpeedKilometersPerHour) },
                 pollenItems: pollenItems,
                 allergyRiskText: allergyRisk.map { "Allergierisiko: \(shortLevelText(for: $0.level))" },
                 hourlyAllergyRiskItems: allergyRisk.map(hourlyAllergyRiskItems(for:)) ?? []
@@ -304,6 +306,22 @@ private extension AllergyDashboardViewModel {
 
     private func formattedTemperatureText(for temperature: Double) -> String {
         "\(Int(temperature.rounded()))°"
+    }
+
+    private func formattedHumidityText(for humidityPercent: Double?) -> String? {
+        guard let humidityPercent else {
+            return nil
+        }
+
+        return "\(Int(humidityPercent.rounded()))%"
+    }
+
+    private func formattedWindText(for windSpeedKilometersPerHour: Double?) -> String? {
+        guard let windSpeedKilometersPerHour else {
+            return nil
+        }
+
+        return "\(Int(windSpeedKilometersPerHour.rounded())) km/h"
     }
 
     private func weatherDescription(for code: Int) -> String {
