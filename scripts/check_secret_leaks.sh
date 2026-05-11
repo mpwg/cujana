@@ -61,6 +61,10 @@ if [[ " ${tracked_files[*]} " == *" Configuration/LocalSecrets.xcconfig "* ]]; t
 fi
 
 for file in "${tracked_files[@]}"; do
+  if [[ ! -f "$file" ]]; then
+    continue
+  fi
+
   case "$file" in
     Configuration/LocalSecrets.xcconfig)
       continue

@@ -105,6 +105,18 @@ custom_rules:
     message: "Features must not access persistence directly. Use a repository protocol."
     severity: error
 
+  no_swiftdata_outside_persistence:
+    name: "No SwiftData outside Persistence"
+    included:
+      - "^Cujana/.*\\.swift"
+    excluded:
+      - "^Cujana/Infrastructure/Persistence/.*\\.swift"
+      - ".*CujanaTests/.*\\.swift"
+      - ".*CujanaUITests/.*\\.swift"
+    regex: "(^\\s*import\\s+SwiftData\\b|@Model\\b|\\b(ModelContainer|ModelContext)\\b)"
+    message: "SwiftData APIs must stay in Cujana/Infrastructure/Persistence unless an ADR explicitly allows another path."
+    severity: error
+
   no_manager_suffix:
     name: "No Manager suffix"
     included:
