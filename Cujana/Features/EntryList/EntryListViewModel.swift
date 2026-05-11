@@ -13,19 +13,27 @@ final class EntryListViewModel {
     }
 
     private let loadEntriesUseCase: LoadAllergySymptomEntriesUseCase
+    private let saveEntryUseCase: SaveAllergySymptomEntryUseCase
+    private let deleteEntryUseCase: DeleteAllergySymptomEntryUseCase
     private let loadPollenUseCase: LoadPollenForecastUseCase
     private let locationProvider: (any LocationCoordinateProviding)?
     private let previewCoordinate: LocationCoordinate?
     private let calendar: Calendar
+    private var entries: [HealthEntry] = []
+    private var pollenForecasts: [PollenForecast] = []
 
     init(
         loadEntriesUseCase: LoadAllergySymptomEntriesUseCase,
+        saveEntryUseCase: SaveAllergySymptomEntryUseCase,
+        deleteEntryUseCase: DeleteAllergySymptomEntryUseCase,
         loadPollenUseCase: LoadPollenForecastUseCase,
         locationProvider: (any LocationCoordinateProviding)? = nil,
         coordinate: LocationCoordinate? = nil,
         calendar: Calendar = .current
     ) {
         self.loadEntriesUseCase = loadEntriesUseCase
+        self.saveEntryUseCase = saveEntryUseCase
+        self.deleteEntryUseCase = deleteEntryUseCase
         self.loadPollenUseCase = loadPollenUseCase
         self.locationProvider = locationProvider
         self.previewCoordinate = coordinate
@@ -36,18 +44,62 @@ final class EntryListViewModel {
         state = .loading
 
         do {
-            let entries = try await loadEntriesUseCase.execute(from: .distantPast, to: .distantFuture)
+            entries = try await loadEntriesUseCase.execute(from: .distantPast, to: .distantFuture)
                 .sorted { $0.date > $1.date }
 
-            let pollenForecasts = try await loadPollenForecasts(for: entries)
-            let content = makeContent(
-                entries: entries,
-                pollenForecasts: pollenForecasts
-            )
-
-            state = entries.isEmpty ? .empty(content) : .loaded(content)
+            pollenForecasts = try await loadPollenForecasts(for: entries)
+            publishCurrentContent()
         } catch {
             state = .failure("Die Einträge konnten gerade nicht geladen werden. Bitte versuche es erneut.")
+        }
+    }
+
+    func observeEntryChanges() async {
+        for await notification in NotificationCenter.default.notifications(named: .symptomEntryDidChange) {
+            guard let change = notification.object as? SymptomEntryChange else {
+                await load()
+                continue
+            }
+
+            apply(change)
+        }
+    }
+
+    func makeEditorViewModel(for entry: HealthEntry) -> EntryEditorViewModel {
+        EntryEditorViewModel(
+            saveUseCase: saveEntryUseCase,
+            mode: .edit(existing: entry)
+        )
+    }
+
+    func upsertLocal(_ entry: HealthEntry) {
+        if let existingIndex = entries.firstIndex(where: { $0.id == entry.id }) {
+            entries[existingIndex] = entry
+        } else {
+            entries.append(entry)
+        }
+
+        entries.sort { $0.date > $1.date }
+        publishCurrentContent()
+    }
+
+    func delete(_ entry: HealthEntry) async {
+        do {
+            try await deleteEntryUseCase.execute(id: entry.id)
+        } catch {
+            state = .failure("Die Einträge konnten gerade nicht geladen werden. Bitte versuche es erneut.")
+        }
+    }
+
+    private func apply(_ change: SymptomEntryChange) {
+        withAnimation(.smooth) {
+            switch change {
+            case .saved(let entry):
+                upsertLocal(entry)
+            case .deleted(let id):
+                entries.removeAll { $0.id == id }
+                publishCurrentContent()
+            }
         }
     }
 
@@ -91,8 +143,7 @@ final class EntryListViewModel {
         entries: [AllergySymptomEntry],
         pollenForecasts: [PollenForecast]
     ) -> [EntryListDaySection] {
-        let journalEntries = journalEntries(from: entries)
-        let groupedByDay = Dictionary(grouping: journalEntries) { entry in
+        let groupedByDay = Dictionary(grouping: entries) { entry in
             calendar.startOfDay(for: entry.date)
         }
 
@@ -113,41 +164,13 @@ final class EntryListViewModel {
             }
     }
 
-    private func journalEntries(from entries: [AllergySymptomEntry]) -> [JournalEntry] {
-        Dictionary(grouping: entries, by: \.date)
-            .values
-            .map { entriesAtDate in
-                let sortedEntries = entriesAtDate.sorted { first, second in
-                    symptomSortOrder(first: first.symptoms[0], second: second.symptoms[0])
-                }
-                let representativeEntry = sortedEntries[0]
-                let symptoms = sortedEntries
-                    .flatMap(\.symptoms)
-                    .reduce(into: [SymptomType]()) { result, symptom in
-                        if result.contains(symptom) == false {
-                            result.append(symptom)
-                        }
-                    }
-                    .sorted(by: symptomSortOrder)
-                let note = sortedEntries.compactMap(\.note).first
-                let strongestSeverity = sortedEntries.map(\.severity).max() ?? representativeEntry.severity
-
-                return JournalEntry(
-                    date: representativeEntry.date,
-                    symptoms: symptoms,
-                    severity: strongestSeverity,
-                    note: note
-                )
-            }
-            .sorted { $0.date > $1.date }
-    }
-
     private func makeItem(
-        from entry: JournalEntry,
+        from entry: HealthEntry,
         pollenForecasts: [PollenForecast]
     ) -> JournalEntryItem {
         JournalEntryItem(
-            id: entry.date.ISO8601Format(),
+            id: entry.id.uuidString,
+            entry: entry,
             timeText: entry.date.formatted(.dateTime.hour().minute()),
             noteText: entry.note,
             contextText: contextText(for: entry.date, severity: entry.severity, pollenForecasts: pollenForecasts),
@@ -254,10 +277,12 @@ final class EntryListViewModel {
         return firstIndex < secondIndex
     }
 
-    private struct JournalEntry {
-        let date: Date
-        let symptoms: [SymptomType]
-        let severity: SymptomSeverity
-        let note: String?
+    private func publishCurrentContent() {
+        let content = makeContent(
+            entries: entries,
+            pollenForecasts: pollenForecasts
+        )
+
+        state = entries.isEmpty ? .empty(content) : .loaded(content)
     }
 }

@@ -17,6 +17,8 @@ struct SymptomEntryViewModelTests {
         viewModel.selectSeverity(level: 3)
         viewModel.entryDate = entryDate
         viewModel.note = "  Draußen stärker gespürt.  "
+        viewModel.medicationsText = "Antihistaminikum, Nasenspray"
+        viewModel.tagsText = "Park, Arbeit"
 
         await viewModel.submit()
 
@@ -26,6 +28,8 @@ struct SymptomEntryViewModelTests {
         #expect(entries.first?.symptoms == [.itchyEyes])
         #expect(entries.first?.severity == SymptomSeverity(rawValue: 6))
         #expect(entries.first?.note == "Draußen stärker gespürt.")
+        #expect(entries.first?.medications.map(\.name) == ["Antihistaminikum", "Nasenspray"])
+        #expect(entries.first?.tags == ["Park", "Arbeit"])
         #expect(viewModel.saveStatus == .success("Dein Symptom wurde gespeichert."))
     }
 
@@ -96,6 +100,50 @@ struct SymptomEntryViewModelTests {
         #expect(entries.first?.symptoms == [.sneezing, .itchyEyes])
         #expect(entries.first?.severity == SymptomSeverity(rawValue: 4))
         #expect(viewModel.saveStatus == .success("Deine Symptome wurden gespeichert."))
+    }
+
+    @Test
+    @MainActor
+    func editModePrefillsAndPreservesEntryIdentityAndCoordinate() async throws {
+        let repository = CapturingSymptomEntryRepository()
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let entryID = try #require(UUID(uuidString: "77777777-7777-7777-7777-777777777777"))
+        let existing = try AllergySymptomEntry(
+            id: entryID,
+            date: Date(timeIntervalSince1970: 2_000),
+            symptoms: [.itchyEyes, .sneezing],
+            severity: SymptomSeverity(rawValue: 6),
+            note: "Alt",
+            medications: [Medication(name: "Altmedikament")],
+            tags: ["Park"],
+            coordinate: coordinate
+        )
+        let viewModel = EntryEditorViewModel(
+            saveUseCase: SaveAllergySymptomEntryUseCase(repository: repository),
+            mode: .edit(existing: existing)
+        )
+
+        #expect(viewModel.selectedSymptoms == Set([.itchyEyes, .sneezing]))
+        #expect(viewModel.selectedSeverityLevel == 3)
+        #expect(viewModel.note == "Alt")
+        #expect(viewModel.medicationsText == "Altmedikament")
+        #expect(viewModel.tagsText == "Park")
+        #expect(viewModel.entryDate == existing.date)
+
+        viewModel.selectSymptom(.coughing)
+        viewModel.note = "Aktualisiert"
+        viewModel.medicationsText = "Neues Medikament"
+        viewModel.tagsText = "Park, Frühling"
+
+        let savedEntry = await viewModel.submit()
+
+        #expect(savedEntry?.id == entryID)
+        #expect(savedEntry?.coordinate == coordinate)
+        #expect(savedEntry?.note == "Aktualisiert")
+        #expect(savedEntry?.medications.map(\.name) == ["Neues Medikament"])
+        #expect(savedEntry?.tags == ["Park", "Frühling"])
+        #expect(savedEntry?.symptoms == [.sneezing, .itchyEyes, .coughing])
+        #expect(viewModel.saveStatus == .success("Deine Änderungen wurden gespeichert."))
     }
 
     @Test

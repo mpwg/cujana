@@ -8,7 +8,15 @@ actor InMemorySymptomEntryRepository: SymptomEntryRepository {
     }
 
     func save(_ entry: AllergySymptomEntry) async throws {
-        entries.append(entry)
+        if let existingIndex = entries.firstIndex(where: { $0.id == entry.id }) {
+            entries[existingIndex] = entry
+        } else {
+            entries.append(entry)
+        }
+    }
+
+    func delete(id: UUID) async throws {
+        entries.removeAll { $0.id == id }
     }
 
     func symptomEntries(from startDate: Date, to endDate: Date) async throws -> [AllergySymptomEntry] {

@@ -1,33 +1,35 @@
 import SwiftUI
 
 struct SymptomEntryView: View {
+    @Bindable var viewModel: EntryEditorViewModel
+    var onSaved: ((HealthEntry) -> Void)?
+
+    var body: some View {
+        EntryFormView(viewModel: viewModel, onSaved: onSaved)
+    }
+}
+
+struct EntryFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Bindable var viewModel: SymptomEntryViewModel
+    @Bindable var viewModel: EntryEditorViewModel
+    var onSaved: ((HealthEntry) -> Void)?
     @Namespace private var symptomSelectionNamespace
     @Namespace private var severitySelectionNamespace
     @State private var isDateExpanded = false
     @State private var isInfoPresented = false
 
-    private let symptomColumns = [
-        GridItem(
-            .flexible(minimum: SymptomCheckInToken.symptomGridMinimumWidth),
-            spacing: SymptomCheckInToken.symptomPillGridSpacing
-        ),
-        GridItem(
-            .flexible(minimum: SymptomCheckInToken.symptomGridMinimumWidth),
-            spacing: SymptomCheckInToken.symptomPillGridSpacing
-        )
-    ]
-
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: SymptomCheckInToken.sectionSpacing) {
-                    symptomSection
-                    severitySection
-                    dateSection
-                    noteSection
+                    EntryFormSections(
+                        viewModel: viewModel,
+                        symptomSelectionNamespace: symptomSelectionNamespace,
+                        severitySelectionNamespace: severitySelectionNamespace,
+                        isDateExpanded: $isDateExpanded,
+                        reduceMotion: reduceMotion
+                    )
                     statusMessage
                 }
                 .padding(.horizontal, SymptomCheckInToken.screenHorizontalPadding)
@@ -73,9 +75,11 @@ struct SymptomEntryView: View {
                         .buttonStyle(.plain)
                         .accessibilityLabel("Schließen")
 
-                        Text("Symptome erfassen")
+                        Text(viewModel.screenTitle)
                             .font(TypographyToken.sheetTitle)
                             .foregroundStyle(ColorToken.textPrimary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.82)
                     }
                 }
 
@@ -103,6 +107,64 @@ struct SymptomEntryView: View {
                     .presentationDetents([.medium])
             }
         }
+    }
+
+    @ViewBuilder
+    private var statusMessage: some View {
+        if let message = viewModel.saveStatus.message {
+            Text(message)
+                .cujanaStatus(isError: viewModel.saveStatus.isError)
+        }
+    }
+
+    private var saveButton: some View {
+        PrimaryCTAButton(
+            title: viewModel.submitButtonTitle,
+            isLoading: viewModel.isSaving,
+            isEnabled: viewModel.canSubmit
+        ) {
+            Task {
+                await submitEntry()
+            }
+        }
+    }
+
+    private func submitEntry() async {
+        let savedEntry = await viewModel.submit()
+
+        if let savedEntry, case .success = viewModel.saveStatus {
+            onSaved?(savedEntry)
+            dismiss()
+        }
+    }
+}
+
+struct EntryFormSections: View {
+    @Bindable var viewModel: EntryEditorViewModel
+    let symptomSelectionNamespace: Namespace.ID
+    let severitySelectionNamespace: Namespace.ID
+    @Binding var isDateExpanded: Bool
+    let reduceMotion: Bool
+
+    private let symptomColumns = [
+        GridItem(
+            .flexible(minimum: SymptomCheckInToken.symptomGridMinimumWidth),
+            spacing: SymptomCheckInToken.symptomPillGridSpacing
+        ),
+        GridItem(
+            .flexible(minimum: SymptomCheckInToken.symptomGridMinimumWidth),
+            spacing: SymptomCheckInToken.symptomPillGridSpacing
+        )
+    ]
+
+    var body: some View {
+        symptomSection
+        severitySection
+        dateSection
+        medicationSection
+        tagSection
+        historicalContextSection
+        noteSection
     }
 
     private var symptomSection: some View {
@@ -159,31 +221,34 @@ struct SymptomEntryView: View {
         }
     }
 
+    private var medicationSection: some View {
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
+            SectionHeader(title: "Medikamente", subtitle: "Optional, durch Komma oder Zeilen getrennt.")
+
+            SupplementalEntryField(
+                text: $viewModel.medicationsText,
+                placeholder: "z. B. Antihistaminikum, Nasenspray",
+                accessibilityLabel: "Medikamente"
+            )
+        }
+    }
+
+    private var tagSection: some View {
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
+            SectionHeader(title: "Tags", subtitle: "Optional, durch Komma oder Zeilen getrennt.")
+
+            SupplementalEntryField(
+                text: $viewModel.tagsText,
+                placeholder: "z. B. Park, Arbeit, Schlaf",
+                accessibilityLabel: "Tags"
+            )
+        }
+    }
+
     @ViewBuilder
-    private var statusMessage: some View {
-        if let message = viewModel.saveStatus.message {
-            Text(message)
-                .cujanaStatus(isError: viewModel.saveStatus.isError)
-        }
-    }
-
-    private var saveButton: some View {
-        PrimaryCTAButton(
-            title: viewModel.isSaving ? "Speichern ..." : "Eintrag speichern",
-            isLoading: viewModel.isSaving,
-            isEnabled: viewModel.canSubmit
-        ) {
-            Task {
-                await submitEntry()
-            }
-        }
-    }
-
-    private func submitEntry() async {
-        await viewModel.submit()
-
-        if case .success = viewModel.saveStatus {
-            dismiss()
+    private var historicalContextSection: some View {
+        if let historicalContextText = viewModel.historicalContextText {
+            HistoricalContextCard(text: historicalContextText)
         }
     }
 }

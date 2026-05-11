@@ -2,17 +2,12 @@ import SwiftUI
 
 struct EntryListView: View {
     @Bindable var viewModel: EntryListViewModel
+    @State private var editingEntry: HealthEntry?
+    @State private var pendingDeleteEntry: HealthEntry?
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: SpacingToken.section) {
-                    content
-                }
-                .padding(.horizontal, EntryListToken.screenHorizontalPadding)
-                .padding(.top, SpacingToken.sm)
-                .padding(.bottom, SpacingToken.xxl)
-            }
+            content
             .background(EntryListToken.screenBackground)
             .navigationTitle("Einträge")
 #if os(iOS)
@@ -22,7 +17,49 @@ struct EntryListView: View {
             .task {
                 await viewModel.load()
             }
+            .task {
+                await viewModel.observeEntryChanges()
+            }
+            .sheet(item: $editingEntry) { entry in
+                SymptomEntryView(
+                    viewModel: viewModel.makeEditorViewModel(for: entry)
+                )
+#if os(iOS)
+                .presentationCornerRadius(TabBarToken.sheetCornerRadius)
+                .presentationBackground(ColorToken.backgroundPrimary)
+#endif
+            }
+            .confirmationDialog(
+                "Eintrag löschen?",
+                isPresented: isDeleteDialogPresented,
+                titleVisibility: .visible,
+                actions: {
+                    if let pendingDeleteEntry {
+                        Button("Löschen", role: .destructive) {
+                            Task {
+                                await viewModel.delete(pendingDeleteEntry)
+                            }
+                        }
+                    }
+
+                    Button("Abbrechen", role: .cancel) {}
+                },
+                message: {
+                    Text("Diese Aktion kann nicht rückgängig gemacht werden.")
+                }
+            )
         }
+    }
+
+    private var isDeleteDialogPresented: Binding<Bool> {
+        Binding(
+            get: { pendingDeleteEntry != nil },
+            set: { isPresented in
+                if isPresented == false {
+                    pendingDeleteEntry = nil
+                }
+            }
+        )
     }
 
     @ViewBuilder
@@ -31,24 +68,54 @@ struct EntryListView: View {
         case .idle, .loading:
             loadingView
         case .empty(let content):
-            emptyView(content)
+            scrollContent {
+                emptyView(content)
+            }
         case .loaded(let content):
             listView(content)
         case .failure(let message):
-            errorView(message: message)
-        }
-    }
-
-    private func listView(_ content: EntryListContent) -> some View {
-        LazyVStack(alignment: .leading, spacing: SpacingToken.xl) {
-            ForEach(content.sections) { section in
-                EntryDaySection(section: section)
+            scrollContent {
+                errorView(message: message)
             }
         }
     }
 
+    private func listView(_ content: EntryListContent) -> some View {
+        List {
+            ForEach(content.sections) { section in
+                Section {
+                    ForEach(section.entries) { item in
+                        TimelineEntryRow(
+                            item: item,
+                            onEdit: { editingEntry = item.entry },
+                            onDelete: { pendingDeleteEntry = item.entry }
+                        )
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(
+                            top: 0,
+                            leading: EntryListToken.screenHorizontalPadding,
+                            bottom: EntryListToken.cardSpacing,
+                            trailing: EntryListToken.screenHorizontalPadding
+                        ))
+                    }
+                } header: {
+                    Text(section.title)
+                        .font(EntryListToken.dayHeaderFont)
+                        .foregroundStyle(EntryListToken.dayHeaderText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .textCase(nil)
+                        .padding(.top, SpacingToken.sm)
+                }
+            }
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .contentMargins(.bottom, SpacingToken.xxl, for: .scrollContent)
+    }
+
     private var loadingView: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.section) {
+        scrollContent {
             VStack(spacing: SpacingToken.lg) {
                 ProgressView()
                 Text("Einträge werden geladen ...")
@@ -93,34 +160,42 @@ struct EntryListView: View {
             .cujanaCard()
         }
     }
-}
 
-private struct EntryDaySection: View {
-    let section: EntryListDaySection
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.md) {
-            Text(section.title)
-                .font(EntryListToken.dayHeaderFont)
-                .foregroundStyle(EntryListToken.dayHeaderText)
-                .fixedSize(horizontal: false, vertical: true)
-
-            LazyVStack(spacing: EntryListToken.cardSpacing) {
-                ForEach(section.entries) { item in
-                    TimelineEntryRow(item: item)
-                }
+    private func scrollContent<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: SpacingToken.section) {
+                content()
             }
+            .padding(.horizontal, EntryListToken.screenHorizontalPadding)
+            .padding(.top, SpacingToken.sm)
+            .padding(.bottom, SpacingToken.xxl)
         }
     }
 }
 
 private struct TimelineEntryRow: View {
     let item: JournalEntryItem
+    let onEdit: () -> Void
+    let onDelete: () -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: EntryListToken.timelineCardSpacing) {
             TimelineMarker()
             EntryCard(item: item)
+                .onTapGesture(perform: onEdit)
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(action: onDelete) {
+                        Label("Löschen", systemImage: "trash")
+                    }
+                    .tint(.red)
+
+                    Button(action: onEdit) {
+                        Label("Bearbeiten", systemImage: "pencil")
+                    }
+                    .tint(ColorToken.accentPrimary)
+                }
+                .accessibilityAction(named: "Bearbeiten", onEdit)
+                .accessibilityAction(named: "Löschen", onDelete)
         }
     }
 }
@@ -182,6 +257,7 @@ private struct EntryCard: View {
         .padding(.bottom, EntryListToken.cardPaddingBottom)
         .frame(maxWidth: .infinity, alignment: .leading)
         .entryJournalSurface()
+        .contentShape(RoundedRectangle(cornerRadius: EntryListToken.cardCornerRadius, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
         .animation(EntryListToken.journalAnimation, value: item.symptoms)

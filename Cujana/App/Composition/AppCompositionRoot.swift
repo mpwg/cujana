@@ -44,6 +44,8 @@ struct AppCompositionRoot {
     private func makeEntryListViewModel() -> EntryListViewModel {
         EntryListViewModel(
             loadEntriesUseCase: LoadAllergySymptomEntriesUseCase(repository: dependencies.symptomEntryRepository),
+            saveEntryUseCase: makeSaveAllergySymptomEntryUseCase(),
+            deleteEntryUseCase: DeleteAllergySymptomEntryUseCase(repository: dependencies.symptomEntryRepository),
             loadPollenUseCase: LoadPollenForecastUseCase(repository: dependencies.pollenRepository),
             locationProvider: dependencies.locationProvider
         )
