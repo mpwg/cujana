@@ -112,6 +112,7 @@ struct EntryListView: View {
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .contentMargins(.bottom, SpacingToken.xxl, for: .scrollContent)
+        .animation(EntryListToken.journalAnimation, value: content.sections)
     }
 
     private var loadingView: some View {
