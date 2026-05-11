@@ -9,6 +9,17 @@ struct SymptomEntryView: View {
     @State private var isDateExpanded = false
     @State private var isInfoPresented = false
 
+    private let symptomColumns = [
+        GridItem(
+            .flexible(minimum: SymptomCheckInToken.symptomGridMinimumWidth),
+            spacing: SymptomCheckInToken.symptomPillGridSpacing
+        ),
+        GridItem(
+            .flexible(minimum: SymptomCheckInToken.symptomGridMinimumWidth),
+            spacing: SymptomCheckInToken.symptomPillGridSpacing
+        )
+    ]
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -95,13 +106,13 @@ struct SymptomEntryView: View {
     }
 
     private var symptomSection: some View {
-        SymptomGroupedSection {
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
             SectionHeader(
                 title: "Welche Symptome hast du?",
                 subtitle: "Du kannst mehrere Symptome auswählen."
             )
 
-            AdaptiveFlowLayout(spacing: SymptomCheckInToken.symptomPillGridSpacing) {
+            LazyVGrid(columns: symptomColumns, spacing: SymptomCheckInToken.symptomPillGridSpacing) {
                 ForEach(viewModel.symptomOptions) { option in
                     SymptomChip(
                         option: option,
@@ -116,7 +127,7 @@ struct SymptomEntryView: View {
     }
 
     private var severitySection: some View {
-        SymptomGroupedSection {
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
             SectionHeader(title: "Wie belastend sind die Symptome?", subtitle: "1 ist sehr mild, 5 sehr stark.")
 
             SeveritySelector(
@@ -166,23 +177,5 @@ struct SymptomEntryView: View {
                 await viewModel.submit()
             }
         }
-    }
-}
-
-private struct SymptomGroupedSection<Content: View>: View {
-    let content: Content
-
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.md) {
-            content
-        }
-        .padding(InputToken.padding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ColorToken.cardBackground.opacity(SurfaceStyleToken.strokeOpacity))
-        .clipShape(RoundedRectangle(cornerRadius: SpacingToken.xxl, style: .continuous))
     }
 }

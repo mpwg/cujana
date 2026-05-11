@@ -35,19 +35,13 @@ struct SymptomChip: View {
                     .font(.system(size: SymptomCheckInToken.symptomIconSize, weight: .medium, design: .rounded))
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(iconColor)
-                    .frame(width: SymptomCheckInToken.symptomIconFrameWidth)
                     .accessibilityHidden(true)
 
                 symptomLabel
             }
             .padding(.horizontal, SymptomCheckInToken.symptomPillPaddingH)
             .padding(.vertical, SymptomCheckInToken.symptomPillPaddingV)
-            .frame(
-                minWidth: SymptomCheckInToken.symptomChipMinWidth,
-                maxWidth: SymptomCheckInToken.symptomChipMaxWidth,
-                minHeight: SymptomCheckInToken.symptomPillMinHeight,
-                alignment: .leading
-            )
+            .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.symptomPillMinHeight, alignment: .leading)
             .background(chipBackground)
             .clipShape(RoundedRectangle(cornerRadius: SymptomCheckInToken.symptomPillCornerRadius, style: .continuous))
             .overlay(chipBorder)
@@ -141,7 +135,14 @@ struct SeveritySelector: View {
     let onSelect: (Int) -> Void
 
     var body: some View {
-        AdaptiveFlowLayout(spacing: SymptomCheckInToken.severityPillSpacing) {
+        VStack(alignment: .leading, spacing: SymptomCheckInToken.severityPillSpacing) {
+            severityRow(for: Array(options.prefix(3)))
+            severityRow(for: Array(options.dropFirst(3)))
+        }
+    }
+
+    private func severityRow(for options: [SeverityOption]) -> some View {
+        HStack(spacing: SymptomCheckInToken.severityPillSpacing) {
             ForEach(options) { option in
                 SeverityPill(
                     option: option,
