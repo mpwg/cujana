@@ -101,7 +101,7 @@ private struct EntryDaySection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: SpacingToken.md) {
             Text(section.title)
-                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                .font(EntryListToken.dayHeaderFont)
                 .foregroundStyle(EntryListToken.dayHeaderText)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -151,7 +151,7 @@ private struct EntryCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(item.timeText)
-                .font(.system(size: 18, weight: .medium, design: .rounded))
+                .font(EntryListToken.timeFont)
                 .foregroundStyle(EntryListToken.timeText)
 
             FlexibleSymptomChips(items: item.symptoms)
@@ -167,11 +167,11 @@ private struct EntryCard: View {
 
             HStack(alignment: .firstTextBaseline, spacing: SpacingToken.xs) {
                 Image(systemName: item.contextSystemImageName)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(EntryListToken.contextIconFont)
                     .foregroundStyle(EntryListToken.contextText)
 
                 Text(item.contextText)
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .font(EntryListToken.contextFont)
                     .foregroundStyle(EntryListToken.contextText)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -208,7 +208,7 @@ private struct FlexibleSymptomChips: View {
         FlowLayout(spacing: EntryListToken.chipSpacing, rowSpacing: EntryListToken.chipRowSpacing) {
             ForEach(items) { item in
                 Text(item.title)
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .font(EntryListToken.symptomChipFont)
                     .foregroundStyle(item.foreground)
                     .fixedSize(horizontal: true, vertical: false)
                     .padding(.horizontal, EntryListToken.symptomChipPaddingH)

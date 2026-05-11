@@ -60,7 +60,7 @@ private struct UsageDataConsentSheet: View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(alignment: .leading, spacing: 12) {
                 Image(systemName: "chart.line.uptrend.xyaxis")
-                    .font(.system(size: 32, weight: .semibold))
+                    .font(UsageDataConsentToken.iconFont)
                     .foregroundStyle(.teal)
 
                 Text("Nutzungsdaten teilen?")

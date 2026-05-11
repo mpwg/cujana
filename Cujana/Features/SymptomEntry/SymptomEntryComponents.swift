@@ -32,7 +32,7 @@ struct SymptomChip: View {
         Button(action: action) {
             HStack(alignment: .center, spacing: SymptomCheckInToken.symptomPillSpacing) {
                 Image(systemName: option.systemImageName)
-                    .font(.system(size: SymptomCheckInToken.symptomIconSize, weight: .medium, design: .rounded))
+                    .font(SymptomCheckInToken.symptomIconFont)
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(iconColor)
                     .accessibilityHidden(true)
@@ -48,7 +48,7 @@ struct SymptomChip: View {
             .overlay(alignment: .topTrailing) {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: SymptomCheckInToken.symptomCheckmarkSize, weight: .semibold))
+                        .font(SymptomCheckInToken.symptomCheckmarkFont)
                         .foregroundStyle(SymptomCheckInToken.selectedBorder)
                         .opacity(SymptomCheckInToken.symptomCheckmarkOpacity)
                         .padding(SpacingToken.md)
@@ -271,7 +271,7 @@ struct ExpandableDateCard: View {
             Spacer(minLength: SpacingToken.sm)
 
             Image(systemName: "chevron.down")
-                .font(.system(size: SymptomCheckInToken.hintIconSize, weight: .semibold, design: .rounded))
+                .font(SymptomCheckInToken.hintDisclosureIconFont)
                 .foregroundStyle(SymptomCheckInToken.tertiaryText.opacity(SymptomCheckInToken.chevronOpacity))
                 .rotationEffect(.degrees(isExpanded ? 180 : 0))
                 .accessibilityHidden(true)
@@ -327,7 +327,7 @@ struct DateHintBox: View {
     var body: some View {
         HStack(alignment: .top, spacing: SpacingToken.sm) {
             Image(systemName: "clock.arrow.circlepath")
-                .font(.system(size: SymptomCheckInToken.hintIconSize, weight: .medium, design: .rounded))
+                .font(SymptomCheckInToken.hintIconFont)
                 .foregroundStyle(SymptomCheckInToken.accent)
                 .accessibilityHidden(true)
 
