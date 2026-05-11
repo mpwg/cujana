@@ -7,6 +7,7 @@ struct SymptomEntryView: View {
     @Namespace private var symptomSelectionNamespace
     @Namespace private var severitySelectionNamespace
     @State private var isDateExpanded = false
+    @State private var isInfoPresented = false
 
     private let symptomColumns = [
         GridItem(.adaptive(minimum: SymptomCheckInToken.symptomGridMinimumWidth), spacing: SpacingToken.md)
@@ -66,17 +67,24 @@ struct SymptomEntryView: View {
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Image(systemName: "info.circle")
-                        .font(.system(.body, design: .rounded).weight(.medium))
-                        .foregroundStyle(
-                            ColorToken.textSecondary.opacity(SymptomCheckInToken.navigationInfoOpacity)
-                        )
-                        .frame(
-                            width: SymptomCheckInToken.navigationButtonSize,
-                            height: SymptomCheckInToken.navigationButtonSize
-                        )
-                        .accessibilityLabel("Information")
+                    Button {
+                        isInfoPresented = true
+                    } label: {
+                        Image(systemName: "info.circle")
+                            .font(.system(.body, design: .rounded).weight(.medium))
+                            .foregroundStyle(ColorToken.textSecondary)
+                            .frame(
+                                width: SymptomCheckInToken.navigationButtonSize,
+                                height: SymptomCheckInToken.navigationButtonSize
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Information zu Symptomen")
                 }
+            }
+            .sheet(isPresented: $isInfoPresented) {
+                SymptomInfoSheet()
+                    .presentationDetents([.medium])
             }
         }
     }
@@ -85,14 +93,14 @@ struct SymptomEntryView: View {
         VStack(alignment: .leading, spacing: SpacingToken.lg) {
             SectionHeader(
                 title: "Welche Symptome hast du?",
-                subtitle: "Wähle aus, was gerade am besten passt."
+                subtitle: "Du kannst mehrere Symptome auswählen."
             )
 
             LazyVGrid(columns: symptomColumns, spacing: SpacingToken.md) {
                 ForEach(viewModel.symptomOptions) { option in
                     SymptomChip(
                         option: option,
-                        isSelected: viewModel.selectedSymptom == option.type,
+                        isSelected: viewModel.selectedSymptoms.contains(option.type),
                         namespace: symptomSelectionNamespace
                     ) {
                         viewModel.selectSymptom(option.type)
@@ -131,14 +139,7 @@ struct SymptomEntryView: View {
         VStack(alignment: .leading, spacing: SpacingToken.lg) {
             SectionHeader(title: "Notiz", subtitle: "Optional")
 
-            TextEditor(text: $viewModel.note)
-                .font(TypographyToken.body)
-                .foregroundStyle(ColorToken.textPrimary)
-                .frame(minHeight: SymptomCheckInToken.notesMinHeight)
-                .scrollContentBackground(.hidden)
-                .padding(SymptomCheckInToken.notesPadding)
-                .premiumSurface(cornerRadius: SymptomCheckInToken.notesCornerRadius)
-                .accessibilityLabel("Notiz")
+            SymptomNoteField(text: $viewModel.note)
         }
     }
 

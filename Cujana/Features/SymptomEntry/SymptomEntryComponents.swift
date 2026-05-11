@@ -13,7 +13,7 @@ struct SectionHeader: View {
 
             Text(subtitle)
                 .font(TypographyToken.symptomSectionDescription)
-                .foregroundStyle(ColorToken.textSecondary.opacity(SymptomCheckInToken.sectionDescriptionOpacity))
+                .foregroundStyle(ColorToken.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -32,7 +32,7 @@ struct SymptomChip: View {
 
                 Text(option.title)
                     .font(TypographyToken.symptomPill)
-                    .foregroundStyle(isSelected ? SymptomCheckInToken.symptomSelectedText : ColorToken.textPrimary)
+                    .foregroundStyle(isSelected ? SymptomCheckInToken.selectedText : ColorToken.textPrimary)
                     .lineLimit(2)
                     .minimumScaleFactor(SymptomCheckInToken.symptomTextMinimumScale)
                     .multilineTextAlignment(.leading)
@@ -45,30 +45,51 @@ struct SymptomChip: View {
             .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.symptomPillMinHeight, alignment: .leading)
             .background(chipBackground)
             .clipShape(RoundedRectangle(cornerRadius: SymptomCheckInToken.symptomPillCornerRadius, style: .continuous))
+            .overlay(chipBorder)
             .softShadow(chipShadow)
+            .scaleEffect(isSelected ? SymptomCheckInToken.symptomSelectedScale : 1)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(option.title)
+        .accessibilityHint("Mehrfachauswahl möglich")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .sensoryFeedback(.selection, trigger: isSelected)
+        .animation(
+            .spring(
+                response: SymptomCheckInToken.animationDuration,
+                dampingFraction: SymptomCheckInToken.animationDamping
+            ),
+            value: isSelected
+        )
     }
 
     private var icon: some View {
-        Image(systemName: option.systemImageName)
-            .font(.system(size: SymptomCheckInToken.symptomIconSize, weight: .medium, design: .rounded))
-            .symbolRenderingMode(.hierarchical)
-            .foregroundStyle(iconColor)
-            .frame(
-                width: SymptomCheckInToken.symptomIconSize,
-                height: SymptomCheckInToken.symptomIconSize
-            )
+        ZStack(alignment: .topTrailing) {
+            Image(systemName: option.systemImageName)
+                .font(.system(size: SymptomCheckInToken.symptomIconSize, weight: .medium, design: .rounded))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(iconColor)
+                .frame(
+                    width: SymptomCheckInToken.symptomIconSize,
+                    height: SymptomCheckInToken.symptomIconSize
+                )
+
+            if isSelected {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: SymptomCheckInToken.symptomCheckmarkSize, weight: .semibold))
+                    .foregroundStyle(SymptomCheckInToken.selectedBorder)
+                    .offset(x: SpacingToken.sm, y: -SpacingToken.sm)
+                    .accessibilityHidden(true)
+            }
+        }
     }
 
     private var iconColor: Color {
         if isSelected {
-            return SymptomCheckInToken.accent
+            return SymptomCheckInToken.selectedIcon
         }
 
-        return ColorToken.accentPrimary.opacity(SymptomCheckInToken.symptomIconOpacity)
+        return SymptomCheckInToken.accent.opacity(SymptomCheckInToken.symptomUnselectedIconOpacity)
     }
 
     private var chipShadow: ShadowTokenValue {
@@ -85,6 +106,19 @@ struct SymptomChip: View {
             RoundedRectangle(cornerRadius: SymptomCheckInToken.symptomPillCornerRadius, style: .continuous)
                 .fill(ColorToken.cardBackground)
         }
+    }
+
+    private var chipBorder: some View {
+        RoundedRectangle(cornerRadius: SymptomCheckInToken.symptomPillCornerRadius, style: .continuous)
+            .stroke(chipBorderColor, lineWidth: chipBorderWidth)
+    }
+
+    private var chipBorderColor: Color {
+        isSelected ? SymptomCheckInToken.selectedBorder : SymptomCheckInToken.symptomUnselectedBorder
+    }
+
+    private var chipBorderWidth: CGFloat {
+        isSelected ? SymptomCheckInToken.symptomSelectedBorderWidth : SymptomCheckInToken.symptomUnselectedBorderWidth
     }
 }
 
@@ -137,6 +171,14 @@ private struct SeverityPill: View {
         .buttonStyle(.plain)
         .accessibilityLabel(option.title)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .sensoryFeedback(.selection, trigger: isSelected)
+        .animation(
+            .spring(
+                response: SymptomCheckInToken.animationDuration,
+                dampingFraction: SymptomCheckInToken.animationDamping
+            ),
+            value: isSelected
+        )
     }
 
     @ViewBuilder
@@ -172,6 +214,7 @@ struct ExpandableDateCard: View {
             }
             .padding(SymptomCheckInToken.fieldContainerPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(minHeight: isExpanded ? nil : SymptomCheckInToken.dateCardCollapsedHeight)
             .background(ColorToken.cardBackground)
             .clipShape(
                 RoundedRectangle(cornerRadius: SymptomCheckInToken.dateCardCornerRadius, style: .continuous)
@@ -226,6 +269,7 @@ struct ExpandableDateCard: View {
                 .tint(SymptomCheckInToken.accent)
                 .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.datePickerMinHeight)
         }
+        .padding(.top, SpacingToken.xs)
     }
 
     private var dateSummary: String {
@@ -266,6 +310,42 @@ struct DateHintBox: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(SymptomCheckInToken.hintBackground)
         .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
+    }
+}
+
+struct SymptomNoteField: View {
+    @Binding var text: String
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            if text.isEmpty {
+                Text("Optional etwas ergänzen ...")
+                    .font(TypographyToken.body)
+                    .foregroundStyle(ColorToken.textTertiary)
+                    .padding(SymptomCheckInToken.notesPadding)
+                    .accessibilityHidden(true)
+            }
+
+            TextEditor(text: $text)
+                .font(TypographyToken.body)
+                .foregroundStyle(ColorToken.textPrimary)
+                .scrollContentBackground(.hidden)
+                .padding(SymptomCheckInToken.notesPadding)
+                .background(Color.clear)
+        }
+        .frame(minHeight: SymptomCheckInToken.notesMinHeight)
+        .background(ColorToken.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: SymptomCheckInToken.notesCornerRadius, style: .continuous))
+        .overlay(noteBorder)
+        .accessibilityLabel("Notiz")
+    }
+
+    private var noteBorder: some View {
+        RoundedRectangle(cornerRadius: SymptomCheckInToken.notesCornerRadius, style: .continuous)
+            .stroke(
+                SymptomCheckInToken.symptomUnselectedBorder,
+                lineWidth: SymptomCheckInToken.symptomUnselectedBorderWidth
+            )
     }
 }
 
@@ -320,7 +400,7 @@ private struct PrimaryCTAButtonStyle: ButtonStyle {
 
     private func buttonBackground(configuration: Configuration) -> Color {
         if isEnabled == false {
-            return SemanticColorToken.disabledButtonBackground
+            return SymptomCheckInToken.disabledButtonBackground
         }
 
         return configuration.isPressed ? SymptomCheckInToken.saveButtonPressedBackground : SymptomCheckInToken.accent

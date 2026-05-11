@@ -182,6 +182,7 @@ enum TypographyToken {
     static let symptomPill = Font.system(size: 15, weight: .medium, design: .rounded)
     static let symptomSectionTitle = Font.system(size: 18, weight: .semibold, design: .rounded)
     static let symptomSectionDescription = Font.system(size: 14, weight: .regular, design: .rounded)
+    static let symptomInfoTitle = Font.system(size: 22, weight: .semibold, design: .rounded)
     static let severityControl = Font.system(size: 14, weight: .semibold, design: .rounded)
     static let hourlyHour = Font.system(size: 12, weight: .medium, design: .rounded)
     static let hourlySeverity = Font.system(size: 14, weight: .semibold, design: .rounded)

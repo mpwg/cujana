@@ -4,7 +4,7 @@ import Observation
 @MainActor
 @Observable
 final class SymptomEntryViewModel {
-    var selectedSymptom: SymptomType?
+    var selectedSymptoms: Set<SymptomType> = []
     var selectedSeverityLevel: Int?
     var note = ""
     var entryDate = Date()
@@ -30,11 +30,16 @@ final class SymptomEntryViewModel {
     }
 
     var canSubmit: Bool {
-        selectedSymptom != nil && selectedSeverityLevel != nil && !isSaving
+        selectedSymptoms.isEmpty == false && selectedSeverityLevel != nil && !isSaving
     }
 
     func selectSymptom(_ symptom: SymptomType) {
-        selectedSymptom = symptom
+        if selectedSymptoms.contains(symptom) {
+            selectedSymptoms.remove(symptom)
+        } else {
+            selectedSymptoms.insert(symptom)
+        }
+
         resetTransientStatus()
     }
 
@@ -44,8 +49,8 @@ final class SymptomEntryViewModel {
     }
 
     func submit() async {
-        guard let symptom = selectedSymptom else {
-            saveStatus = .failure("Bitte wähle zuerst ein Symptom aus.")
+        guard selectedSymptoms.isEmpty == false else {
+            saveStatus = .failure("Bitte wähle zuerst mindestens ein Symptom aus.")
             return
         }
 
@@ -57,19 +62,24 @@ final class SymptomEntryViewModel {
         saveStatus = .saving
 
         do {
-            let entry = try AllergySymptomEntry(
-                date: entryDate,
-                symptomType: symptom,
-                severity: severity,
-                note: note
-            )
+            let savedSymptomCount = selectedSymptoms.count
 
-            try await saveUseCase.execute(entry)
+            for symptom in selectedSymptoms.sorted(by: symptomSortOrder) {
+                let entry = try AllergySymptomEntry(
+                    date: entryDate,
+                    symptomType: symptom,
+                    severity: severity,
+                    note: note
+                )
+
+                try await saveUseCase.execute(entry)
+            }
+
             note = ""
-            selectedSymptom = nil
+            selectedSymptoms.removeAll()
             selectedSeverityLevel = nil
             entryDate = Date()
-            saveStatus = .success("Dein Symptom wurde gespeichert.")
+            saveStatus = .success(successMessage(symptomCount: savedSymptomCount))
         } catch SymptomEntryError.noteTooLong {
             saveStatus = .failure("Die Notiz ist zu lang. Bitte kürze sie etwas.")
         } catch {
@@ -90,5 +100,20 @@ final class SymptomEntryViewModel {
         if saveStatus != .saving {
             saveStatus = .idle
         }
+    }
+
+    private func successMessage(symptomCount: Int) -> String {
+        symptomCount == 1
+            ? "Dein Symptom wurde gespeichert."
+            : "Deine Symptome wurden gespeichert."
+    }
+
+    private func symptomSortOrder(first: SymptomType, second: SymptomType) -> Bool {
+        guard let firstIndex = symptomOptions.firstIndex(where: { $0.type == first }),
+              let secondIndex = symptomOptions.firstIndex(where: { $0.type == second }) else {
+            return false
+        }
+
+        return firstIndex < secondIndex
     }
 }
