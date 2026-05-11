@@ -11,9 +11,10 @@ struct AppDependencies {
     static func production() throws -> AppDependencies {
         let locationProvider = CoreLocationCoordinateProvider()
         let modelContainer = try CujanaPersistence.makeProductionModelContainer()
+        let pollenResponseCache = PolleninformationPollenResponseCache()
 
         return AppDependencies(
-            pollenRepository: PolleninformationPollenRepository(),
+            pollenRepository: PolleninformationPollenRepository(cache: pollenResponseCache),
             weatherRepository: WeatherKitWeatherRepository(),
             environmentalDataRepository: LocalEnvironmentalDataRepository(modelContainer: modelContainer),
             symptomEntryRepository: LocalSymptomEntryRepository(modelContainer: modelContainer),

@@ -10,7 +10,7 @@ nonisolated public struct PolleninformationPollenRepository: PollenRepository {
 
     public init(
         apiClient: any PolleninformationPollenAPIClient = PolleninformationURLSessionClient(),
-        cache: PolleninformationPollenResponseCache = .production,
+        cache: PolleninformationPollenResponseCache,
         now: @escaping @Sendable () -> Date = Date.init,
         cacheDuration: TimeInterval = Self.defaultCacheDuration
     ) {
@@ -65,8 +65,6 @@ nonisolated public struct PolleninformationPollenRepository: PollenRepository {
 }
 
 public actor PolleninformationPollenResponseCache {
-    public static let production = PolleninformationPollenResponseCache()
-
     private struct StoredResponse: Codable {
         let coordinateKey: String
         let response: PolleninformationPollenResponseDTO

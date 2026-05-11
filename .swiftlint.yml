@@ -133,6 +133,22 @@ custom_rules:
     message: "Avoid global singletons for app services. Inject dependencies from App/Composition."
     severity: error
 
+  no_static_mutable_state:
+    name: "No static mutable state"
+    included:
+      - "Cujana/.*\\.swift"
+    regex: "\\bstatic\\s+var\\s+[A-Za-z_][A-Za-z0-9_]*\\s*(:[^=\\n]+)?="
+    message: "Avoid global mutable state in app code. Inject mutable services from App/Composition."
+    severity: error
+
+  no_unsafe:
+    name: "No unsafe Swift escape hatches"
+    included:
+      - "Cujana/.*\\.swift"
+    regex: "\\bunsafe\\b"
+    message: "Avoid unsafe Swift escape hatches. Keep isolation and memory-safety checks enabled."
+    severity: error
+
   no_force_try_or_cast:
     name: "No force try or force cast"
     included:
