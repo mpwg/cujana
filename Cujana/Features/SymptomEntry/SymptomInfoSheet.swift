@@ -32,7 +32,7 @@ struct SymptomInfoSheet: View {
 
                 Spacer()
             }
-            .padding(SymptomCheckInToken.fieldContainerPadding)
+            .padding(InputToken.padding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(ColorToken.backgroundPrimary.ignoresSafeArea())
             .toolbar {

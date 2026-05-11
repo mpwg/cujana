@@ -32,6 +32,7 @@ struct SymptomChip: View {
                     .font(.system(size: SymptomCheckInToken.symptomIconSize, weight: .medium, design: .rounded))
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(iconColor)
+                    .frame(width: SymptomCheckInToken.symptomIconFrameWidth)
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 0) {

@@ -11,7 +11,11 @@ struct SymptomEntryView: View {
 
     private let symptomColumns = [
         GridItem(
-            .adaptive(minimum: SymptomCheckInToken.symptomGridMinimumWidth),
+            .flexible(minimum: SymptomCheckInToken.symptomGridMinimumWidth),
+            spacing: SymptomCheckInToken.symptomPillGridSpacing
+        ),
+        GridItem(
+            .flexible(minimum: SymptomCheckInToken.symptomGridMinimumWidth),
             spacing: SymptomCheckInToken.symptomPillGridSpacing
         )
     ]
@@ -102,7 +106,7 @@ struct SymptomEntryView: View {
     }
 
     private var symptomSection: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.md) {
+        SymptomGroupedSection {
             SectionHeader(
                 title: "Welche Symptome hast du?",
                 subtitle: "Du kannst mehrere Symptome auswählen."
@@ -123,7 +127,7 @@ struct SymptomEntryView: View {
     }
 
     private var severitySection: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.md) {
+        SymptomGroupedSection {
             SectionHeader(title: "Wie belastend sind die Symptome?", subtitle: "1 ist sehr mild, 5 sehr stark.")
 
             SeveritySelector(
@@ -173,5 +177,23 @@ struct SymptomEntryView: View {
                 await viewModel.submit()
             }
         }
+    }
+}
+
+private struct SymptomGroupedSection<Content: View>: View {
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
+            content
+        }
+        .padding(InputToken.padding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(ColorToken.cardBackground.opacity(SurfaceStyleToken.strokeOpacity))
+        .clipShape(RoundedRectangle(cornerRadius: SpacingToken.xxl, style: .continuous))
     }
 }
