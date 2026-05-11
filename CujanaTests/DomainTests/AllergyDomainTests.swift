@@ -55,7 +55,7 @@ struct AllergyDomainTests {
         )
         let symptomEntry = try AllergySymptomEntry(
             date: Date(timeIntervalSince1970: 5_400),
-            symptomType: .itchyEyes,
+            symptoms: [.itchyEyes],
             severity: .moderate
         )
 
@@ -86,7 +86,7 @@ struct AllergyDomainTests {
         )
         let symptomEntry = try AllergySymptomEntry(
             date: Date(timeIntervalSince1970: 5_400),
-            symptomType: .sneezing,
+            symptoms: [.sneezing],
             severity: .mild
         )
 
@@ -105,12 +105,32 @@ struct AllergyDomainTests {
     @Test func symptomEntryNormalizesBlankNote() throws {
         let entry = try AllergySymptomEntry(
             date: Date(timeIntervalSince1970: 0),
-            symptomType: .itchyEyes,
+            symptoms: [.itchyEyes],
             severity: .moderate,
             note: "   \n  "
         )
 
         #expect(entry.note == nil)
+    }
+
+    @Test func symptomEntryStoresMultipleSymptomsAsOneCheckIn() throws {
+        let entry = try AllergySymptomEntry(
+            date: Date(timeIntervalSince1970: 0),
+            symptoms: [.sneezing, .itchyEyes, .sneezing],
+            severity: .moderate
+        )
+
+        #expect(entry.symptoms == [.sneezing, .itchyEyes])
+    }
+
+    @Test func symptomEntryRejectsEmptySymptoms() {
+        #expect(throws: SymptomEntryError.emptySymptoms) {
+            _ = try AllergySymptomEntry(
+                date: Date(timeIntervalSince1970: 0),
+                symptoms: [],
+                severity: .mild
+            )
+        }
     }
 
     @Test func symptomEntryRejectsTooLongNote() {
@@ -119,7 +139,7 @@ struct AllergyDomainTests {
         #expect(throws: SymptomEntryError.noteTooLong(maxLength: AllergySymptomEntry.maximumNoteLength)) {
             _ = try AllergySymptomEntry(
                 date: Date(timeIntervalSince1970: 0),
-                symptomType: .sneezing,
+                symptoms: [.sneezing],
                 severity: .mild,
                 note: note
             )
@@ -159,7 +179,7 @@ struct AllergyDomainTests {
         let loadUseCase = LoadAllergySymptomEntriesUseCase(repository: repository)
         let entry = try AllergySymptomEntry(
             date: Date(timeIntervalSince1970: 1_000),
-            symptomType: .runnyNose,
+            symptoms: [.runnyNose],
             severity: .mild
         )
 
@@ -184,7 +204,7 @@ struct AllergyDomainTests {
         )
         let symptomEntry = try AllergySymptomEntry(
             date: forecast.validFrom,
-            symptomType: .wateryEyes,
+            symptoms: [.wateryEyes],
             severity: .severe,
             coordinate: coordinate
         )
@@ -221,7 +241,7 @@ struct AllergyDomainTests {
         )
         let symptomEntry = try AllergySymptomEntry(
             date: startDate,
-            symptomType: .wateryEyes,
+            symptoms: [.wateryEyes],
             severity: .severe,
             coordinate: coordinate
         )

@@ -48,9 +48,9 @@ struct EntryListView: View {
         VStack(alignment: .leading, spacing: SpacingToken.section) {
             header(content)
 
-            LazyVStack(spacing: SpacingToken.lg) {
-                ForEach(content.items) { item in
-                    EntryCard(item: item)
+            LazyVStack(alignment: .leading, spacing: SpacingToken.xl) {
+                ForEach(content.sections) { section in
+                    EntryDaySection(section: section)
                 }
             }
         }
@@ -99,7 +99,7 @@ struct EntryListView: View {
             EntryPlaceholderRow(
                 systemImageName: "list.bullet.rectangle",
                 title: "Noch keine Einträge",
-                subtitle: "Sobald du Symptome erfasst, erscheinen sie hier mit Datum, Wetterstatus und Polleninfos."
+                subtitle: "Sobald du Symptome erfasst, erscheinen deine Check-ins hier als ruhiges Journal."
             )
             .cujanaCard()
         }
@@ -132,98 +132,90 @@ struct EntryListView: View {
     }
 }
 
-private struct EntryCard: View {
-    let item: EntryListItem
+private struct EntryDaySection: View {
+    let section: EntryListDaySection
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.lg) {
-            HStack(alignment: .top, spacing: SpacingToken.md) {
-                EntryIcon(systemImageName: item.symptomSystemImageName, background: item.symptomBackground)
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
+            Text(section.title.uppercased())
+                .font(TypographyToken.caption)
+                .foregroundStyle(ColorToken.textTertiary)
 
-                VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                    HStack(alignment: .firstTextBaseline, spacing: SpacingToken.sm) {
-                        Text(item.symptomTitle)
-                            .font(TypographyToken.headline)
-                            .foregroundStyle(ColorToken.textPrimary)
-
-                        Spacer(minLength: SpacingToken.sm)
-
-                        Text(item.severityText)
-                            .font(TypographyToken.footnote)
-                            .foregroundStyle(ColorToken.accentPrimary)
-                            .cujanaChip()
-                    }
-
-                    Text("\(item.dateText), \(item.timeText)")
-                        .font(TypographyToken.footnote)
-                        .foregroundStyle(ColorToken.textSecondary)
-
-                    if let noteText = item.noteText {
-                        Text(noteText)
-                            .font(TypographyToken.footnote)
-                            .foregroundStyle(ColorToken.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
-
-            Divider()
-
-            EntryInfoBlock(
-                systemImageName: "cloud.sun",
-                title: item.weatherTitle,
-                subtitle: item.weatherDescription
-            )
-
-            VStack(alignment: .leading, spacing: SpacingToken.md) {
-                EntryInfoBlock(
-                    systemImageName: "leaf",
-                    title: "Polleninfos",
-                    subtitle: item.pollenItems.isEmpty
-                        ? "Keine Pollenwerte für dieses Datum."
-                        : "Belastung am Tag des Eintrags."
-                )
-
-                if !item.pollenItems.isEmpty {
-                    FlexiblePollenChips(items: item.pollenItems)
+            LazyVStack(spacing: SpacingToken.md) {
+                ForEach(section.entries) { item in
+                    EntryCard(item: item)
                 }
             }
         }
-        .cujanaCard()
     }
 }
 
-private struct EntryInfoBlock: View {
-    let systemImageName: String
-    let title: String
-    let subtitle: String
+private struct EntryCard: View {
+    let item: JournalEntryItem
 
     var body: some View {
-        HStack(alignment: .top, spacing: SpacingToken.md) {
-            EntryIcon(systemImageName: systemImageName, background: ChipToken.calmBackground)
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
+            HStack(alignment: .top, spacing: SpacingToken.md) {
+                VStack(alignment: .leading, spacing: SpacingToken.xs) {
+                    Text(item.dateText)
+                        .font(TypographyToken.headline)
+                        .foregroundStyle(ColorToken.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
 
-            VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                Text(title)
-                    .font(TypographyToken.bodyEmphasized)
-                    .foregroundStyle(ColorToken.textPrimary)
+                    Text(item.timeText)
+                        .font(TypographyToken.caption)
+                        .foregroundStyle(ColorToken.textSecondary)
+                }
 
-                Text(subtitle)
+                Spacer(minLength: SpacingToken.sm)
+
+                Text(item.severityText)
+                    .font(TypographyToken.caption)
+                    .foregroundStyle(ColorToken.accentPrimary)
+                    .padding(.horizontal, EntryListToken.severityPillPaddingH)
+                    .frame(height: EntryListToken.severityPillHeight)
+                    .background(item.severityBackground)
+                    .clipShape(Capsule())
+            }
+
+            FlexibleSymptomChips(items: item.symptoms)
+
+            if let noteText = item.noteText {
+                Text(noteText)
                     .font(TypographyToken.footnote)
                     .foregroundStyle(ColorToken.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+
+            if let contextText = item.contextText {
+                HStack(spacing: SpacingToken.xs) {
+                    Image(systemName: item.contextSystemImageName)
+                        .font(TypographyToken.caption)
+                        .foregroundStyle(ColorToken.textTertiary)
+
+                    Text(contextText)
+                        .font(TypographyToken.caption)
+                        .foregroundStyle(ColorToken.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
+        .padding(EntryListToken.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(ColorToken.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: EntryListToken.cardCornerRadius, style: .continuous))
+        .softShadow(EntryListToken.cardShadow)
     }
 }
 
-private struct FlexiblePollenChips: View {
-    let items: [EntryListPollenItem]
+private struct FlexibleSymptomChips: View {
+    let items: [JournalEntrySymptomItem]
 
     var body: some View {
         LazyVGrid(
             columns: [
                 GridItem(
-                    .adaptive(minimum: EntryListToken.pollenChipGridMinimumWidth),
+                    .adaptive(minimum: EntryListToken.symptomChipGridMinimumWidth),
                     spacing: SpacingToken.sm,
                     alignment: .leading
                 )
@@ -232,24 +224,16 @@ private struct FlexiblePollenChips: View {
             spacing: SpacingToken.sm
         ) {
             ForEach(items) { item in
-                VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                    Text(item.title)
-                        .font(TypographyToken.footnote)
-                        .foregroundStyle(ColorToken.textPrimary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-
-                    Text(item.levelText)
-                        .font(TypographyToken.caption)
-                        .foregroundStyle(ColorToken.textSecondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                }
-                .padding(.horizontal, SpacingToken.md)
-                .padding(.vertical, SpacingToken.sm)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Text(item.title)
+                    .font(TypographyToken.caption)
+                    .foregroundStyle(ColorToken.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
+                    .padding(.horizontal, EntryListToken.symptomChipPaddingH)
+                    .frame(height: EntryListToken.symptomChipHeight)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 .background(item.background)
-                .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
+                    .clipShape(Capsule())
             }
         }
     }

@@ -12,7 +12,7 @@ struct LocalSymptomEntryRepositoryTests {
         let entry = try AllergySymptomEntry(
             id: entryID,
             date: Date(timeIntervalSince1970: 1_000),
-            symptomType: .itchyEyes,
+            symptoms: [.itchyEyes],
             severity: .moderate,
             note: "Draußen stärker gespürt.",
             coordinate: coordinate
@@ -25,7 +25,7 @@ struct LocalSymptomEntryRepositoryTests {
             StoredSymptomEntry(
                 id: entry.id,
                 date: entry.date,
-                symptomTypeRawValue: SymptomType.itchyEyes.rawValue,
+                symptomTypeRawValues: [SymptomType.itchyEyes.rawValue],
                 severityRawValue: SymptomSeverity.moderate.rawValue,
                 note: "Draußen stärker gespürt.",
                 latitude: coordinate.latitude,
@@ -51,13 +51,13 @@ struct LocalSymptomEntryRepositoryTests {
         let inRangeEntry = try AllergySymptomEntry(
             id: inRangeEntryID,
             date: Date(timeIntervalSince1970: 1_000),
-            symptomType: .runnyNose,
+            symptoms: [.runnyNose],
             severity: .mild
         )
         let laterEntry = try AllergySymptomEntry(
             id: laterEntryID,
             date: Date(timeIntervalSince1970: 2_000),
-            symptomType: .sneezing,
+            symptoms: [.sneezing],
             severity: .severe
         )
         let store = FakeSymptomEntryStore(
@@ -74,6 +74,30 @@ struct LocalSymptomEntryRepositoryTests {
         )
 
         #expect(entries == [inRangeEntry])
+    }
+
+    @Test func saveAndLoadPreservesMultipleSymptomsInOneCheckIn() async throws {
+        let store = FakeSymptomEntryStore()
+        let repository = LocalSymptomEntryRepository(store: store)
+        let entry = try AllergySymptomEntry(
+            date: Date(timeIntervalSince1970: 1_000),
+            symptoms: [.blockedNose, .coughing, .headache],
+            severity: .severe,
+            note: "Morgens gebündelt erfasst."
+        )
+
+        try await repository.save(entry)
+        let entries = try await repository.symptomEntries(
+            from: Date(timeIntervalSince1970: 0),
+            to: Date(timeIntervalSince1970: 2_000)
+        )
+
+        #expect(entries == [entry])
+        #expect((await store.entries()).first?.symptomTypeRawValues == [
+            SymptomType.blockedNose.rawValue,
+            SymptomType.coughing.rawValue,
+            SymptomType.headache.rawValue
+        ])
     }
 
     @Test func loadMapsStoreFailuresToSymptomEntryError() async {
@@ -95,7 +119,7 @@ struct LocalSymptomEntryRepositoryTests {
         )
         let entry = try AllergySymptomEntry(
             date: Date(timeIntervalSince1970: 0),
-            symptomType: .fatigue,
+            symptoms: [.fatigue],
             severity: .moderate
         )
 
@@ -107,17 +131,17 @@ struct LocalSymptomEntryRepositoryTests {
     @Test func inMemoryRepositoryFiltersEntriesByInclusiveDateRange() async throws {
         let earlyEntry = try AllergySymptomEntry(
             date: Date(timeIntervalSince1970: 500),
-            symptomType: .itchyEyes,
+            symptoms: [.itchyEyes],
             severity: .mild
         )
         let startEntry = try AllergySymptomEntry(
             date: Date(timeIntervalSince1970: 1_000),
-            symptomType: .runnyNose,
+            symptoms: [.runnyNose],
             severity: .moderate
         )
         let endEntry = try AllergySymptomEntry(
             date: Date(timeIntervalSince1970: 2_000),
-            symptomType: .sneezing,
+            symptoms: [.sneezing],
             severity: .severe
         )
         let repository = InMemorySymptomEntryRepository(

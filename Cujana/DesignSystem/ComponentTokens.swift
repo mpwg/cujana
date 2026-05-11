@@ -221,7 +221,18 @@ enum ForecastDetailToken {
 }
 
 enum EntryListToken {
-    static let pollenChipGridMinimumWidth: CGFloat = 132
+    static let cardPadding: CGFloat = 18
+    static let cardCornerRadius: CGFloat = 28
+    static let cardShadow = ShadowTokenValue(
+        color: Color.black.opacity(0.025),
+        radius: 16,
+        y: 6
+    )
+    static let symptomChipGridMinimumWidth: CGFloat = 118
+    static let symptomChipHeight: CGFloat = 34
+    static let symptomChipPaddingH: CGFloat = 12
+    static let severityPillHeight: CGFloat = 28
+    static let severityPillPaddingH: CGFloat = 10
 }
 
 enum TabBarToken {

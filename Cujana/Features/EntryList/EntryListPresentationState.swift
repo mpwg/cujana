@@ -3,31 +3,34 @@ import SwiftUI
 struct EntryListContent: Equatable {
     let title: String
     let subtitle: String
-    let items: [EntryListItem]
+    let sections: [EntryListDaySection]
     let generatedAtText: String
 }
 
-struct EntryListItem: Identifiable, Equatable {
-    let id: UUID
-    let dateText: String
-    let timeText: String
-    let symptomTitle: String
-    let severityText: String
-    let noteText: String?
-    let weatherTitle: String
-    let weatherDescription: String
-    let pollenItems: [EntryListPollenItem]
-    let symptomSystemImageName: String
-    let symptomBackground: Color
+struct EntryListDaySection: Identifiable, Equatable {
+    let id: String
+    let title: String
+    let entries: [JournalEntryItem]
 }
 
-struct EntryListPollenItem: Identifiable, Equatable {
-    let type: PollenType
+struct JournalEntryItem: Identifiable, Equatable {
+    let id: String
+    let dateText: String
+    let timeText: String
+    let severityText: String
+    let noteText: String?
+    let contextText: String?
+    let contextSystemImageName: String
+    let symptoms: [JournalEntrySymptomItem]
+    let severityBackground: Color
+}
+
+struct JournalEntrySymptomItem: Identifiable, Equatable {
+    let type: SymptomType
     let title: String
-    let levelText: String
     let background: Color
 
-    var id: PollenType {
+    var id: SymptomType {
         type
     }
 }

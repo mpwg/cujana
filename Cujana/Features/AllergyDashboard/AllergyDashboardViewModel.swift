@@ -409,14 +409,24 @@ private extension AllergyDashboardViewModel {
             .map { entry in
                 SymptomDashboardItem(
                     id: entry.id,
-                    title: AllergyDashboardPresentationState.title(for: entry.symptomType),
+                    title: symptomTitle(for: entry.symptoms),
                     severityText: AllergyDashboardPresentationState.severityText(for: entry.severity),
                     dateText: dateText(for: entry.date),
                     noteText: entry.note,
-                    systemImageName: systemImageName(for: entry.symptomType),
+                    systemImageName: systemImageName(for: entry.symptoms[0]),
                     background: AllergyDashboardPresentationState.symptomBackground(for: entry.severity)
                 )
             }
+    }
+
+    private func symptomTitle(for symptoms: [SymptomType]) -> String {
+        let titles = symptoms.map { AllergyDashboardPresentationState.title(for: $0) }
+
+        guard titles.count > 2 else {
+            return titles.joined(separator: ", ")
+        }
+
+        return "\(titles[0]), \(titles[1]) +\(titles.count - 2)"
     }
 
     private func startOfHistory(for date: Date) -> Date {

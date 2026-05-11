@@ -21,7 +21,7 @@ enum AppDemoData {
                     daysOffset: 0,
                     hour: 7,
                     minute: 25,
-                    symptomType: .itchyEyes,
+                    symptoms: [.itchyEyes, .coughing, .headache],
                     severity: .moderate,
                     note: "Nach dem Weg durch den Park deutlich stärker."
                 )
@@ -32,7 +32,7 @@ enum AppDemoData {
                     daysOffset: -1,
                     hour: 21,
                     minute: 10,
-                    symptomType: .blockedNose,
+                    symptoms: [.blockedNose],
                     severity: .mild,
                     note: "Fenster am Abend länger offen gelassen."
                 )
@@ -43,7 +43,7 @@ enum AppDemoData {
                     daysOffset: -2,
                     hour: 16,
                     minute: 40,
-                    symptomType: .sneezing,
+                    symptoms: [.sneezing],
                     severity: .severe,
                     note: "Nach Rasenmähen im Innenhof."
                 )
@@ -164,9 +164,27 @@ enum AppDemoData {
         let daysOffset: Int
         let hour: Int
         let minute: Int
-        let symptomType: SymptomType
+        let symptoms: [SymptomType]
         let severity: SymptomSeverity
         let note: String
+
+        init(
+            id: String,
+            daysOffset: Int,
+            hour: Int,
+            minute: Int,
+            symptoms: [SymptomType],
+            severity: SymptomSeverity,
+            note: String
+        ) {
+            self.id = id
+            self.daysOffset = daysOffset
+            self.hour = hour
+            self.minute = minute
+            self.symptoms = symptoms
+            self.severity = severity
+            self.note = note
+        }
     }
 
     private static func makeSymptomEntry(seed: SymptomEntrySeed) -> AllergySymptomEntry {
@@ -174,7 +192,7 @@ enum AppDemoData {
             return try AllergySymptomEntry(
                 id: UUID(uuidString: seed.id) ?? UUID(),
                 date: makeRelativeDate(daysOffset: seed.daysOffset, hour: seed.hour, minute: seed.minute),
-                symptomType: seed.symptomType,
+                symptoms: seed.symptoms,
                 severity: seed.severity,
                 note: seed.note,
                 coordinate: coordinate

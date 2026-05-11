@@ -356,7 +356,7 @@ private extension AllergyDashboardViewModelTests {
         try AllergySymptomEntry(
             id: UUID(uuidString: "7B4D4D42-A192-4873-8C2C-2E8103536787") ?? UUID(),
             date: date,
-            symptomType: .itchyEyes,
+            symptoms: [.itchyEyes],
             severity: .severe,
             note: "Abends stärker.",
             coordinate: coordinate
@@ -366,7 +366,7 @@ private extension AllergyDashboardViewModelTests {
     private func symptom(date: Date, type: SymptomType) throws -> AllergySymptomEntry {
         try AllergySymptomEntry(
             date: date,
-            symptomType: type,
+            symptoms: [type],
             severity: .moderate
         )
     }

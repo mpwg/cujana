@@ -3,7 +3,7 @@ import Foundation
 nonisolated struct StoredSymptomEntry: Codable, Equatable, Sendable {
     let id: UUID
     let date: Date
-    let symptomTypeRawValue: String
+    let symptomTypeRawValues: [String]
     let severityRawValue: Int
     let note: String?
     let latitude: Double?
@@ -12,7 +12,7 @@ nonisolated struct StoredSymptomEntry: Codable, Equatable, Sendable {
     init(entry: AllergySymptomEntry) {
         id = entry.id
         date = entry.date
-        symptomTypeRawValue = entry.symptomType.rawValue
+        symptomTypeRawValues = entry.symptoms.map(\.rawValue)
         severityRawValue = entry.severity.rawValue
         note = entry.note
         latitude = entry.coordinate?.latitude
@@ -22,7 +22,7 @@ nonisolated struct StoredSymptomEntry: Codable, Equatable, Sendable {
     init(
         id: UUID,
         date: Date,
-        symptomTypeRawValue: String,
+        symptomTypeRawValues: [String],
         severityRawValue: Int,
         note: String?,
         latitude: Double?,
@@ -30,7 +30,7 @@ nonisolated struct StoredSymptomEntry: Codable, Equatable, Sendable {
     ) {
         self.id = id
         self.date = date
-        self.symptomTypeRawValue = symptomTypeRawValue
+        self.symptomTypeRawValues = symptomTypeRawValues
         self.severityRawValue = severityRawValue
         self.note = note
         self.latitude = latitude
@@ -38,14 +38,15 @@ nonisolated struct StoredSymptomEntry: Codable, Equatable, Sendable {
     }
 
     func domainEntry() throws -> AllergySymptomEntry {
-        guard let symptomType = SymptomType(rawValue: symptomTypeRawValue) else {
+        let symptoms = symptomTypeRawValues.compactMap(SymptomType.init(rawValue:))
+        guard symptoms.count == symptomTypeRawValues.count else {
             throw SymptomEntryError.storageUnavailable
         }
 
         return try AllergySymptomEntry(
             id: id,
             date: date,
-            symptomType: symptomType,
+            symptoms: symptoms,
             severity: SymptomSeverity(rawValue: severityRawValue),
             note: note,
             coordinate: coordinate()

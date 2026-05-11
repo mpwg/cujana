@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import SwiftUI
 
 @MainActor
 @Observable
@@ -90,40 +91,98 @@ final class EntryListViewModel {
             title: "Alle Einträge",
             subtitle: entries.isEmpty
                 ? "Noch keine Symptome erfasst."
-                : "\(entries.count) Einträge mit Datum, Wetterstatus und Pollenlage.",
-            items: entries.map { entry in
-                makeItem(from: entry, pollenForecasts: pollenForecasts)
-            },
+                : "\(journalEntries(from: entries).count) Check-ins nach Tagen sortiert.",
+            sections: makeSections(entries: entries, pollenForecasts: pollenForecasts),
             generatedAtText: "Aktualisiert \(relativeText(for: currentDate, currentDate: currentDate))"
         )
     }
 
-    private func makeItem(
-        from entry: AllergySymptomEntry,
+    private func makeSections(
+        entries: [AllergySymptomEntry],
         pollenForecasts: [PollenForecast]
-    ) -> EntryListItem {
-        EntryListItem(
-            id: entry.id,
+    ) -> [EntryListDaySection] {
+        let journalEntries = journalEntries(from: entries)
+        let groupedByDay = Dictionary(grouping: journalEntries) { entry in
+            calendar.startOfDay(for: entry.date)
+        }
+
+        return groupedByDay.keys
+            .sorted(by: >)
+            .map { day in
+                let entriesForDay = groupedByDay[day, default: []]
+                    .sorted { $0.date > $1.date }
+                    .map { entry in
+                        makeItem(from: entry, pollenForecasts: pollenForecasts)
+                    }
+
+                return EntryListDaySection(
+                    id: day.ISO8601Format(),
+                    title: sectionTitle(for: day),
+                    entries: entriesForDay
+                )
+            }
+    }
+
+    private func journalEntries(from entries: [AllergySymptomEntry]) -> [JournalEntry] {
+        Dictionary(grouping: entries, by: \.date)
+            .values
+            .map { entriesAtDate in
+                let sortedEntries = entriesAtDate.sorted { first, second in
+                    symptomSortOrder(first: first.symptoms[0], second: second.symptoms[0])
+                }
+                let representativeEntry = sortedEntries[0]
+                let symptoms = sortedEntries
+                    .flatMap(\.symptoms)
+                    .reduce(into: [SymptomType]()) { result, symptom in
+                        if result.contains(symptom) == false {
+                            result.append(symptom)
+                        }
+                    }
+                    .sorted(by: symptomSortOrder)
+                let note = sortedEntries.compactMap(\.note).first
+                let strongestSeverity = sortedEntries.map(\.severity).max() ?? representativeEntry.severity
+
+                return JournalEntry(
+                    date: representativeEntry.date,
+                    symptoms: symptoms,
+                    severity: strongestSeverity,
+                    note: note
+                )
+            }
+            .sorted { $0.date > $1.date }
+    }
+
+    private func makeItem(
+        from entry: JournalEntry,
+        pollenForecasts: [PollenForecast]
+    ) -> JournalEntryItem {
+        JournalEntryItem(
+            id: entry.date.ISO8601Format(),
             dateText: dateText(for: entry.date),
             timeText: entry.date.formatted(.dateTime.hour().minute()),
-            symptomTitle: AllergyDashboardPresentationState.title(for: entry.symptomType),
             severityText: AllergyDashboardPresentationState.severityText(for: entry.severity),
             noteText: entry.note,
-            weatherTitle: "Wetterdaten",
-            weatherDescription: "Noch nicht angebunden.",
-            pollenItems: makePollenItems(for: entry.date, pollenForecasts: pollenForecasts),
-            symptomSystemImageName: systemImageName(for: entry.symptomType),
-            symptomBackground: AllergyDashboardPresentationState.symptomBackground(for: entry.severity)
+            contextText: contextText(for: entry.date, pollenForecasts: pollenForecasts),
+            contextSystemImageName: "cloud.sun",
+            symptoms: entry.symptoms.map { symptom in
+                JournalEntrySymptomItem(
+                    type: symptom,
+                    title: AllergyDashboardPresentationState.title(for: symptom),
+                    background: symptomBackground(for: entry.severity)
+                )
+            },
+            severityBackground: AllergyDashboardPresentationState.symptomBackground(for: entry.severity)
         )
     }
 
-    private func makePollenItems(
+    private func contextText(
         for date: Date,
         pollenForecasts: [PollenForecast]
-    ) -> [EntryListPollenItem] {
-        pollenForecasts
+    ) -> String? {
+        let pollenItems = pollenForecasts
             .flatMap(\.dailyLevels)
             .filter { calendar.isDate($0.date, inSameDayAs: date) }
+            .filter { $0.level.rawValue > PollenLevel.none.rawValue }
             .sorted { first, second in
                 if first.level == second.level {
                     return AllergyDashboardPresentationState.title(for: first.pollenType)
@@ -134,13 +193,14 @@ final class EntryListViewModel {
             }
             .prefix(Constant.visiblePollenCount)
             .map { level in
-                EntryListPollenItem(
-                    type: level.pollenType,
-                    title: AllergyDashboardPresentationState.title(for: level.pollenType),
-                    levelText: AllergyDashboardPresentationState.levelText(for: level.level),
-                    background: AllergyDashboardPresentationState.pollenBackground(for: level.level)
-                )
+                "\(pollenContextPrefix(for: level.level)) \(AllergyDashboardPresentationState.title(for: level.pollenType))belastung"
             }
+
+        guard pollenItems.isEmpty == false else {
+            return nil
+        }
+
+        return pollenItems.joined(separator: " · ")
     }
 
     private func endOfDay(for date: Date) -> Date {
@@ -163,6 +223,18 @@ final class EntryListViewModel {
         return date.formatted(.dateTime.weekday(.abbreviated).day().month(.wide).year())
     }
 
+    private func sectionTitle(for date: Date) -> String {
+        if calendar.isDateInToday(date) {
+            return "Heute"
+        }
+
+        if calendar.isDateInYesterday(date) {
+            return "Gestern"
+        }
+
+        return date.formatted(.dateTime.weekday(.wide).day().month(.wide))
+    }
+
     private func relativeText(for date: Date, currentDate: Date) -> String {
         if calendar.isDate(date, inSameDayAs: currentDate) {
             return "heute"
@@ -171,9 +243,40 @@ final class EntryListViewModel {
         return date.formatted(.dateTime.day().month(.abbreviated))
     }
 
-    private func systemImageName(for symptomType: SymptomType) -> String {
-        SymptomEntryPresentationState.symptomOptions
-            .first { $0.type == symptomType }?
-            .systemImageName ?? "sparkle"
+    private func symptomBackground(for severity: SymptomSeverity) -> Color {
+        severity.rawValue >= SymptomSeverity.moderate.rawValue
+            ? Color(hex: "#F3E8D7")
+            : Color(hex: "#EEF3ED")
+    }
+
+    private func pollenContextPrefix(for level: PollenLevel) -> String {
+        switch level.rawValue {
+        case 1:
+            "Niedrige"
+        case 2:
+            "Mittlere"
+        case 3:
+            "Hohe"
+        default:
+            "Sehr hohe"
+        }
+    }
+
+    private func symptomSortOrder(first: SymptomType, second: SymptomType) -> Bool {
+        let options = SymptomEntryPresentationState.symptomOptions
+        guard let firstIndex = options.firstIndex(where: { $0.type == first }),
+              let secondIndex = options.firstIndex(where: { $0.type == second }) else {
+            return AllergyDashboardPresentationState.title(for: first)
+                < AllergyDashboardPresentationState.title(for: second)
+        }
+
+        return firstIndex < secondIndex
+    }
+
+    private struct JournalEntry {
+        let date: Date
+        let symptoms: [SymptomType]
+        let severity: SymptomSeverity
+        let note: String?
     }
 }
