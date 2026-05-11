@@ -8,8 +8,8 @@ struct AppCompositionRoot {
         self.dependencies = dependencies
     }
 
-    static func production() -> AppCompositionRoot {
-        AppCompositionRoot(dependencies: .production())
+    static func production() throws -> AppCompositionRoot {
+        AppCompositionRoot(dependencies: try .production())
     }
 
     func makeContentView(telemetryService: AppTelemetryService) -> ContentView {
