@@ -224,3 +224,11 @@ custom_rules:
     regex: "\\.shadow\\("
     message: "Use ShadowToken"
     severity: error
+
+  no_swiftdata_json_blob:
+    name: "No SwiftData JSON blob"
+    included:
+      - "Cujana/Infrastructure/Persistence/.*\\.swift"
+    regex: "(?s)@Model\\s+[^\\{]+\\{.*\\b(var|let)\\s+[A-Za-z0-9_]*(payload|blob|json|JSON|encoded|serialized)[A-Za-z0-9_]*\\s*:\\s*Data\\b"
+    message: "SwiftData V1 must store persistence fields structurally, not as a large JSON/Data blob."
+    severity: error

@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 
 struct AppDependencies {
     let pollenRepository: any PollenRepository
@@ -10,32 +11,21 @@ struct AppDependencies {
 
     static func production() -> AppDependencies {
         let locationProvider = CoreLocationCoordinateProvider()
+        let modelContainer: ModelContainer
+
+        do {
+            modelContainer = try CujanaPersistence.makeProductionModelContainer()
+        } catch {
+            fatalError("SwiftData persistent store could not be created: \(error)")
+        }
 
         return AppDependencies(
             pollenRepository: PolleninformationPollenRepository(),
             weatherRepository: WeatherKitWeatherRepository(),
-            environmentalDataRepository: makeEnvironmentalDataRepository(),
-            symptomEntryRepository: makeSymptomEntryRepository(),
+            environmentalDataRepository: LocalEnvironmentalDataRepository(modelContainer: modelContainer),
+            symptomEntryRepository: LocalSymptomEntryRepository(modelContainer: modelContainer),
             locationProvider: locationProvider,
             backgroundLocationAuthorizer: locationProvider
         )
     }
-
-    private static func makeEnvironmentalDataRepository() -> any EnvironmentalDataRepository {
-        do {
-            let store = try FileEnvironmentalDataSnapshotStore.applicationSupportStore()
-            return LocalEnvironmentalDataRepository(store: store)
-        } catch {
-            return InMemoryEnvironmentalDataRepository()
-        }
-    }
-
-    private static func makeSymptomEntryRepository() -> any SymptomEntryRepository {
-        do {
-            return LocalSymptomEntryRepository(store: try FileSymptomEntryStore.applicationSupportStore())
-        } catch {
-            return InMemorySymptomEntryRepository()
-        }
-    }
-
 }

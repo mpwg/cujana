@@ -75,4 +75,4 @@ nonisolated public struct AllergySymptomEntry: Equatable, Identifiable, Sendable
 }
 
 public typealias HealthEntry = AllergySymptomEntry
-public typealias WeatherSnapshot = EnvironmentalDataSnapshot
+public typealias WeatherSnapshot = WeatherDataEntry
