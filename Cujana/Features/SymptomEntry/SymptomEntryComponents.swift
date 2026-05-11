@@ -27,16 +27,19 @@ struct SymptomChip: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: SymptomCheckInToken.symptomPillSpacing) {
+            HStack(alignment: .center, spacing: SymptomCheckInToken.symptomPillSpacing) {
                 Image(systemName: option.systemImageName)
                     .font(.system(size: SymptomCheckInToken.symptomIconSize, weight: .medium, design: .rounded))
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(iconColor)
                     .accessibilityHidden(true)
 
-                symptomLabel
+                VStack(alignment: .leading, spacing: 0) {
+                    symptomLabel
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                Spacer(minLength: SpacingToken.xs)
+                Spacer(minLength: 0)
             }
             .padding(.horizontal, SymptomCheckInToken.symptomPillPaddingH)
             .padding(.vertical, SymptomCheckInToken.symptomPillPaddingV)
@@ -168,6 +171,7 @@ private struct SeverityPill: View {
                 .foregroundStyle(isSelected ? ColorToken.cardBackground : SymptomCheckInToken.severityUnselectedText)
                 .lineLimit(1)
                 .minimumScaleFactor(SymptomCheckInToken.severityTextMinimumScale)
+                .fixedSize(horizontal: true, vertical: false)
                 .padding(.horizontal, SymptomCheckInToken.severityPillPaddingH)
                 .frame(minWidth: SymptomCheckInToken.severityPillMinWidth)
                 .frame(height: SymptomCheckInToken.severityPillMinHeight)
