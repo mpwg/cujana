@@ -55,7 +55,7 @@ final class EnvironmentalDataRefreshCoordinator {
         scheduleBackgroundRefreshIfAllowed()
 
         let refreshTask = Task { @MainActor in
-            await refreshOnlyWithBackgroundAuthorization()
+            await refreshForBackgroundTask()
         }
 
         task.expirationHandler = {
@@ -68,8 +68,12 @@ final class EnvironmentalDataRefreshCoordinator {
         }
     }
 
-    private func refreshOnlyWithBackgroundAuthorization() async -> Bool {
-        guard backgroundLocationAuthorizer?.allowsBackgroundLocationRefresh == true else {
+    func refreshForBackgroundTask() async -> Bool {
+        guard let backgroundLocationAuthorizer else {
+            return false
+        }
+
+        guard await backgroundLocationAuthorizer.requestBackgroundLocationRefreshAuthorization() else {
             return false
         }
 
