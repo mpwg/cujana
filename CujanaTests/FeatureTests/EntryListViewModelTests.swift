@@ -38,13 +38,9 @@ struct EntryListViewModelTests {
                 PollenForecast.DailyLevel(date: date, pollenType: .grass, level: .moderate)
             ]
         )
-        let viewModel = EntryListViewModel(
-            loadEntriesUseCase: LoadAllergySymptomEntriesUseCase(
-                repository: StubEntryListSymptomRepository(entries: entries)
-            ),
-            loadPollenUseCase: LoadPollenForecastUseCase(
-                repository: StubEntryListPollenRepository(forecasts: [forecast])
-            ),
+        let viewModel = makeEntryListViewModel(
+            entries: entries,
+            forecasts: [forecast],
             coordinate: coordinate,
             calendar: calendar
         )
@@ -74,6 +70,12 @@ struct EntryListViewModelTests {
         let pollenRepository = CapturingEntryListPollenRepository()
         let viewModel = EntryListViewModel(
             loadEntriesUseCase: LoadAllergySymptomEntriesUseCase(
+                repository: StubEntryListSymptomRepository(entries: [])
+            ),
+            saveEntryUseCase: SaveAllergySymptomEntryUseCase(
+                repository: StubEntryListSymptomRepository(entries: [])
+            ),
+            deleteEntryUseCase: DeleteAllergySymptomEntryUseCase(
                 repository: StubEntryListSymptomRepository(entries: [])
             ),
             loadPollenUseCase: LoadPollenForecastUseCase(repository: pollenRepository),
@@ -111,6 +113,12 @@ struct EntryListViewModelTests {
             loadEntriesUseCase: LoadAllergySymptomEntriesUseCase(
                 repository: StubEntryListSymptomRepository(entries: entries)
             ),
+            saveEntryUseCase: SaveAllergySymptomEntryUseCase(
+                repository: StubEntryListSymptomRepository(entries: entries)
+            ),
+            deleteEntryUseCase: DeleteAllergySymptomEntryUseCase(
+                repository: StubEntryListSymptomRepository(entries: entries)
+            ),
             loadPollenUseCase: LoadPollenForecastUseCase(repository: pollenRepository),
             locationProvider: StubEntryListLocationProvider(coordinate: nil),
             calendar: calendar
@@ -134,6 +142,12 @@ struct EntryListViewModelTests {
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let viewModel = EntryListViewModel(
             loadEntriesUseCase: LoadAllergySymptomEntriesUseCase(
+                repository: FailingEntryListSymptomRepository()
+            ),
+            saveEntryUseCase: SaveAllergySymptomEntryUseCase(
+                repository: FailingEntryListSymptomRepository()
+            ),
+            deleteEntryUseCase: DeleteAllergySymptomEntryUseCase(
                 repository: FailingEntryListSymptomRepository()
             ),
             loadPollenUseCase: LoadPollenForecastUseCase(
@@ -200,6 +214,30 @@ struct EntryListViewModelTests {
             severity: seed.severity,
             note: seed.note,
             coordinate: coordinate
+        )
+    }
+
+    private func makeEntryListViewModel(
+        entries: [AllergySymptomEntry],
+        forecasts: [PollenForecast],
+        coordinate: LocationCoordinate,
+        calendar: Calendar
+    ) -> EntryListViewModel {
+        EntryListViewModel(
+            loadEntriesUseCase: LoadAllergySymptomEntriesUseCase(
+                repository: StubEntryListSymptomRepository(entries: entries)
+            ),
+            saveEntryUseCase: SaveAllergySymptomEntryUseCase(
+                repository: StubEntryListSymptomRepository(entries: entries)
+            ),
+            deleteEntryUseCase: DeleteAllergySymptomEntryUseCase(
+                repository: StubEntryListSymptomRepository(entries: entries)
+            ),
+            loadPollenUseCase: LoadPollenForecastUseCase(
+                repository: StubEntryListPollenRepository(forecasts: forecasts)
+            ),
+            coordinate: coordinate,
+            calendar: calendar
         )
     }
 }

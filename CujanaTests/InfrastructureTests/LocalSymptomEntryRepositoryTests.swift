@@ -100,6 +100,65 @@ struct LocalSymptomEntryRepositoryTests {
         ])
     }
 
+    @Test func saveReplacesExistingEntryWithSameID() async throws {
+        let entryID = try #require(UUID(uuidString: "44444444-4444-4444-4444-444444444444"))
+        let original = try AllergySymptomEntry(
+            id: entryID,
+            date: Date(timeIntervalSince1970: 1_000),
+            symptoms: [.itchyEyes],
+            severity: .mild,
+            note: "Vorher"
+        )
+        let edited = try AllergySymptomEntry(
+            id: entryID,
+            date: Date(timeIntervalSince1970: 1_500),
+            symptoms: [.itchyEyes, .coughing],
+            severity: .severe,
+            note: "Nachher"
+        )
+        let store = FakeSymptomEntryStore(entries: [StoredSymptomEntry(entry: original)])
+        let repository = LocalSymptomEntryRepository(store: store)
+
+        try await repository.save(edited)
+
+        let entries = try await repository.symptomEntries(
+            from: Date(timeIntervalSince1970: 0),
+            to: Date(timeIntervalSince1970: 2_000)
+        )
+        #expect(entries == [edited])
+        #expect(await store.entries().count == 1)
+    }
+
+    @Test func deleteRemovesOnlyMatchingEntry() async throws {
+        let deletedEntry = try AllergySymptomEntry(
+            id: #require(UUID(uuidString: "55555555-5555-5555-5555-555555555555")),
+            date: Date(timeIntervalSince1970: 1_000),
+            symptoms: [.itchyEyes],
+            severity: .mild
+        )
+        let remainingEntry = try AllergySymptomEntry(
+            id: #require(UUID(uuidString: "66666666-6666-6666-6666-666666666666")),
+            date: Date(timeIntervalSince1970: 1_200),
+            symptoms: [.sneezing],
+            severity: .moderate
+        )
+        let store = FakeSymptomEntryStore(
+            entries: [
+                StoredSymptomEntry(entry: deletedEntry),
+                StoredSymptomEntry(entry: remainingEntry)
+            ]
+        )
+        let repository = LocalSymptomEntryRepository(store: store)
+
+        try await repository.delete(id: deletedEntry.id)
+
+        let entries = try await repository.symptomEntries(
+            from: Date(timeIntervalSince1970: 0),
+            to: Date(timeIntervalSince1970: 2_000)
+        )
+        #expect(entries == [remainingEntry])
+    }
+
     @Test func loadMapsStoreFailuresToSymptomEntryError() async {
         let repository = LocalSymptomEntryRepository(
             store: FakeSymptomEntryStore(loadError: SymptomEntryError.storageUnavailable)

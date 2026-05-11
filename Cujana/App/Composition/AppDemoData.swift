@@ -128,6 +128,12 @@ enum AppDemoData {
             loadEntriesUseCase: LoadAllergySymptomEntriesUseCase(
                 repository: DemoSymptomEntryRepository(entries: symptomEntries)
             ),
+            saveEntryUseCase: SaveAllergySymptomEntryUseCase(
+                repository: DemoSymptomEntryRepository(entries: symptomEntries)
+            ),
+            deleteEntryUseCase: DeleteAllergySymptomEntryUseCase(
+                repository: DemoSymptomEntryRepository(entries: symptomEntries)
+            ),
             loadPollenUseCase: LoadPollenForecastUseCase(
                 repository: DemoPollenRepository(forecasts: pollenForecasts)
             ),
@@ -229,13 +235,23 @@ enum AppDemoData {
 }
 
 actor DemoSymptomEntryRepository: SymptomEntryRepository {
-    private let entries: [AllergySymptomEntry]
+    private var entries: [AllergySymptomEntry]
 
     init(entries: [AllergySymptomEntry]) {
         self.entries = entries
     }
 
-    func save(_ entry: AllergySymptomEntry) async throws {}
+    func save(_ entry: AllergySymptomEntry) async throws {
+        if let existingIndex = entries.firstIndex(where: { $0.id == entry.id }) {
+            entries[existingIndex] = entry
+        } else {
+            entries.append(entry)
+        }
+    }
+
+    func delete(id: UUID) async throws {
+        entries.removeAll { $0.id == id }
+    }
 
     func symptomEntries(from startDate: Date, to endDate: Date) async throws -> [AllergySymptomEntry] {
         entries.filter { entry in

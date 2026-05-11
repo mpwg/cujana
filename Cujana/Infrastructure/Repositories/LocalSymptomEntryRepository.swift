@@ -10,7 +10,24 @@ actor LocalSymptomEntryRepository: SymptomEntryRepository {
     func save(_ entry: AllergySymptomEntry) async throws {
         do {
             var entries = try await store.loadEntries()
-            entries.append(StoredSymptomEntry(entry: entry))
+            let storedEntry = StoredSymptomEntry(entry: entry)
+
+            if let existingIndex = entries.firstIndex(where: { $0.id == entry.id }) {
+                entries[existingIndex] = storedEntry
+            } else {
+                entries.append(storedEntry)
+            }
+
+            try await store.saveEntries(entries)
+        } catch {
+            throw SymptomEntryError.storageUnavailable
+        }
+    }
+
+    func delete(id: UUID) async throws {
+        do {
+            var entries = try await store.loadEntries()
+            entries.removeAll { $0.id == id }
             try await store.saveEntries(entries)
         } catch {
             throw SymptomEntryError.storageUnavailable

@@ -12,6 +12,7 @@ struct EntryListDaySection: Identifiable, Equatable {
 
 struct JournalEntryItem: Identifiable, Equatable {
     let id: String
+    let entry: HealthEntry
     let timeText: String
     let noteText: String?
     let contextText: String
