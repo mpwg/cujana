@@ -16,6 +16,8 @@ final class EntryListViewModel {
     private let saveEntryUseCase: SaveAllergySymptomEntryUseCase
     private let deleteEntryUseCase: DeleteAllergySymptomEntryUseCase
     private let loadPollenUseCase: LoadPollenForecastUseCase
+    private let entryChangeObserver: (any SymptomEntryChangeObserving)?
+    private let entryChangePublisher: (any SymptomEntryChangePublishing)?
     private let locationProvider: (any LocationCoordinateProviding)?
     private let previewCoordinate: LocationCoordinate?
     private let calendar: Calendar
@@ -27,6 +29,8 @@ final class EntryListViewModel {
         saveEntryUseCase: SaveAllergySymptomEntryUseCase,
         deleteEntryUseCase: DeleteAllergySymptomEntryUseCase,
         loadPollenUseCase: LoadPollenForecastUseCase,
+        entryChangeObserver: (any SymptomEntryChangeObserving)? = nil,
+        entryChangePublisher: (any SymptomEntryChangePublishing)? = nil,
         locationProvider: (any LocationCoordinateProviding)? = nil,
         coordinate: LocationCoordinate? = nil,
         calendar: Calendar = .current
@@ -35,6 +39,8 @@ final class EntryListViewModel {
         self.saveEntryUseCase = saveEntryUseCase
         self.deleteEntryUseCase = deleteEntryUseCase
         self.loadPollenUseCase = loadPollenUseCase
+        self.entryChangeObserver = entryChangeObserver
+        self.entryChangePublisher = entryChangePublisher
         self.locationProvider = locationProvider
         self.previewCoordinate = coordinate
         self.calendar = calendar
@@ -55,12 +61,11 @@ final class EntryListViewModel {
     }
 
     func observeEntryChanges() async {
-        for await notification in NotificationCenter.default.notifications(named: .symptomEntryDidChange) {
-            guard let change = notification.object as? SymptomEntryChange else {
-                await load()
-                continue
-            }
+        guard let entryChangeObserver else {
+            return
+        }
 
+        for await change in entryChangeObserver.changes {
             apply(change)
         }
     }
@@ -68,6 +73,7 @@ final class EntryListViewModel {
     func makeEditorViewModel(for entry: HealthEntry) -> EntryEditorViewModel {
         EntryEditorViewModel(
             saveUseCase: saveEntryUseCase,
+            entryChangePublisher: entryChangePublisher,
             mode: .edit(existing: entry)
         )
     }
@@ -86,6 +92,7 @@ final class EntryListViewModel {
     func delete(_ entry: HealthEntry) async {
         do {
             try await deleteEntryUseCase.execute(id: entry.id)
+            entryChangePublisher?.publish(.deleted(entry.id))
         } catch {
             state = .failure("Die Einträge konnten gerade nicht geladen werden. Bitte versuche es erneut.")
         }

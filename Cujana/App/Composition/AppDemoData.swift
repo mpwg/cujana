@@ -4,6 +4,7 @@ import Foundation
 enum AppDemoData {
     static let now = makeDate(year: 2026, month: 5, day: 8, hour: 9, minute: 41)
     static let calendar = Calendar(identifier: .gregorian)
+    private static let entryChangeStore = SymptomEntryChangeStore()
 
     static var coordinate: LocationCoordinate {
         guard let coordinate = try? LocationCoordinate(latitude: 48.2082, longitude: 16.3738) else {
@@ -102,7 +103,8 @@ enum AppDemoData {
         let viewModel = SymptomEntryViewModel(
             saveUseCase: SaveAllergySymptomEntryUseCase(
                 repository: DemoSymptomEntryRepository(entries: symptomEntries)
-            )
+            ),
+            entryChangePublisher: entryChangeStore
         )
         viewModel.selectedSymptoms = [.itchyEyes]
         viewModel.selectedSeverityLevel = 3
@@ -137,6 +139,8 @@ enum AppDemoData {
             loadPollenUseCase: LoadPollenForecastUseCase(
                 repository: DemoPollenRepository(forecasts: pollenForecasts)
             ),
+            entryChangeObserver: entryChangeStore,
+            entryChangePublisher: entryChangeStore,
             coordinate: coordinate,
             calendar: calendar
         )

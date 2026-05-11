@@ -9,10 +9,6 @@ nonisolated public struct SaveAllergySymptomEntryUseCase: Sendable {
 
     public func execute(_ entry: AllergySymptomEntry) async throws {
         try await repository.save(entry)
-        NotificationCenter.default.post(
-            name: .symptomEntryDidChange,
-            object: SymptomEntryChange.saved(entry)
-        )
     }
 }
 
@@ -25,9 +21,5 @@ nonisolated public struct DeleteAllergySymptomEntryUseCase: Sendable {
 
     public func execute(id: UUID) async throws {
         try await repository.delete(id: id)
-        NotificationCenter.default.post(
-            name: .symptomEntryDidChange,
-            object: SymptomEntryChange.deleted(id)
-        )
     }
 }

@@ -18,14 +18,17 @@ final class EntryEditorViewModel {
     let mode: EntryMode
 
     private let saveUseCase: SaveAllergySymptomEntryUseCase
+    private let entryChangePublisher: (any SymptomEntryChangePublishing)?
 
     init(
         saveUseCase: SaveAllergySymptomEntryUseCase,
+        entryChangePublisher: (any SymptomEntryChangePublishing)? = nil,
         mode: EntryMode = .create,
         symptomOptions: [SymptomOption] = SymptomEntryPresentationState.symptomOptions,
         severityOptions: [SeverityOption] = SymptomEntryPresentationState.severityOptions
     ) {
         self.saveUseCase = saveUseCase
+        self.entryChangePublisher = entryChangePublisher
         self.mode = mode
         self.symptomOptions = symptomOptions
         self.severityOptions = severityOptions
@@ -94,6 +97,7 @@ final class EntryEditorViewModel {
             )
 
             try await saveUseCase.execute(entry)
+            entryChangePublisher?.publish(.saved(entry))
 
             if case .create = mode {
                 note = ""
