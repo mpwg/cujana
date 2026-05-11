@@ -10,7 +10,7 @@ struct UsageDataConsentTests {
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defer { defaults.removePersistentDomain(forName: suiteName) }
 
-        let store = UsageDataConsentStore(defaults: defaults)
+        let store = UserDefaultsUsageDataConsentStore(defaults: defaults)
 
         #expect(store.consent == .undecided)
 
@@ -25,13 +25,9 @@ struct UsageDataConsentTests {
     }
 
     @Test func telemetryStartsOnlyAfterOptIn() throws {
-        let suiteName = "AppTelemetryServiceTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suiteName))
-        defer { defaults.removePersistentDomain(forName: suiteName) }
-
         let gateway = CapturingTelemetryGateway()
         let service = AppTelemetryService(
-            store: UsageDataConsentStore(defaults: defaults),
+            store: InMemoryUsageDataConsentStore(),
             gateway: gateway,
             configuration: .test
         )
@@ -48,13 +44,9 @@ struct UsageDataConsentTests {
     }
 
     @Test func telemetryStopsWhenConsentIsRevoked() throws {
-        let suiteName = "AppTelemetryServiceTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suiteName))
-        defer { defaults.removePersistentDomain(forName: suiteName) }
-
         let gateway = CapturingTelemetryGateway()
         let service = AppTelemetryService(
-            store: UsageDataConsentStore(defaults: defaults),
+            store: InMemoryUsageDataConsentStore(),
             gateway: gateway,
             configuration: .test
         )
@@ -66,6 +58,18 @@ struct UsageDataConsentTests {
         #expect(!gateway.isTelemetryDeckStarted)
         #expect(gateway.didStopSentry)
         #expect(gateway.didStopTelemetryDeck)
+    }
+}
+
+private final class InMemoryUsageDataConsentStore: UsageDataConsentStoring {
+    private(set) var consent: UsageDataConsent
+
+    init(consent: UsageDataConsent = .undecided) {
+        self.consent = consent
+    }
+
+    func setConsent(_ consent: UsageDataConsent) {
+        self.consent = consent
     }
 }
 
