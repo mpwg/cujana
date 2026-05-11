@@ -3,9 +3,14 @@ import SwiftUI
 @MainActor
 struct AppCompositionRoot {
     private let dependencies: AppDependencies
+    private let symptomEntryChangeStore: SymptomEntryChangeStore
 
-    init(dependencies: AppDependencies) {
+    init(
+        dependencies: AppDependencies,
+        symptomEntryChangeStore: SymptomEntryChangeStore = SymptomEntryChangeStore()
+    ) {
         self.dependencies = dependencies
+        self.symptomEntryChangeStore = symptomEntryChangeStore
     }
 
     static func production() throws -> AppCompositionRoot {
@@ -38,7 +43,10 @@ struct AppCompositionRoot {
     }
 
     private func makeSymptomEntryViewModel() -> SymptomEntryViewModel {
-        SymptomEntryViewModel(saveUseCase: makeSaveAllergySymptomEntryUseCase())
+        SymptomEntryViewModel(
+            saveUseCase: makeSaveAllergySymptomEntryUseCase(),
+            entryChangePublisher: symptomEntryChangeStore
+        )
     }
 
     private func makeEntryListViewModel() -> EntryListViewModel {
@@ -47,6 +55,8 @@ struct AppCompositionRoot {
             saveEntryUseCase: makeSaveAllergySymptomEntryUseCase(),
             deleteEntryUseCase: DeleteAllergySymptomEntryUseCase(repository: dependencies.symptomEntryRepository),
             loadPollenUseCase: LoadPollenForecastUseCase(repository: dependencies.pollenRepository),
+            entryChangeObserver: symptomEntryChangeStore,
+            entryChangePublisher: symptomEntryChangeStore,
             locationProvider: dependencies.locationProvider
         )
     }

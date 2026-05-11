@@ -164,6 +164,91 @@ struct EntryListViewModelTests {
         )
     }
 
+    @Test
+    @MainActor
+    func observeEntryChangesUpdatesEntryAfterEditorSave() async throws {
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let entry = try symptom(seed: SymptomSeed(
+            id: "F2F0C101-6F5B-4AA4-9867-66D9BA7B0483",
+            date: Date(timeIntervalSince1970: 86_400),
+            type: .itchyEyes,
+            severity: .moderate,
+            note: "Vorher"
+        ), coordinate: coordinate)
+        let repository = StubEntryListSymptomRepository(entries: [entry])
+        let entryChangeStore = SymptomEntryChangeStore()
+        let viewModel = EntryListViewModel(
+            loadEntriesUseCase: LoadAllergySymptomEntriesUseCase(repository: repository),
+            saveEntryUseCase: SaveAllergySymptomEntryUseCase(repository: repository),
+            deleteEntryUseCase: DeleteAllergySymptomEntryUseCase(repository: repository),
+            loadPollenUseCase: LoadPollenForecastUseCase(
+                repository: StubEntryListPollenRepository(forecasts: [])
+            ),
+            entryChangeObserver: entryChangeStore,
+            entryChangePublisher: entryChangeStore,
+            coordinate: coordinate,
+            calendar: calendar
+        )
+
+        await viewModel.load()
+        let observationTask = Task {
+            await viewModel.observeEntryChanges()
+        }
+        defer {
+            observationTask.cancel()
+        }
+        await Task.yield()
+
+        let editorViewModel = viewModel.makeEditorViewModel(for: entry)
+        editorViewModel.note = "Aktualisiert"
+        let savedEntry = await editorViewModel.submit()
+        try await waitForEntryChangeDelivery()
+
+        #expect(savedEntry?.note == "Aktualisiert")
+        #expect(loadedEntries(in: viewModel).first?.noteText == "Aktualisiert")
+    }
+
+    @Test
+    @MainActor
+    func observeEntryChangesRemovesEntryAfterDelete() async throws {
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let entry = try symptom(seed: SymptomSeed(
+            id: "F2F0C101-6F5B-4AA4-9867-66D9BA7B0483",
+            date: Date(timeIntervalSince1970: 86_400),
+            type: .itchyEyes,
+            severity: .moderate,
+            note: nil
+        ), coordinate: coordinate)
+        let repository = DeletingEntryListSymptomRepository(entries: [entry])
+        let entryChangeStore = SymptomEntryChangeStore()
+        let viewModel = EntryListViewModel(
+            loadEntriesUseCase: LoadAllergySymptomEntriesUseCase(repository: repository),
+            saveEntryUseCase: SaveAllergySymptomEntryUseCase(repository: repository),
+            deleteEntryUseCase: DeleteAllergySymptomEntryUseCase(repository: repository),
+            loadPollenUseCase: LoadPollenForecastUseCase(
+                repository: StubEntryListPollenRepository(forecasts: [])
+            ),
+            entryChangeObserver: entryChangeStore,
+            entryChangePublisher: entryChangeStore,
+            coordinate: coordinate,
+            calendar: calendar
+        )
+
+        await viewModel.load()
+        let observationTask = Task {
+            await viewModel.observeEntryChanges()
+        }
+        defer {
+            observationTask.cancel()
+        }
+        await Task.yield()
+
+        await viewModel.delete(entry)
+        try await waitForEntryChangeDelivery()
+
+        #expect(loadedEntries(in: viewModel).isEmpty)
+    }
+
     private var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .current
@@ -241,6 +326,20 @@ struct EntryListViewModelTests {
             calendar: calendar
         )
     }
+
+}
+
+@MainActor
+private func loadedEntries(in viewModel: EntryListViewModel) -> [JournalEntryItem] {
+    guard case .loaded(let content) = viewModel.state else {
+        return []
+    }
+
+    return content.sections.flatMap(\.entries)
+}
+
+private func waitForEntryChangeDelivery() async throws {
+    try await Task.sleep(nanoseconds: 50_000_000)
 }
 
 private struct StubEntryListSymptomRepository: SymptomEntryRepository {
@@ -258,6 +357,18 @@ private struct FailingEntryListSymptomRepository: SymptomEntryRepository {
 
     func symptomEntries(from startDate: Date, to endDate: Date) async throws -> [AllergySymptomEntry] {
         throw SymptomEntryError.storageUnavailable
+    }
+}
+
+private struct DeletingEntryListSymptomRepository: SymptomEntryRepository {
+    let entries: [AllergySymptomEntry]
+
+    func save(_ entry: AllergySymptomEntry) async throws {}
+
+    func delete(id: UUID) async throws {}
+
+    func symptomEntries(from startDate: Date, to endDate: Date) async throws -> [AllergySymptomEntry] {
+        entries
     }
 }
 
