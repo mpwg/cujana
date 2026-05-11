@@ -1,10 +1,3 @@
-//
-//  ComponentTokens.swift
-//  Cujana
-//
-//  Created by Codex on 05.05.26.
-//
-
 import SwiftUI
 
 enum CardToken {
@@ -245,34 +238,39 @@ enum PressFeedbackToken {
 enum SymptomCheckInToken {
     static let accent = Color(hex: "#6D8F76")
     static let accentPressed = Color(hex: "#5E7D66")
-    static let selectedBorder = Color(hex: "#6D8F76")
+    static let selectedBorder = Color(hex: "#7E9C84")
     static let selectedIcon = Color(hex: "#5F8168")
     static let selectedText = Color(hex: "#355240")
-    static let sectionSurface = Color.white.opacity(0.35)
+    static let secondaryText = Color(hex: "#6B6B6E")
+    static let tertiaryText = Color(hex: "#8A8A8E")
+    static let sectionTitleTracking = -0.02
     static let screenHorizontalPadding: CGFloat = 20
     static let sectionSpacing: CGFloat = 28
     static let topContentPadding: CGFloat = 24
-    static let symptomGridMinimumWidth: CGFloat = 150
+    static let symptomGridMinimumWidth: CGFloat = 170
+    static let symptomPillGridSpacing: CGFloat = 14
     static let scrollBottomPadding: CGFloat = 120
     static let bottomBarBackgroundOpacity = 0.96
     static let fieldContainerPadding: CGFloat = 20
     static let symptomPillMinHeight: CGFloat = 72
     static let symptomPillPaddingH: CGFloat = 14
     static let symptomPillPaddingV: CGFloat = 10
-    static let symptomPillSpacing: CGFloat = 12
-    static let symptomTextMinimumScale = 0.9
-    static let symptomSelectedBackground = Color(hex: "#E5EFE7")
+    static let symptomPillSpacing: CGFloat = 14
+    static let symptomTextMinimumScale = 0.92
+    static let symptomSelectedBackground = Color(hex: "#E8F0E8")
     static let symptomUnselectedBorder = Color(hex: "#3C3C43").opacity(0.1)
     static let symptomUnselectedIconOpacity = 0.85
-    static let symptomSelectedBorderWidth: CGFloat = 1
+    static let symptomSelectedBorderWidth: CGFloat = 0.8
     static let symptomUnselectedBorderWidth: CGFloat = 1
     static let symptomIconSize: CGFloat = 18
-    static let symptomCheckmarkSize: CGFloat = 16
+    static let symptomCheckmarkSize: CGFloat = 15
+    static let symptomCheckmarkOpacity = 0.85
     static let symptomPressedScale = 0.97
     static let symptomPillCornerRadius: CGFloat = 22
     static let symptomPillShadow = ShadowTokenValue(color: Color.black.opacity(0.04), radius: 8, y: 1)
     static let severityPillMinHeight: CGFloat = 40
     static let severityPillMinWidth: CGFloat = 82
+    static let severityPillSpacing: CGFloat = 10
     static let severityPillPaddingH: CGFloat = 16
     static let severityPillCornerRadius: CGFloat = 20
     static let severityTextMinimumScale = 0.8
@@ -281,8 +279,8 @@ enum SymptomCheckInToken {
     static let severityUnselectedBorder = Color(hex: "#3C3C43").opacity(0.1)
     static let dateCardCornerRadius: CGFloat = 24
     static let dateCardShadow = ShadowTokenValue(color: Color.black.opacity(0.04), radius: 12, y: 2)
-    static let dateCardCollapsedHeight: CGFloat = 78
-    static let dateIconSize: CGFloat = 40
+    static let dateCardCollapsedHeight: CGFloat = 70
+    static let dateIconSize: CGFloat = 34
     static let datePickerMinHeight: CGFloat = 44
     static let hintBackground = Color(hex: "#6D8F76").opacity(0.08)
     static let hintIconSize: CGFloat = 15
@@ -290,13 +288,15 @@ enum SymptomCheckInToken {
     static let notesMinHeight: CGFloat = 140
     static let notesPadding: CGFloat = 16
     static let notesCornerRadius: CGFloat = 24
-    static let saveButtonMinHeight: CGFloat = 56
-    static let saveButtonRadius: CGFloat = 28
+    static let notesBorder = Color(hex: "#3C3C43").opacity(0.08)
+    static let notesBorderWidth: CGFloat = 0.5
+    static let saveButtonMinHeight: CGFloat = 52
+    static let saveButtonRadius: CGFloat = 26
     static let saveButtonPressedBackground = accentPressed
     static let disabledButtonBackground = Color(hex: "#D9E4DA")
-    static let saveButtonShadow = ShadowTokenValue(color: Color(hex: "#6D8F76").opacity(0.16), radius: 20, y: 8)
+    static let saveButtonShadow = ShadowTokenValue(color: Color(hex: "#6D8F76").opacity(0.12), radius: 14, y: 4)
     static let infoButtonSize: CGFloat = 48
-    static let infoButtonBackground = Color.white.opacity(0.72)
+    static let infoButtonBackground = Color.white.opacity(0.64)
     static let animationDuration = 0.24
     static let animationDamping = 0.86
 }

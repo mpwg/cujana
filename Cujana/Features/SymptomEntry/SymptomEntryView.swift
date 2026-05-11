@@ -10,7 +10,10 @@ struct SymptomEntryView: View {
     @State private var isInfoPresented = false
 
     private let symptomColumns = [
-        GridItem(.adaptive(minimum: SymptomCheckInToken.symptomGridMinimumWidth), spacing: SpacingToken.md)
+        GridItem(
+            .adaptive(minimum: SymptomCheckInToken.symptomGridMinimumWidth),
+            spacing: SymptomCheckInToken.symptomPillGridSpacing
+        )
     ]
 
     var body: some View {
@@ -55,9 +58,12 @@ struct SymptomEntryView: View {
                                 .font(.system(.body, design: .rounded).weight(.semibold))
                                 .foregroundStyle(ColorToken.textPrimary)
                                 .frame(
-                                    width: SymptomCheckInToken.datePickerMinHeight,
-                                    height: SymptomCheckInToken.datePickerMinHeight
+                                    width: SymptomCheckInToken.infoButtonSize,
+                                    height: SymptomCheckInToken.infoButtonSize
                                 )
+                                .background(SymptomCheckInToken.infoButtonBackground)
+                                .background(.ultraThinMaterial)
+                                .clipShape(Circle())
                                 .contentShape(Circle())
                         }
                         .buttonStyle(.plain)
@@ -96,22 +102,20 @@ struct SymptomEntryView: View {
     }
 
     private var symptomSection: some View {
-        GroupedSection {
-            VStack(alignment: .leading, spacing: SpacingToken.lg) {
-                SectionHeader(
-                    title: "Welche Symptome hast du?",
-                    subtitle: "Du kannst mehrere Symptome auswählen."
-                )
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
+            SectionHeader(
+                title: "Welche Symptome hast du?",
+                subtitle: "Du kannst mehrere Symptome auswählen."
+            )
 
-                LazyVGrid(columns: symptomColumns, spacing: SpacingToken.md) {
-                    ForEach(viewModel.symptomOptions) { option in
-                        SymptomChip(
-                            option: option,
-                            isSelected: viewModel.selectedSymptoms.contains(option.type),
-                            namespace: symptomSelectionNamespace
-                        ) {
-                            viewModel.selectSymptom(option.type)
-                        }
+            LazyVGrid(columns: symptomColumns, spacing: SymptomCheckInToken.symptomPillGridSpacing) {
+                ForEach(viewModel.symptomOptions) { option in
+                    SymptomChip(
+                        option: option,
+                        isSelected: viewModel.selectedSymptoms.contains(option.type),
+                        namespace: symptomSelectionNamespace
+                    ) {
+                        viewModel.selectSymptom(option.type)
                     }
                 }
             }
@@ -119,17 +123,15 @@ struct SymptomEntryView: View {
     }
 
     private var severitySection: some View {
-        GroupedSection {
-            VStack(alignment: .leading, spacing: SpacingToken.lg) {
-                SectionHeader(title: "Wie belastend sind die Symptome?", subtitle: "1 ist sehr mild, 5 sehr stark.")
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
+            SectionHeader(title: "Wie belastend sind die Symptome?", subtitle: "1 ist sehr mild, 5 sehr stark.")
 
-                SeveritySelector(
-                    options: viewModel.severityOptions,
-                    selectedLevel: viewModel.selectedSeverityLevel,
-                    namespace: severitySelectionNamespace,
-                    onSelect: viewModel.selectSeverity(level:)
-                )
-            }
+            SeveritySelector(
+                options: viewModel.severityOptions,
+                selectedLevel: viewModel.selectedSeverityLevel,
+                namespace: severitySelectionNamespace,
+                onSelect: viewModel.selectSeverity(level:)
+            )
         }
     }
 
@@ -146,12 +148,10 @@ struct SymptomEntryView: View {
     }
 
     private var noteSection: some View {
-        GroupedSection {
-            VStack(alignment: .leading, spacing: SpacingToken.lg) {
-                SectionHeader(title: "Notiz", subtitle: "Optional")
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
+            SectionHeader(title: "Notiz", subtitle: "Optional")
 
-                SymptomNoteField(text: $viewModel.note)
-            }
+            SymptomNoteField(text: $viewModel.note)
         }
     }
 

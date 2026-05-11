@@ -8,29 +8,14 @@ struct SectionHeader: View {
         VStack(alignment: .leading, spacing: SpacingToken.xs) {
             Text(title)
                 .font(TypographyToken.symptomSectionTitle)
-                .tracking(-0.4)
+                .tracking(SymptomCheckInToken.sectionTitleTracking)
                 .foregroundStyle(ColorToken.textPrimary)
 
             Text(subtitle)
                 .font(TypographyToken.symptomSectionDescription)
-                .foregroundStyle(ColorToken.textSecondary)
+                .foregroundStyle(SymptomCheckInToken.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
         }
-    }
-}
-
-struct GroupedSection<Content: View>: View {
-    let content: Content
-
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
-
-    var body: some View {
-        content
-            .padding(SpacingToken.md)
-            .background(SymptomCheckInToken.sectionSurface)
-            .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusMedium, style: .continuous))
     }
 }
 
@@ -64,14 +49,14 @@ struct SymptomChip: View {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: SymptomCheckInToken.symptomCheckmarkSize, weight: .semibold))
                         .foregroundStyle(SymptomCheckInToken.selectedBorder)
-                        .padding(SpacingToken.sm)
+                        .opacity(SymptomCheckInToken.symptomCheckmarkOpacity)
+                        .padding(SpacingToken.md)
                         .accessibilityHidden(true)
                 }
             }
             .softShadow(chipShadow)
-            .scaleEffect(isSelected ? SymptomCheckInToken.symptomPressedScale : 1)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SymptomChipButtonStyle())
         .accessibilityLabel(option.title)
         .accessibilityHint("Mehrfachauswahl möglich")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -91,6 +76,7 @@ struct SymptomChip: View {
             .foregroundStyle(isSelected ? SymptomCheckInToken.selectedText : ColorToken.textPrimary)
             .lineLimit(2)
             .minimumScaleFactor(SymptomCheckInToken.symptomTextMinimumScale)
+            .allowsTightening(true)
             .multilineTextAlignment(.leading)
             .fixedSize(horizontal: false, vertical: true)
     }
@@ -133,29 +119,39 @@ struct SymptomChip: View {
     }
 }
 
+private struct SymptomChipButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? SymptomCheckInToken.symptomPressedScale : 1)
+            .animation(.easeInOut(duration: PressFeedbackToken.animationDuration), value: configuration.isPressed)
+    }
+}
+
 struct SeveritySelector: View {
     let options: [SeverityOption]
     let selectedLevel: Int?
     let namespace: Namespace.ID
     let onSelect: (Int) -> Void
 
+    private let severityColumns = [
+        GridItem(
+            .adaptive(minimum: SymptomCheckInToken.severityPillMinWidth),
+            spacing: SymptomCheckInToken.severityPillSpacing
+        )
+    ]
+
     var body: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: SpacingToken.sm) {
-                ForEach(options) { option in
-                    SeverityPill(
-                        option: option,
-                        isSelected: selectedLevel == option.level,
-                        namespace: namespace
-                    ) {
-                        onSelect(option.level)
-                    }
+        LazyVGrid(columns: severityColumns, alignment: .leading, spacing: SymptomCheckInToken.severityPillSpacing) {
+            ForEach(options) { option in
+                SeverityPill(
+                    option: option,
+                    isSelected: selectedLevel == option.level,
+                    namespace: namespace
+                ) {
+                    onSelect(option.level)
                 }
             }
-            .padding(.vertical, SpacingToken.xs)
         }
-        .scrollIndicators(.hidden)
-        .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
     }
 }
 
@@ -236,7 +232,7 @@ struct ExpandableDateCard: View {
                     compactPickers
                 }
             }
-            .padding(SymptomCheckInToken.fieldContainerPadding)
+            .padding(SpacingToken.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
             .frame(minHeight: isExpanded ? nil : SymptomCheckInToken.dateCardCollapsedHeight)
             .background(ColorToken.cardBackground)
@@ -245,7 +241,7 @@ struct ExpandableDateCard: View {
             )
             .softShadow(SymptomCheckInToken.dateCardShadow)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(DateCardButtonStyle())
         .accessibilityLabel("Zeitpunkt, \(dateSummary)")
         .accessibilityHint(isExpanded ? "Zum Einklappen tippen" : "Zum Bearbeiten tippen")
     }
@@ -267,7 +263,7 @@ struct ExpandableDateCard: View {
 
                 Text(dateSummary)
                     .font(TypographyToken.secondaryBody)
-                    .foregroundStyle(ColorToken.textSecondary)
+                    .foregroundStyle(SymptomCheckInToken.secondaryText)
                     .contentTransition(.opacity)
             }
 
@@ -275,7 +271,7 @@ struct ExpandableDateCard: View {
 
             Image(systemName: "chevron.down")
                 .font(.system(size: SymptomCheckInToken.hintIconSize, weight: .semibold, design: .rounded))
-                .foregroundStyle(ColorToken.textTertiary.opacity(SymptomCheckInToken.chevronOpacity))
+                .foregroundStyle(SymptomCheckInToken.tertiaryText.opacity(SymptomCheckInToken.chevronOpacity))
                 .rotationEffect(.degrees(isExpanded ? 180 : 0))
                 .accessibilityHidden(true)
         }
@@ -317,6 +313,15 @@ struct ExpandableDateCard: View {
     }
 }
 
+private struct DateCardButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .opacity(configuration.isPressed ? PressFeedbackToken.prominentOpacity : 1)
+            .scaleEffect(configuration.isPressed ? PressFeedbackToken.prominentScale : 1)
+            .animation(.easeInOut(duration: PressFeedbackToken.animationDuration), value: configuration.isPressed)
+    }
+}
+
 struct DateHintBox: View {
     var body: some View {
         HStack(alignment: .top, spacing: SpacingToken.sm) {
@@ -327,7 +332,7 @@ struct DateHintBox: View {
 
             Text("Du kannst auch frühere Einträge nachtragen.")
                 .font(TypographyToken.symptomSectionDescription)
-                .foregroundStyle(ColorToken.textSecondary)
+                .foregroundStyle(SymptomCheckInToken.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(SpacingToken.md)
@@ -345,7 +350,7 @@ struct SymptomNoteField: View {
             if text.isEmpty {
                 Text("Optional etwas ergänzen ...")
                     .font(TypographyToken.body)
-                    .foregroundStyle(ColorToken.textTertiary)
+                    .foregroundStyle(SymptomCheckInToken.tertiaryText)
                     .padding(SymptomCheckInToken.notesPadding)
                     .accessibilityHidden(true)
             }
@@ -367,8 +372,8 @@ struct SymptomNoteField: View {
     private var noteBorder: some View {
         RoundedRectangle(cornerRadius: SymptomCheckInToken.notesCornerRadius, style: .continuous)
             .stroke(
-                SymptomCheckInToken.symptomUnselectedBorder,
-                lineWidth: SymptomCheckInToken.symptomUnselectedBorderWidth
+                SymptomCheckInToken.notesBorder,
+                lineWidth: SymptomCheckInToken.notesBorderWidth
             )
     }
 }
