@@ -119,8 +119,7 @@ Carthage/Build/
 
 # fastlane
 #
-# It is recommended to not store the screenshots in the git repo.
-# Instead, use fastlane to re-generate the screenshots whenever they are needed.
+# App-Store-Screenshots werden für Release-Branches versioniert.
 # For more information about the recommended setup visit:
 # https://docs.fastlane.tools/best-practices/source-control/#source-control
 
@@ -130,8 +129,9 @@ Carthage/Build/
 # deliver temporary files
 **/fastlane/Preview.html
 
-# snapshot generated screenshots
-**/fastlane/screenshots
+# lokale Screenshot-Prüfartefakte
+**/fastlane/screenshots/seed-check
+**/fastlane/screenshots/test_output
 
 # scan temporary files
 **/fastlane/test_output

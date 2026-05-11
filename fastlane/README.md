@@ -29,7 +29,7 @@ Erzeugt App-Store-Screenshots für iPhone und iPad
 [bundle exec] fastlane ios validate_screenshot_seed
 ```
 
-Validiert den Screenshot-Seed ohne vollständige Screenshot-Erzeugung
+Validiert den Screenshot-Seed mit einem einzelnen lokalen Kontroll-Screenshot
 
 ### ios upload_screenshots
 

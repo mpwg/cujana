@@ -4,9 +4,9 @@ Dieser Prozess ist von Symi übernommen und auf Cujana angepasst. Releases sind 
 
 ## Branching
 
-- `main` ist der Produktionsstand und wird erst nach erfolgreichem App-Store-Release aktualisiert.
+- `main` ist der Produktionsstand und wird über einen PR ohne App-Store-Screenshots aktualisiert.
 - `develop` ist optional für laufende Entwicklung.
-- `release/*` ist für Release-Vorbereitung, TestFlight und App-Store-Upload.
+- `release/*` ist für Release-Vorbereitung, TestFlight und App-Store-Upload. App-Store-Screenshots werden nur auf diesem Branch eingecheckt.
 - Release-Branch-Namen enthalten keine Versionsnummer. Die Version kommt aus der `MARKETING_VERSION` im Xcode-Projekt und aus dem manuellen Workflow-Input.
 - Git-Tags dokumentieren nur ausgelieferte Stände. Sie lösen keinen Release-Workflow aus.
 
@@ -18,11 +18,13 @@ Der Standardweg ist das Vorbereitungsskript:
 scripts/prepare_release.sh 1.0.0 release/next
 ```
 
-Das Skript erstellt oder öffnet den Release-Branch, setzt die `MARKETING_VERSION`, prüft Metadaten und Screenshots und führt die lokalen Release-Gates aus. Für schnelle Vorbereitungsrunden können die schweren Gates bewusst übersprungen werden:
+Das Skript erstellt oder öffnet den Release-Branch, setzt die `MARKETING_VERSION`, erzeugt die App-Store-Screenshots, prüft Metadaten und Screenshots und führt die lokalen Release-Gates aus. Für schnelle Vorbereitungsrunden können die schweren Gates bewusst übersprungen werden:
 
 ```bash
 SKIP_TESTS=1 SKIP_SCREENSHOTS=1 scripts/prepare_release.sh 1.0.0 release/next
 ```
+
+Mit `SKIP_SCREENSHOTS=1` werden keine neuen Screenshots erzeugt; dann müssen unter `fastlane/screenshots/ios` bereits gültige PNGs für alle Sprachen liegen.
 
 Manuell entspricht das diesen Schritten:
 
@@ -43,29 +45,39 @@ Manuell entspricht das diesen Schritten:
 
    Die App-Store-Workflows erwarten das Format `X.Y.Z`. Die `MARKETING_VERSION` im Xcode-Projekt muss exakt zur späteren Workflow-Eingabe passen.
 
-4. Screenshots und Metadaten vorbereiten:
+4. Metadaten vorbereiten:
 
    - Metadaten liegen unter `fastlane/metadata`
-   - Screenshots liegen unter `fastlane/screenshots/ios`
-   - beide Verzeichnisse müssen versioniert und committed sein
+   - Metadaten müssen versioniert und committed sein
 
-5. Lokale Vorab-Prüfungen ausführen:
+5. Lokale Vorab-Prüfungen ausführen und Screenshots erzeugen:
 
    ```bash
    make architecture-check
    make test
-   bundle exec fastlane ios validate_screenshot_seed
+   bundle exec fastlane ios sync_screenshots pages:all
    bundle exec fastlane ios verify_release version:1.0.0
    ```
 
-6. Änderungen committen und Branch pushen:
+   `sync_screenshots` erzeugt die App-Store-PNGs unter `fastlane/screenshots/ios`; diese Dateien gehören in den Release-Commit. `validate_screenshot_seed` ist nur ein schneller Smoke-Test und schreibt höchstens einen lokalen Kontroll-Screenshot unter `fastlane/screenshots/seed-check`; dieser Lane ersetzt `sync_screenshots` nicht.
+
+6. Release-Artefakte committen und Branch pushen:
 
    ```bash
    git status
-   git add Cujana.xcodeproj fastlane docs README.md
-   git commit -m "Release vorbereiten"
+   scripts/commit_release_artifacts.sh 1.0.0 release/next
    git push -u origin release/next
    ```
+
+   Das Commit-Skript prüft `fastlane/screenshots/ios`, staged die Release-Dateien inklusive PNGs und bricht ab, wenn ein Screenshot nicht im Git-Index landet.
+
+7. Main-PR ohne Screenshots erstellen:
+
+   ```bash
+   scripts/create_main_release_pr.sh 1.0.0 release/next
+   ```
+
+   Das PR-Skript erzeugt einen separaten Branch, standardmäßig `main-sync/next`, setzt `fastlane/screenshots/ios` dort auf den `main`-Zustand zurück und erstellt einen PR gegen `main`. Wenn der PR dennoch Screenshot-Änderungen enthalten würde, bricht das Skript ab.
 
 ## GitHub-Actions-Workflows
 
@@ -166,22 +178,18 @@ Der Standardweg ist das Abschlussskript:
 scripts/finalize_release.sh 1.0.0 release/next
 ```
 
-Das Skript prüft einen sauberen Arbeitsbaum, validiert die `MARKETING_VERSION`, merged den Release-Branch in `main`, pusht `main`, erstellt und pusht das Tag `v1.0.0` und löscht den Release-Branch lokal sowie auf `origin`.
+Das Skript prüft einen sauberen Arbeitsbaum, validiert die `MARKETING_VERSION`, stellt eingecheckte Release-Screenshots sicher, erstellt und pusht das Tag `v1.0.0` auf dem Release-Branch und löscht den Release-Branch lokal sowie auf `origin`. Es merged nicht nach `main`.
 
 Manuell entspricht das diesen Schritten:
 
-1. Release-Branch in `main` mergen:
+1. Main-PR ohne Screenshots prüfen und mergen.
+
+   Der PR wird mit `scripts/create_main_release_pr.sh` erzeugt. Vor dem Merge muss der PR weiterhin keine Änderungen unter `fastlane/screenshots/ios` zeigen.
+
+2. Git-Tag auf dem Release-Branch erstellen und pushen:
 
    ```bash
-   git checkout main
-   git pull
-   git merge --no-ff release/next
-   git push origin main
-   ```
-
-2. Git-Tag lokal erstellen und pushen:
-
-   ```bash
+   git checkout release/next
    git tag v1.0.0
    git push origin v1.0.0
    ```
@@ -189,6 +197,8 @@ Manuell entspricht das diesen Schritten:
 3. Release-Branch löschen:
 
    ```bash
+   git checkout main
+   git pull --ff-only
    git push origin --delete release/next
-   git branch -d release/next
+   git branch -D release/next
    ```
