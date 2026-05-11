@@ -10,6 +10,9 @@ struct SectionHeader: View {
                 .font(TypographyToken.symptomSectionTitle)
                 .tracking(SymptomCheckInToken.sectionTitleTracking)
                 .foregroundStyle(ColorToken.textPrimary)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             Text(subtitle)
                 .font(TypographyToken.symptomSectionDescription)
@@ -35,16 +38,16 @@ struct SymptomChip: View {
                     .frame(width: SymptomCheckInToken.symptomIconFrameWidth)
                     .accessibilityHidden(true)
 
-                VStack(alignment: .leading, spacing: 0) {
-                    symptomLabel
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                Spacer(minLength: 0)
+                symptomLabel
             }
             .padding(.horizontal, SymptomCheckInToken.symptomPillPaddingH)
             .padding(.vertical, SymptomCheckInToken.symptomPillPaddingV)
-            .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.symptomPillMinHeight, alignment: .leading)
+            .frame(
+                minWidth: SymptomCheckInToken.symptomChipMinWidth,
+                maxWidth: SymptomCheckInToken.symptomChipMaxWidth,
+                minHeight: SymptomCheckInToken.symptomPillMinHeight,
+                alignment: .leading
+            )
             .background(chipBackground)
             .clipShape(RoundedRectangle(cornerRadius: SymptomCheckInToken.symptomPillCornerRadius, style: .continuous))
             .overlay(chipBorder)
@@ -137,15 +140,8 @@ struct SeveritySelector: View {
     let namespace: Namespace.ID
     let onSelect: (Int) -> Void
 
-    private let severityColumns = [
-        GridItem(
-            .adaptive(minimum: SymptomCheckInToken.severityPillMinWidth),
-            spacing: SymptomCheckInToken.severityPillSpacing
-        )
-    ]
-
     var body: some View {
-        LazyVGrid(columns: severityColumns, alignment: .leading, spacing: SymptomCheckInToken.severityPillSpacing) {
+        AdaptiveFlowLayout(spacing: SymptomCheckInToken.severityPillSpacing) {
             ForEach(options) { option in
                 SeverityPill(
                     option: option,
@@ -174,7 +170,6 @@ private struct SeverityPill: View {
                 .minimumScaleFactor(SymptomCheckInToken.severityTextMinimumScale)
                 .fixedSize(horizontal: true, vertical: false)
                 .padding(.horizontal, SymptomCheckInToken.severityPillPaddingH)
-                .frame(minWidth: SymptomCheckInToken.severityPillMinWidth)
                 .frame(height: SymptomCheckInToken.severityPillMinHeight)
                 .background(pillBackground)
                 .clipShape(

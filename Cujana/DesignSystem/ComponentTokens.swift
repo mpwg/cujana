@@ -247,15 +247,16 @@ enum SymptomCheckInToken {
     static let screenHorizontalPadding: CGFloat = 20
     static let sectionSpacing: CGFloat = 28
     static let topContentPadding: CGFloat = 24
-    static let symptomGridMinimumWidth: CGFloat = 160
+    static let symptomChipMinWidth: CGFloat = 118
+    static let symptomChipMaxWidth: CGFloat = 280
     static let symptomPillGridSpacing: CGFloat = 14
     static let scrollBottomPadding: CGFloat = 120
     static let bottomBarBackgroundOpacity = 0.96
-    static let symptomPillMinHeight: CGFloat = 76
+    static let symptomPillMinHeight: CGFloat = 64
     static let symptomPillPaddingH: CGFloat = 16
     static let symptomPillPaddingV: CGFloat = 14
     static let symptomPillSpacing: CGFloat = 14
-    static let symptomTextMinimumScale = 0.94
+    static let symptomTextMinimumScale = 0.96
     static let symptomSelectedBackground = Color(hex: "#E6EFE7")
     static let symptomUnselectedBorder = Color(hex: "#3C3C43").opacity(0.1)
     static let symptomUnselectedIconOpacity = 0.85
@@ -269,7 +270,6 @@ enum SymptomCheckInToken {
     static let symptomPillCornerRadius: CGFloat = 22
     static let symptomPillShadow = ShadowTokenValue(color: Color.black.opacity(0.04), radius: 8, y: 1)
     static let severityPillMinHeight: CGFloat = 40
-    static let severityPillMinWidth: CGFloat = 96
     static let severityPillSpacing: CGFloat = 10
     static let severityPillPaddingH: CGFloat = 18
     static let severityPillCornerRadius: CGFloat = 20

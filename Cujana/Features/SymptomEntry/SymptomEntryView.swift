@@ -9,17 +9,6 @@ struct SymptomEntryView: View {
     @State private var isDateExpanded = false
     @State private var isInfoPresented = false
 
-    private let symptomColumns = [
-        GridItem(
-            .flexible(minimum: SymptomCheckInToken.symptomGridMinimumWidth),
-            spacing: SymptomCheckInToken.symptomPillGridSpacing
-        ),
-        GridItem(
-            .flexible(minimum: SymptomCheckInToken.symptomGridMinimumWidth),
-            spacing: SymptomCheckInToken.symptomPillGridSpacing
-        )
-    ]
-
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -112,7 +101,7 @@ struct SymptomEntryView: View {
                 subtitle: "Du kannst mehrere Symptome auswählen."
             )
 
-            LazyVGrid(columns: symptomColumns, spacing: SymptomCheckInToken.symptomPillGridSpacing) {
+            AdaptiveFlowLayout(spacing: SymptomCheckInToken.symptomPillGridSpacing) {
                 ForEach(viewModel.symptomOptions) { option in
                     SymptomChip(
                         option: option,
