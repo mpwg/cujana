@@ -166,17 +166,17 @@ enum AllergyDashboardPresentationState {
     static func levelDescription(for level: PollenLevel) -> String {
         switch level.rawValue {
         case 0:
-            "Heute kaum relevant."
+            "Aktuell geringe Belastung."
         case 1:
-            "Leicht im Blick behalten."
+            "Kann leicht spürbar sein, bleibt aber meist im Hintergrund."
         case 2:
-            "Kann spürbar werden."
+            "Kann heute Niesen und gereizte Augen verstärken."
         case 3:
-            "Plane ruhiger im Freien."
+            "Kann Symptome heute deutlich verstärken."
         case 4:
-            "Belastung möglichst meiden."
+            "Kann allergische Reaktionen heute stark begünstigen."
         default:
-            "Starke Belastung erwartet."
+            "Kann allergische Reaktionen heute stark begünstigen."
         }
     }
 

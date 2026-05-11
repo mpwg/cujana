@@ -17,13 +17,20 @@ struct ForecastDetailView: View {
     var body: some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: ForecastDetailToken.sectionSpacing) {
-                if let selectedDay {
+                VStack(alignment: .leading, spacing: ForecastDetailToken.titleBottomPadding) {
+                    Text("Alle Details")
+                        .font(TypographyToken.detailTitle)
+                        .tracking(-0.7)
+                        .foregroundStyle(ColorToken.textPrimary)
+
                     DetailDayPicker(
                         days: days,
                         selectedDayID: bindingForSelectedDay,
                         namespace: dayPickerNamespace
                     )
+                }
 
+                if let selectedDay {
                     VStack(alignment: .leading, spacing: ForecastDetailToken.contextSpacing) {
                         WeatherContextRow(day: selectedDay)
                             .transition(.opacity)
@@ -44,10 +51,9 @@ struct ForecastDetailView: View {
                 AttributionFooter()
             }
             .padding(.horizontal, ForecastDetailToken.screenHorizontalPadding)
-            .padding(.top, SpacingToken.lg)
+            .padding(.top, ForecastDetailToken.screenTopPadding)
             .padding(.bottom, SpacingToken.xl)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .containerRelativeFrame(.horizontal)
         }
         .safeAreaInset(edge: .bottom) {
             Spacer()
@@ -57,7 +63,7 @@ struct ForecastDetailView: View {
         .scrollBounceBehavior(.basedOnSize, axes: .vertical)
         .scrollIndicators(.hidden)
         .background(DetailColorToken.background.ignoresSafeArea())
-        .navigationTitle("Alle Details")
+        .navigationTitle("")
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
@@ -67,7 +73,7 @@ struct ForecastDetailView: View {
                     selectedDayID = days.first?.id
                 }
             }
-            .animation(.spring(response: 0.38, dampingFraction: 0.94), value: selectedDayID)
+            .animation(MotionToken.detailSelection, value: selectedDayID)
     }
 
     private var bindingForSelectedDay: Binding<ForecastDetailDayItem.ID?> {
@@ -96,7 +102,7 @@ private struct AllergenFocusSection: View {
             if relevantItems.isEmpty {
                 CalmEmptyAllergenState()
             } else {
-                VStack(spacing: SpacingToken.sm) {
+                VStack(spacing: SpacingToken.md) {
                     ForEach(relevantItems) { item in
                         AllergenFocusRow(item: item)
                     }
@@ -114,48 +120,47 @@ private struct AllergenFocusRow: View {
     let item: ForecastDetailPollenItem
 
     var body: some View {
-        HStack(spacing: SpacingToken.md) {
+        HStack(alignment: .center, spacing: SpacingToken.md) {
             Image(systemName: "leaf.fill")
-                .font(.system(.footnote, design: .rounded).weight(.semibold))
-                .foregroundStyle(DetailColorToken.sage)
-                .frame(width: ForecastDetailToken.allergenIconSize, height: ForecastDetailToken.allergenIconSize)
+                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .foregroundStyle(SemanticColorToken.foreground(for: item.levelText))
+                .frame(
+                    width: ForecastDetailToken.allergenIconFrameSize,
+                    height: ForecastDetailToken.allergenIconFrameSize
+                )
                 .background(DetailColorToken.riskBackground(for: item.levelText))
                 .clipShape(Circle())
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: ForecastDetailToken.allergenTextSpacing) {
                 Text(item.title)
-                    .font(TypographyToken.body)
+                    .font(TypographyToken.allergenTitle)
                     .foregroundStyle(ColorToken.textPrimary)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.leading)
 
-                Text(item.levelDescription)
-                    .font(TypographyToken.caption)
+                Text(item.symptomImpactText)
+                    .font(TypographyToken.allergenDescription)
                     .foregroundStyle(ColorToken.textSecondary.opacity(DetailColorToken.secondaryTextReadable))
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.leading)
             }
+            .layoutPriority(1)
 
             Spacer(minLength: SpacingToken.sm)
 
             RiskBadge(text: item.levelText)
+                .layoutPriority(0)
         }
         .frame(minHeight: ForecastDetailToken.allergenRowMinHeight)
-        .padding(.horizontal, SpacingToken.lg)
-        .padding(.vertical, SpacingToken.sm)
-        .background(.thinMaterial)
-        .background(DetailColorToken.surface)
-        .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusMedium, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: RadiusToken.radiusMedium, style: .continuous)
-                .stroke(
-                    DetailColorToken.neutralStroke.opacity(DetailColorToken.rowStroke),
-                    lineWidth: ForecastDetailToken.hairlineStrokeWidth
-                )
-        }
-        .softShadow(ShadowToken.card)
+        .padding(ForecastDetailToken.allergenCardPadding)
+        .premiumSurface(cornerRadius: ForecastDetailToken.allergenCardCornerRadius)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(item.title), \(item.levelText). \(item.levelDescription)")
+        .accessibilityLabel("\(item.title), \(item.levelText). \(item.symptomImpactText)")
     }
+
 }
 
 struct RiskBadge: View {
@@ -163,15 +168,16 @@ struct RiskBadge: View {
 
     var body: some View {
         Text(text)
-            .font(TypographyToken.caption.weight(.semibold))
-            .foregroundStyle(ColorToken.textPrimary.opacity(DetailColorToken.primaryTextSubtle))
+            .font(TypographyToken.severityPill.weight(.semibold))
+            .foregroundStyle(SemanticColorToken.foreground(for: text))
             .lineLimit(1)
             .minimumScaleFactor(ForecastDetailToken.badgeTextMinimumScale)
-            .padding(.horizontal, SpacingToken.sm)
-            .padding(.vertical, ForecastDetailToken.badgeVerticalPadding)
+            .padding(.horizontal, ForecastDetailToken.badgeHorizontalPadding)
+            .frame(height: ForecastDetailToken.badgeHeight)
             .background(DetailColorToken.riskBackground(for: text))
-            .clipShape(Capsule())
+            .clipShape(RoundedRectangle(cornerRadius: ForecastDetailToken.badgeCornerRadius, style: .continuous))
     }
+
 }
 
 private struct CompactNoRiskCard: View {
@@ -184,7 +190,7 @@ private struct CompactNoRiskCard: View {
                 .foregroundStyle(DetailColorToken.sageTertiary)
                 .accessibilityHidden(true)
 
-            Text("\(items.count) Allergene aktuell ohne Belastung")
+            Text("\(items.count) weitere Allergene aktuell ohne Belastung")
                 .font(TypographyToken.footnote.weight(.medium))
                 .foregroundStyle(ColorToken.textSecondary.opacity(DetailColorToken.secondaryTextReadable))
                 .lineLimit(1)
@@ -194,8 +200,8 @@ private struct CompactNoRiskCard: View {
         .frame(minHeight: ForecastDetailToken.noRiskMinHeight)
         .padding(.horizontal, SpacingToken.md)
         .padding(.vertical, ForecastDetailToken.noRiskVerticalPadding)
-        .background(DetailColorToken.mutedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
+        .background(ColorToken.cardMutedBackground)
+        .clipShape(RoundedRectangle(cornerRadius: ForecastDetailToken.noRiskCornerRadius, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(items.count) Allergene aktuell ohne Belastung")
     }
@@ -206,7 +212,7 @@ private struct HourlyRiskSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: SpacingToken.md) {
-            SectionTitle("Stündlicher Verlauf", prominence: .secondary)
+            SectionTitle("Belastungsverlauf", prominence: .secondary)
 
             if day.hourlyAllergyRiskItems.isEmpty {
                 Text("Stündliche Werte sind aktuell nicht verfügbar.")
@@ -278,7 +284,7 @@ private struct HourlyRiskChip: View {
     var body: some View {
         VStack(spacing: ForecastDetailToken.hourlyChipContentSpacing) {
             Text(isCurrentHour ? "Jetzt" : item.hourText)
-                .font(.system(.caption2, design: .rounded).weight(.medium))
+                .font(TypographyToken.hourlyHour)
                 .foregroundStyle(isCurrentHour ? ColorToken.textPrimary : ColorToken.textSecondary)
                 .monospacedDigit()
 
@@ -288,41 +294,41 @@ private struct HourlyRiskChip: View {
                 .accessibilityHidden(true)
 
             Text(item.levelText)
-                .font(.system(.caption2, design: .rounded).weight(.semibold))
+                .font(TypographyToken.hourlySeverity)
                 .foregroundStyle(ColorToken.textPrimary.opacity(DetailColorToken.hourlyPrimaryText))
                 .lineLimit(1)
                 .minimumScaleFactor(ForecastDetailToken.hourlyTextMinimumScale)
 
             Text(item.temperatureText)
-                .font(.system(.caption2, design: .rounded))
-                .foregroundStyle(ColorToken.textSecondary)
+                .font(TypographyToken.tinyMeta)
+                .foregroundStyle(ColorToken.textSecondary.opacity(ForecastDetailToken.hourlyWeatherTextOpacity))
                 .monospacedDigit()
         }
         .frame(width: chipWidth)
         .frame(minHeight: chipMinHeight)
-        .background(chipBackground)
-        .clipShape(RoundedRectangle(cornerRadius: ForecastDetailToken.hourlyChipCornerRadius, style: .continuous))
+        .background { chipBackground }
+        .clipShape(RoundedRectangle(cornerRadius: chipCornerRadius, style: .continuous))
         .scaleEffect(isCurrentHour ? ForecastDetailToken.hourlyCurrentScale : 1)
-        .overlay {
-            RoundedRectangle(cornerRadius: ForecastDetailToken.hourlyChipCornerRadius, style: .continuous)
-                .stroke(strokeColor, lineWidth: ForecastDetailToken.hairlineStrokeWidth)
-        }
+        .softShadow(isCurrentHour ? ShadowToken.floating : ShadowTokenValue(color: .clear, radius: 0, y: 0))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(item.hourText), Risiko \(item.levelText), \(item.temperatureText)")
+        .accessibilityLabel("\(item.hourText), Belastung \(item.levelText), \(item.temperatureText)")
     }
 
-    private var chipBackground: Color {
+    @ViewBuilder
+    private var chipBackground: some View {
         if isCurrentHour {
-            return DetailColorToken.riskBackground(for: item.levelText)
-                .opacity(DetailColorToken.currentRiskBackground)
+            LinearGradient(
+                colors: [
+                    SemanticColorToken.highSeverityBackground.opacity(ForecastDetailToken.hourlyActiveTopOpacity),
+                    SemanticColorToken.highSeverityBackground.opacity(ForecastDetailToken.hourlyActiveBottomOpacity)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        } else {
+            SemanticColorToken.highSeverityBackground
+                .opacity(ForecastDetailToken.hourlyInactiveBackgroundOpacity)
         }
-
-        return DetailColorToken.riskBackground(for: item.levelText)
-            .opacity(DetailColorToken.quietRiskBackground)
-    }
-
-    private var strokeColor: Color {
-        isCurrentHour ? DetailColorToken.sageAccentBorder : DetailColorToken.neutralStroke
     }
 
     private var dotSize: CGFloat {
@@ -335,6 +341,10 @@ private struct HourlyRiskChip: View {
 
     private var chipMinHeight: CGFloat {
         isCurrentHour ? ForecastDetailToken.hourlyCurrentChipMinHeight : ForecastDetailToken.hourlyChipMinHeight
+    }
+
+    private var chipCornerRadius: CGFloat {
+        isCurrentHour ? ForecastDetailToken.hourlyChipCornerRadius : ForecastDetailToken.hourlyInactiveChipCornerRadius
     }
 }
 

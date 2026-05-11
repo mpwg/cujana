@@ -104,7 +104,7 @@ enum AppDemoData {
                 repository: DemoSymptomEntryRepository(entries: symptomEntries)
             )
         )
-        viewModel.selectedSymptom = .itchyEyes
+        viewModel.selectedSymptoms = [.itchyEyes]
         viewModel.selectedSeverityLevel = 3
         viewModel.entryDate = now
         viewModel.note = "Augen jucken seit dem Heimweg durch den Park."

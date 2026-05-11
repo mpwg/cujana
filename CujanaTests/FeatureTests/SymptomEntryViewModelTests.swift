@@ -43,7 +43,7 @@ struct SymptomEntryViewModelTests {
 
         let entries = await repository.savedEntries()
         #expect(entries.isEmpty)
-        #expect(viewModel.saveStatus == .failure("Bitte wähle zuerst ein Symptom aus."))
+        #expect(viewModel.saveStatus == .failure("Bitte wähle zuerst mindestens ein Symptom aus."))
     }
 
     @Test
@@ -75,6 +75,26 @@ struct SymptomEntryViewModelTests {
         viewModel.selectSymptom(.sneezing)
 
         #expect(viewModel.saveStatus == .idle)
+    }
+
+    @Test
+    @MainActor
+    func submitStoresMultipleSelectedSymptoms() async throws {
+        let repository = CapturingSymptomEntryRepository()
+        let viewModel = SymptomEntryViewModel(
+            saveUseCase: SaveAllergySymptomEntryUseCase(repository: repository)
+        )
+
+        viewModel.selectSymptom(.sneezing)
+        viewModel.selectSymptom(.itchyEyes)
+        viewModel.selectSeverity(level: 2)
+
+        await viewModel.submit()
+
+        let entries = await repository.savedEntries()
+        #expect(entries.map(\.symptomType) == [.sneezing, .itchyEyes])
+        #expect(entries.allSatisfy { $0.severity == SymptomSeverity(rawValue: 4) })
+        #expect(viewModel.saveStatus == .success("Deine Symptome wurden gespeichert."))
     }
 
     @Test
