@@ -174,8 +174,16 @@ struct SymptomEntryView: View {
             isEnabled: viewModel.canSubmit
         ) {
             Task {
-                await viewModel.submit()
+                await submitEntry()
             }
+        }
+    }
+
+    private func submitEntry() async {
+        await viewModel.submit()
+
+        if case .success = viewModel.saveStatus {
+            dismiss()
         }
     }
 }
