@@ -32,6 +32,13 @@ Kurze Beschreibung:
 - [ ] UI Tests ergänzt oder bewusst nicht nötig.
 - [ ] Regression Test für Bugfix vorhanden oder bewusst nicht nötig.
 
+## Pflicht-Checks vor Merge
+
+- [ ] iOS CI läuft für produktive Swift-, Test-, Projekt- oder CI-Änderungen.
+- [ ] iPhone-Unit-Tests laufen bei Änderungen unter `Cujana/**`, `CujanaTests/**`, `CujanaUITests/**` oder `Cujana.xcodeproj/**`.
+- [ ] UI-Smoke läuft bei UI-, Asset-, App-Startpfad-, UI-Test- oder Projektänderungen.
+- [ ] CodeQL läuft vor dem Merge in `main` bei produktiven Swift- oder Projektänderungen.
+
 ## Hinweise für Reviewer
 
 Was sollte besonders geprüft werden?
