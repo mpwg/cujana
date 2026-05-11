@@ -6,6 +6,7 @@ struct AllergyDashboardContent: Equatable {
     let forecastDays: [ForecastDaySummaryItem]
     let forecastDetailDays: [ForecastDetailDayItem]
     let symptomItems: [SymptomDashboardItem]
+    let sourceStatuses: [AllergyOverviewSourceStatus]
     let generatedAtText: String
 
     var hasOverviewData: Bool {

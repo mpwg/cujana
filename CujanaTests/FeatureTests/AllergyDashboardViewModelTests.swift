@@ -40,6 +40,38 @@ struct AllergyDashboardViewModelTests {
 
     @Test
     @MainActor
+    func loadShowsDegradedPollenTextWhenPollenSourceFails() async throws {
+        let date = Date(timeIntervalSince1970: 1_800)
+        let coordinate = try LocationCoordinate(latitude: 37.75, longitude: -122.4)
+        let weather = dashboardWeather(date: date, coordinate: coordinate)
+        let viewModel = AllergyDashboardViewModel(
+            loadUseCase: LoadAllergyOverviewUseCase(
+                pollenRepository: DashboardFailingPollenRepository(error: PollenDataError.networkFailure),
+                weatherRepository: DashboardStubWeatherRepository(forecasts: [weather]),
+                symptomEntryRepository: DashboardStubSymptomEntryRepository(entries: [])
+            ),
+            coordinate: coordinate,
+            calendar: calendar,
+            now: { date }
+        )
+
+        await viewModel.load()
+
+        guard case .loaded(let content) = viewModel.state else {
+            Issue.record("Expected loaded state.")
+            return
+        }
+
+        #expect(content.forecastDays.first?.pollenText == "Pollendaten gerade nicht verfügbar.")
+        #expect(
+            content.sourceStatuses.contains(
+                AllergyOverviewSourceStatus(source: .pollen, state: .unavailable(.network))
+            )
+        )
+    }
+
+    @Test
+    @MainActor
     func loadMapsPollenAndSymptomsIntoDashboardContent() async throws {
         let date = Date(timeIntervalSince1970: 1_800)
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
