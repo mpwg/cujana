@@ -62,7 +62,12 @@ struct ContentView: View {
                 }
             },
             content: {
-                SymptomEntryView(viewModel: symptomEntryViewModel)
+                SymptomEntryView(
+                    viewModel: symptomEntryViewModel,
+                    onSaved: { savedEntry in
+                        entryListViewModel.upsertLocal(savedEntry)
+                    }
+                )
 #if os(iOS)
                     .presentationCornerRadius(TabBarToken.sheetCornerRadius)
                     .presentationBackground(ColorToken.backgroundPrimary)

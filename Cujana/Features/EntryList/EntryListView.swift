@@ -261,6 +261,7 @@ private struct EntryCard: View {
         .contentShape(RoundedRectangle(cornerRadius: EntryListToken.cardCornerRadius, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
+        .accessibilityIdentifier("journal-entry-\(item.symptoms.map(\.type.rawValue).joined(separator: "-"))")
         .animation(EntryListToken.journalAnimation, value: item.symptoms)
     }
 

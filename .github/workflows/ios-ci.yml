@@ -295,7 +295,7 @@ jobs:
             -resultBundlePath "${RESULT_BUNDLE_PATH}" \
             -testLanguage de \
             -testRegion DE \
-            -only-testing:CujanaUITests/CujanaScreenshotTests/testLaunchScreenRenders \
+            -only-testing:CujanaUITests/CujanaUITests/testDashboardSymptomEntryAppearsInJournal \
             CODE_SIGNING_ALLOWED=NO
 
       - name: xcresult bei Fehler hochladen

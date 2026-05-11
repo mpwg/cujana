@@ -1,43 +1,43 @@
-//
-//  CujanaUITests.swift
-//  CujanaUITests
-//
-//  Created by Matthias Wallner-Géhri on 04.05.26.
-//
-
 import XCTest
 
+@MainActor
 final class CujanaUITests: XCTestCase {
-
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testDashboardSymptomEntryAppearsInJournal() throws {
         let app = XCUIApplication()
-        app.launch()
+        launchDashboardDemo(app)
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // XCUIAutomation Documentation
-        // https://developer.apple.com/documentation/xcuiautomation
+        XCTAssertTrue(app.staticTexts["Wie fühlst du dich heute?"].waitForExistence(timeout: 6))
+
+        app.buttons["Symptome erfassen"].tap()
+        XCTAssertTrue(app.staticTexts["Welche Symptome hast du?"].waitForExistence(timeout: 3))
+
+        app.buttons["Laufende Nase"].tap()
+        app.buttons["Mittel"].tap()
+
+        let saveButton = app.buttons["Eintrag speichern"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 2))
+        XCTAssertTrue(saveButton.isEnabled)
+        saveButton.tap()
+
+        XCTAssertTrue(app.buttons["Symptome erfassen"].waitForExistence(timeout: 4))
+
+        app.tabBars.buttons["Einträge"].tap()
+        XCTAssertTrue(app.navigationBars["Einträge"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.staticTexts["journal-entry-runnyNose"].waitForExistence(timeout: 4))
     }
 
-    @MainActor
-    func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
-        }
+    private func launchDashboardDemo(_ app: XCUIApplication) {
+        app.launchArguments += [
+            "-ui_testing",
+            "-cujana_screenshot_screen",
+            "dashboard",
+            "-cujana_screenshot_seed",
+            "default"
+        ]
+        app.launch()
     }
 }

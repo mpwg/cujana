@@ -20,9 +20,17 @@ Folgende Checks sind für dieses Gate relevant:
 make architecture-check
 swiftlint lint --strict
 make test
+xcodebuild test \
+  -project Cujana.xcodeproj \
+  -scheme CujanaScreenshots \
+  -destination 'platform=iOS Simulator,name=iPhone 17' \
+  -testLanguage de \
+  -testRegion DE \
+  -only-testing:CujanaUITests/CujanaUITests/testDashboardSymptomEntryAppearsInJournal
 ```
 
 `make test` führt die Unit-Tests über das shared Scheme `Cujana-UnitTests` als Mac-Catalyst-Testlauf aus. Das entspricht dem Xcode-Testpfad des CI-Guardrail-Workflows und verhindert, dass ein lokaler Testlauf ohne ausgeführte Tests grün wird.
+Der zentrale UI-Smoke läuft separat über das shared Scheme `CujanaScreenshots` auf dem iPhone-Simulator und wird in CI für relevante iOS-PRs ausgeführt.
 
 ## Architekturprüfung
 
@@ -37,7 +45,7 @@ make test
 ## Bekannte Einschränkungen
 
 - Der MVP verwendet weiterhin Wien als feste Startkoordinate.
-- UI-Tests bleiben außerhalb des schnellen Guardrail-Testpfads und sind nicht Teil von `make test`.
+- UI-Tests bleiben außerhalb des schnellen Unit-Guardrail-Testpfads und sind nicht Teil von `make test`.
 - Die Fehlerzustände sind bewusst nutzerfreundlich, aber noch nicht nach Ursache differenziert.
 
 ## Follow-up-Issues

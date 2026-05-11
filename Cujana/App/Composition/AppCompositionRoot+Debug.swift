@@ -20,15 +20,6 @@ extension AppCompositionRoot {
         }
     }
 
-    private func makeDemoContentView(telemetryService: AppTelemetryService) -> ContentView {
-        ContentView(
-            dashboardViewModel: AppDemoData.makeDashboardViewModel(),
-            entryListViewModel: AppDemoData.makeEntryListViewModel(),
-            symptomEntryViewModel: AppDemoData.makeSymptomEntryViewModel(),
-            telemetryService: telemetryService
-        )
-    }
-
     @ViewBuilder
     private func makeScreenshotView(
         screen: AppScreenshotScreen,
@@ -36,7 +27,7 @@ extension AppCompositionRoot {
     ) -> some View {
         switch screen {
         case .dashboard:
-            makeDemoContentView(telemetryService: telemetryService)
+            makeContentView(telemetryService: telemetryService)
         case .entry:
             SymptomEntryView(viewModel: AppDemoData.makeSymptomEntryViewModel())
         }
