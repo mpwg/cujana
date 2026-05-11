@@ -1,0 +1,4 @@
+// Shared target defaults for Cujana app and test targets.
+
+#include "Architecture.xcconfig"
+#include? "LocalSecrets.xcconfig"
