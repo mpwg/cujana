@@ -412,10 +412,7 @@ end
 def release_signing_xcargs(build_number:)
   [
     "DEVELOPMENT_TEAM=#{shellescape_build_setting(ENV['APPLE_DEVELOPER_TEAM_ID'])}",
-    "CURRENT_PROJECT_VERSION=#{shellescape_build_setting(build_number)}",
-    "CUJANA_SENTRY_DSN=#{shellescape_build_setting(ENV['CUJANA_SENTRY_DSN'])}",
-    "CUJANA_TELEMETRY_APP_ID=#{shellescape_build_setting(ENV['CUJANA_TELEMETRY_APP_ID'])}",
-    "POLLENINFORMATION_API_KEY=#{shellescape_build_setting(ENV['POLLENINFORMATION_API_KEY'])}"
+    "CURRENT_PROJECT_VERSION=#{shellescape_build_setting(build_number)}"
   ].join(" ")
 end
 
