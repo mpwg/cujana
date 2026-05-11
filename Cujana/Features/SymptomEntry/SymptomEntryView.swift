@@ -21,33 +21,38 @@ struct EntryFormView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: SymptomCheckInToken.sectionSpacing) {
-                    EntryFormSections(
-                        viewModel: viewModel,
-                        symptomSelectionNamespace: symptomSelectionNamespace,
-                        severitySelectionNamespace: severitySelectionNamespace,
-                        isDateExpanded: $isDateExpanded,
-                        reduceMotion: reduceMotion
-                    )
-                    statusMessage
+            GeometryReader { proxy in
+                VStack(spacing: 0) {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: SymptomCheckInToken.sectionSpacing) {
+                            EntryFormSections(
+                                viewModel: viewModel,
+                                symptomSelectionNamespace: symptomSelectionNamespace,
+                                severitySelectionNamespace: severitySelectionNamespace,
+                                isDateExpanded: $isDateExpanded,
+                                reduceMotion: reduceMotion
+                            )
+                            statusMessage
+                        }
+                        .padding(.horizontal, SymptomCheckInToken.screenHorizontalPadding)
+                        .padding(.top, SymptomCheckInToken.topContentPadding)
+                        .padding(.bottom, SpacingToken.lg)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(height: max(proxy.size.height - SymptomCheckInToken.bottomBarHeight, 0))
+
+                    saveButton
+                        .padding(.horizontal, SymptomCheckInToken.screenHorizontalPadding)
+                        .padding(.top, SpacingToken.md)
+                        .padding(.bottom, SpacingToken.md)
+                        .frame(height: SymptomCheckInToken.bottomBarHeight)
+                        .background {
+                            ColorToken.backgroundPrimary.opacity(SymptomCheckInToken.bottomBarBackgroundOpacity)
+                        }
                 }
-                .padding(.horizontal, SymptomCheckInToken.screenHorizontalPadding)
-                .padding(.top, SymptomCheckInToken.topContentPadding)
-                .padding(.bottom, SpacingToken.lg)
-                .safeAreaPadding(.bottom, SymptomCheckInToken.scrollBottomPadding)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
             }
             .background(ColorToken.backgroundPrimary.ignoresSafeArea())
-            .safeAreaInset(edge: .bottom) {
-                saveButton
-                    .padding(.horizontal, SymptomCheckInToken.screenHorizontalPadding)
-                    .padding(.top, SpacingToken.md)
-                    .padding(.bottom, SpacingToken.md)
-                    .background {
-                        ColorToken.backgroundPrimary.opacity(SymptomCheckInToken.bottomBarBackgroundOpacity)
-                    }
-            }
 #if os(iOS)
             .navigationTitle(viewModel.screenTitle)
             .navigationBarTitleDisplayMode(.inline)
@@ -138,13 +143,6 @@ struct EntryFormSections: View {
     @Binding var isDateExpanded: Bool
     let reduceMotion: Bool
 
-    private let symptomColumns = [
-        GridItem(
-            .flexible(minimum: SymptomCheckInToken.symptomGridMinimumWidth),
-            spacing: SymptomCheckInToken.symptomPillGridSpacing
-        )
-    ]
-
     var body: some View {
         symptomSection
         severitySection
@@ -159,10 +157,10 @@ struct EntryFormSections: View {
         VStack(alignment: .leading, spacing: SpacingToken.md) {
             SectionHeader(
                 title: "Symptome",
-                subtitle: "Mehrere Symptome auswählbar."
+                subtitle: ""
             )
 
-            LazyVGrid(columns: symptomColumns, spacing: SymptomCheckInToken.symptomPillGridSpacing) {
+            LazyVStack(spacing: SymptomCheckInToken.symptomPillGridSpacing) {
                 ForEach(viewModel.symptomOptions) { option in
                     SymptomChip(
                         option: option,

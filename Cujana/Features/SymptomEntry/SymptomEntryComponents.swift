@@ -13,10 +13,12 @@ struct SectionHeader: View {
                 .lineLimit(nil)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text(subtitle)
-                .font(TypographyToken.symptomSectionDescription)
-                .foregroundStyle(ColorToken.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            if subtitle.isEmpty == false {
+                Text(subtitle)
+                    .font(TypographyToken.symptomSectionDescription)
+                    .foregroundStyle(ColorToken.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
     }
 }
@@ -98,7 +100,6 @@ struct SymptomChip: View {
         if isSelected {
             RoundedRectangle(cornerRadius: SymptomCheckInToken.symptomPillCornerRadius, style: .continuous)
                 .fill(SymptomCheckInToken.symptomSelectedBackground)
-                .matchedGeometryEffect(id: "symptom-\(option.id)", in: namespace)
         } else {
             RoundedRectangle(cornerRadius: SymptomCheckInToken.symptomPillCornerRadius, style: .continuous)
                 .fill(ColorToken.cardBackground)
