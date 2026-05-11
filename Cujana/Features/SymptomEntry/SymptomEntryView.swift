@@ -24,7 +24,7 @@ struct SymptomEntryView: View {
                     statusMessage
                 }
                 .padding(.horizontal, SymptomCheckInToken.screenHorizontalPadding)
-                .padding(.top, SymptomCheckInToken.sectionSpacing)
+                .padding(.top, SymptomCheckInToken.topContentPadding)
                 .padding(.bottom, SpacingToken.lg)
                 .safeAreaPadding(.bottom, SymptomCheckInToken.scrollBottomPadding)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -35,7 +35,10 @@ struct SymptomEntryView: View {
                     .padding(.horizontal, SymptomCheckInToken.screenHorizontalPadding)
                     .padding(.top, SpacingToken.md)
                     .padding(.bottom, SpacingToken.md)
-                    .background(ColorToken.backgroundPrimary.opacity(SymptomCheckInToken.bottomBarBackgroundOpacity))
+                    .background {
+                        ColorToken.backgroundPrimary.opacity(SymptomCheckInToken.bottomBarBackgroundOpacity)
+                            .background(.ultraThinMaterial)
+                    }
             }
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -52,8 +55,8 @@ struct SymptomEntryView: View {
                                 .font(.system(.body, design: .rounded).weight(.semibold))
                                 .foregroundStyle(ColorToken.textPrimary)
                                 .frame(
-                                    width: SymptomCheckInToken.navigationButtonSize,
-                                    height: SymptomCheckInToken.navigationButtonSize
+                                    width: SymptomCheckInToken.datePickerMinHeight,
+                                    height: SymptomCheckInToken.datePickerMinHeight
                                 )
                                 .contentShape(Circle())
                         }
@@ -74,9 +77,12 @@ struct SymptomEntryView: View {
                             .font(.system(.body, design: .rounded).weight(.medium))
                             .foregroundStyle(ColorToken.textSecondary)
                             .frame(
-                                width: SymptomCheckInToken.navigationButtonSize,
-                                height: SymptomCheckInToken.navigationButtonSize
+                                width: SymptomCheckInToken.infoButtonSize,
+                                height: SymptomCheckInToken.infoButtonSize
                             )
+                            .background(SymptomCheckInToken.infoButtonBackground)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Information zu Symptomen")
@@ -90,20 +96,22 @@ struct SymptomEntryView: View {
     }
 
     private var symptomSection: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.lg) {
-            SectionHeader(
-                title: "Welche Symptome hast du?",
-                subtitle: "Du kannst mehrere Symptome auswählen."
-            )
+        GroupedSection {
+            VStack(alignment: .leading, spacing: SpacingToken.lg) {
+                SectionHeader(
+                    title: "Welche Symptome hast du?",
+                    subtitle: "Du kannst mehrere Symptome auswählen."
+                )
 
-            LazyVGrid(columns: symptomColumns, spacing: SpacingToken.md) {
-                ForEach(viewModel.symptomOptions) { option in
-                    SymptomChip(
-                        option: option,
-                        isSelected: viewModel.selectedSymptoms.contains(option.type),
-                        namespace: symptomSelectionNamespace
-                    ) {
-                        viewModel.selectSymptom(option.type)
+                LazyVGrid(columns: symptomColumns, spacing: SpacingToken.md) {
+                    ForEach(viewModel.symptomOptions) { option in
+                        SymptomChip(
+                            option: option,
+                            isSelected: viewModel.selectedSymptoms.contains(option.type),
+                            namespace: symptomSelectionNamespace
+                        ) {
+                            viewModel.selectSymptom(option.type)
+                        }
                     }
                 }
             }
@@ -111,15 +119,17 @@ struct SymptomEntryView: View {
     }
 
     private var severitySection: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.lg) {
-            SectionHeader(title: "Wie belastend sind die Symptome?", subtitle: "1 ist sehr mild, 5 sehr stark.")
+        GroupedSection {
+            VStack(alignment: .leading, spacing: SpacingToken.lg) {
+                SectionHeader(title: "Wie belastend sind die Symptome?", subtitle: "1 ist sehr mild, 5 sehr stark.")
 
-            SeveritySelector(
-                options: viewModel.severityOptions,
-                selectedLevel: viewModel.selectedSeverityLevel,
-                namespace: severitySelectionNamespace,
-                onSelect: viewModel.selectSeverity(level:)
-            )
+                SeveritySelector(
+                    options: viewModel.severityOptions,
+                    selectedLevel: viewModel.selectedSeverityLevel,
+                    namespace: severitySelectionNamespace,
+                    onSelect: viewModel.selectSeverity(level:)
+                )
+            }
         }
     }
 
@@ -136,10 +146,12 @@ struct SymptomEntryView: View {
     }
 
     private var noteSection: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.lg) {
-            SectionHeader(title: "Notiz", subtitle: "Optional")
+        GroupedSection {
+            VStack(alignment: .leading, spacing: SpacingToken.lg) {
+                SectionHeader(title: "Notiz", subtitle: "Optional")
 
-            SymptomNoteField(text: $viewModel.note)
+                SymptomNoteField(text: $viewModel.note)
+            }
         }
     }
 

@@ -253,6 +253,7 @@ enum ShadowToken {
 
 enum MotionToken {
     static let detailSelection = Animation.spring(response: 0.32, dampingFraction: 0.86)
+    static let reducedMotionDuration = 0.01
 }
 
 extension Color {
