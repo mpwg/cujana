@@ -17,8 +17,7 @@ struct DetailDayPicker: View {
                 } label: {
                     Label(day.title, systemImage: "leaf")
                         .font(TypographyToken.detailSegment)
-                        .lineLimit(1)
-                        .minimumScaleFactor(ForecastDetailToken.dayPickerTextMinimumScale)
+                        .fixedSize(horizontal: false, vertical: true)
                         .foregroundStyle(isSelected ? ColorToken.accentDark : ColorToken.textSecondary)
                         .frame(maxWidth: .infinity, minHeight: ForecastDetailToken.dayPickerMinHeight)
                         .padding(.horizontal, SpacingToken.sm)
@@ -32,11 +31,12 @@ struct DetailDayPicker: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("\(day.title) auswählen")
+                .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
                 .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
         }
         .padding(ForecastDetailToken.dayPickerPadding)
-        .frame(height: ForecastDetailToken.dayPickerHeight)
+        .frame(minHeight: ForecastDetailToken.dayPickerHeight)
         .background(
             reduceTransparency
                 ? ColorToken.secondarySurface
@@ -62,8 +62,6 @@ struct WeatherContextRow: View {
                     .font(TypographyToken.detailStatusTitle)
                     .tracking(-0.6)
                     .foregroundStyle(ColorToken.textPrimary)
-                    .lineLimit(2)
-                    .minimumScaleFactor(ForecastDetailToken.weatherTextMinimumScale)
                     .fixedSize(horizontal: false, vertical: true)
                     .multilineTextAlignment(.leading)
                     .opacity(DetailColorToken.weatherDescriptionText)
@@ -71,7 +69,6 @@ struct WeatherContextRow: View {
                 Text(statusSubtitle)
                     .font(TypographyToken.detailStatusSubtitle)
                     .foregroundStyle(ColorToken.textSecondary)
-                    .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
                     .multilineTextAlignment(.leading)
             }
@@ -82,8 +79,7 @@ struct WeatherContextRow: View {
                     ForecastDetailToken.allergyWeatherContextText
                         .opacity(ForecastDetailToken.allergyWeatherContextOpacity)
                 )
-                .lineLimit(1)
-                .minimumScaleFactor(ForecastDetailToken.weatherTextMinimumScale)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(ForecastDetailToken.weatherCardPadding)
         .frame(minHeight: ForecastDetailToken.weatherMinHeight, alignment: .center)

@@ -11,18 +11,21 @@ struct SectionHeader: View {
                 .tracking(SymptomCheckInToken.sectionTitleTracking)
                 .foregroundStyle(ColorToken.textPrimary)
                 .lineLimit(nil)
-                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text(subtitle)
-                .font(TypographyToken.symptomSectionDescription)
-                .foregroundStyle(SymptomCheckInToken.secondaryText)
-                .fixedSize(horizontal: false, vertical: true)
+            if subtitle.isEmpty == false {
+                Text(subtitle)
+                    .font(TypographyToken.symptomSectionDescription)
+                    .foregroundStyle(ColorToken.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
     }
 }
 
 struct SymptomChip: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     let option: SymptomOption
     let isSelected: Bool
     let namespace: Namespace.ID
@@ -59,11 +62,12 @@ struct SymptomChip: View {
         }
         .buttonStyle(SymptomChipButtonStyle())
         .accessibilityLabel(option.title)
+        .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
         .accessibilityHint("Mehrfachauswahl möglich")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .sensoryFeedback(.selection, trigger: isSelected)
         .animation(
-            .spring(
+            reduceMotion ? nil : .spring(
                 response: SymptomCheckInToken.animationDuration,
                 dampingFraction: SymptomCheckInToken.animationDamping
             ),
@@ -73,13 +77,10 @@ struct SymptomChip: View {
 
     private var symptomLabel: some View {
         Text(option.title)
-            .font(TypographyToken.symptomPill.weight(.semibold))
+            .font(.body.weight(.semibold))
             .foregroundStyle(isSelected ? SymptomCheckInToken.selectedText : ColorToken.textPrimary)
-            .lineLimit(2)
-            .minimumScaleFactor(SymptomCheckInToken.symptomTextMinimumScale)
-            .allowsTightening(true)
             .multilineTextAlignment(.leading)
-            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityHidden(true)
     }
 
     private var iconColor: Color {
@@ -99,7 +100,6 @@ struct SymptomChip: View {
         if isSelected {
             RoundedRectangle(cornerRadius: SymptomCheckInToken.symptomPillCornerRadius, style: .continuous)
                 .fill(SymptomCheckInToken.symptomSelectedBackground)
-                .matchedGeometryEffect(id: "symptom-\(option.id)", in: namespace)
         } else {
             RoundedRectangle(cornerRadius: SymptomCheckInToken.symptomPillCornerRadius, style: .continuous)
                 .fill(ColorToken.cardBackground)
@@ -121,10 +121,20 @@ struct SymptomChip: View {
 }
 
 private struct SymptomChipButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? SymptomCheckInToken.symptomPressedScale : 1)
-            .animation(.easeInOut(duration: PressFeedbackToken.animationDuration), value: configuration.isPressed)
+            .scaleEffect(pressedScale(configuration: configuration))
+            .animation(pressAnimation, value: configuration.isPressed)
+    }
+
+    private var pressAnimation: Animation? {
+        reduceMotion ? nil : .easeInOut(duration: PressFeedbackToken.animationDuration)
+    }
+
+    private func pressedScale(configuration: Configuration) -> CGFloat {
+        reduceMotion ? 1 : (configuration.isPressed ? SymptomCheckInToken.symptomPressedScale : 1)
     }
 }
 
@@ -157,6 +167,8 @@ struct SeveritySelector: View {
 }
 
 private struct SeverityPill: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     let option: SeverityOption
     let isSelected: Bool
     let namespace: Namespace.ID
@@ -167,11 +179,9 @@ private struct SeverityPill: View {
             Text(option.title)
                 .font(TypographyToken.severityControl)
                 .foregroundStyle(isSelected ? ColorToken.cardBackground : SymptomCheckInToken.severityUnselectedText)
-                .lineLimit(1)
-                .minimumScaleFactor(SymptomCheckInToken.severityTextMinimumScale)
-                .fixedSize(horizontal: true, vertical: false)
+                .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, SymptomCheckInToken.severityPillPaddingH)
-                .frame(height: SymptomCheckInToken.severityPillMinHeight)
+                .frame(minHeight: SymptomCheckInToken.severityPillMinHeight)
                 .background(pillBackground)
                 .clipShape(
                     RoundedRectangle(cornerRadius: SymptomCheckInToken.severityPillCornerRadius, style: .continuous)
@@ -180,10 +190,11 @@ private struct SeverityPill: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(option.title)
+        .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .sensoryFeedback(.selection, trigger: isSelected)
         .animation(
-            .spring(
+            reduceMotion ? nil : .spring(
                 response: SymptomCheckInToken.animationDuration,
                 dampingFraction: SymptomCheckInToken.animationDamping
             ),
@@ -221,36 +232,37 @@ struct ExpandableDateCard: View {
     let reduceMotion: Bool
 
     var body: some View {
-        Button {
-            withAnimation(animation) {
-                isExpanded.toggle()
-            }
-        } label: {
-            VStack(alignment: .leading, spacing: SpacingToken.md) {
-                collapsedHeader
-
-                if isExpanded {
-                    compactPickers
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
+            Button {
+                withAnimation(animation) {
+                    isExpanded.toggle()
                 }
+            } label: {
+                collapsedHeader
             }
-            .padding(SpacingToken.lg)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(minHeight: isExpanded ? nil : SymptomCheckInToken.dateCardCollapsedHeight)
-            .background(ColorToken.cardBackground)
-            .clipShape(
-                RoundedRectangle(cornerRadius: SymptomCheckInToken.dateCardCornerRadius, style: .continuous)
-            )
-            .softShadow(SymptomCheckInToken.dateCardShadow)
+            .buttonStyle(DateCardButtonStyle())
+            .accessibilityLabel("Zeitpunkt")
+            .accessibilityValue(dateSummary)
+            .accessibilityHint(isExpanded ? "Zum Einklappen tippen" : "Zum Bearbeiten tippen")
+
+            if isExpanded {
+                compactPickers
+            }
         }
-        .buttonStyle(DateCardButtonStyle())
-        .accessibilityLabel("Zeitpunkt, \(dateSummary)")
-        .accessibilityHint(isExpanded ? "Zum Einklappen tippen" : "Zum Bearbeiten tippen")
+        .padding(SpacingToken.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(minHeight: isExpanded ? nil : SymptomCheckInToken.dateCardCollapsedHeight)
+        .background(ColorToken.cardBackground)
+        .clipShape(
+            RoundedRectangle(cornerRadius: SymptomCheckInToken.dateCardCornerRadius, style: .continuous)
+        )
+        .softShadow(SymptomCheckInToken.dateCardShadow)
     }
 
     private var collapsedHeader: some View {
         HStack(spacing: SpacingToken.md) {
             Image(systemName: "calendar")
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(TypographyToken.secondaryBody.weight(.semibold))
                 .foregroundStyle(SymptomCheckInToken.accent)
                 .frame(width: SymptomCheckInToken.dateIconSize, height: SymptomCheckInToken.dateIconSize)
                 .background(SymptomCheckInToken.hintBackground)
@@ -284,11 +296,13 @@ struct ExpandableDateCard: View {
                 .datePickerStyle(.compact)
                 .tint(SymptomCheckInToken.accent)
                 .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.datePickerMinHeight)
+                .accessibilityHint("Ändert das Datum des Eintrags")
 
             DatePicker("Uhrzeit", selection: $entryDate, displayedComponents: .hourAndMinute)
                 .datePickerStyle(.compact)
                 .tint(SymptomCheckInToken.accent)
                 .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.datePickerMinHeight)
+                .accessibilityHint("Ändert die Uhrzeit des Eintrags")
         }
         .padding(.top, SpacingToken.xs)
     }
@@ -315,11 +329,21 @@ struct ExpandableDateCard: View {
 }
 
 private struct DateCardButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .opacity(configuration.isPressed ? PressFeedbackToken.prominentOpacity : 1)
-            .scaleEffect(configuration.isPressed ? PressFeedbackToken.prominentScale : 1)
-            .animation(.easeInOut(duration: PressFeedbackToken.animationDuration), value: configuration.isPressed)
+            .scaleEffect(pressedScale(configuration: configuration))
+            .animation(pressAnimation, value: configuration.isPressed)
+    }
+
+    private var pressAnimation: Animation? {
+        reduceMotion ? nil : .easeInOut(duration: PressFeedbackToken.animationDuration)
+    }
+
+    private func pressedScale(configuration: Configuration) -> CGFloat {
+        reduceMotion ? 1 : (configuration.isPressed ? PressFeedbackToken.prominentScale : 1)
     }
 }
 
@@ -376,71 +400,5 @@ struct SymptomNoteField: View {
                 SymptomCheckInToken.notesBorder,
                 lineWidth: SymptomCheckInToken.notesBorderWidth
             )
-    }
-}
-
-struct PrimaryCTAButton: View {
-    let title: String
-    let isLoading: Bool
-    let isEnabled: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: SpacingToken.sm) {
-                if isLoading {
-                    ProgressView()
-                        .tint(ColorToken.cardBackground)
-                }
-
-                Text(title)
-                    .contentTransition(.opacity)
-            }
-        }
-        .buttonStyle(PrimaryCTAButtonStyle(isEnabled: isEnabled))
-        .disabled(isEnabled == false)
-    }
-}
-
-private struct PrimaryCTAButtonStyle: ButtonStyle {
-    let isEnabled: Bool
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(TypographyToken.button)
-            .foregroundStyle(foreground)
-            .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.saveButtonMinHeight)
-            .background(buttonBackground(configuration: configuration))
-            .clipShape(RoundedRectangle(cornerRadius: SymptomCheckInToken.saveButtonRadius, style: .continuous))
-            .softShadow(buttonShadow)
-            .opacity(disabledOrPressedOpacity(configuration: configuration))
-            .scaleEffect(configuration.isPressed ? PressFeedbackToken.prominentScale : 1)
-            .animation(.easeInOut(duration: SymptomCheckInToken.animationDuration), value: configuration.isPressed)
-    }
-
-    private var foreground: Color {
-        isEnabled
-            ? ColorToken.cardBackground
-            : ColorToken.cardBackground.opacity(SurfaceOpacityToken.accentProminent)
-    }
-
-    private var buttonShadow: ShadowTokenValue {
-        isEnabled ? SymptomCheckInToken.saveButtonShadow : ShadowTokenValue(color: .clear, radius: 0, y: 0)
-    }
-
-    private func buttonBackground(configuration: Configuration) -> Color {
-        if isEnabled == false {
-            return SymptomCheckInToken.disabledButtonBackground
-        }
-
-        return configuration.isPressed ? SymptomCheckInToken.saveButtonPressedBackground : SymptomCheckInToken.accent
-    }
-
-    private func disabledOrPressedOpacity(configuration: Configuration) -> Double {
-        if isEnabled == false {
-            return ButtonToken.Primary.enabledOpacity
-        }
-
-        return configuration.isPressed ? PressFeedbackToken.prominentOpacity : ButtonToken.Primary.enabledOpacity
     }
 }

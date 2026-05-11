@@ -9,25 +9,25 @@ import SwiftUI
 
 enum ColorToken {
     fileprivate enum Raw {
-        static let backgroundPrimary = Color(hex: "#F7F4EE")
-        static let backgroundSecondary = Color(hex: "#F1ECE4")
-        static let cardBackground = Color(hex: "#FFFFFF")
-        static let cardMutedBackground = Color(hex: "#F1ECE4")
+        static let backgroundPrimary = Color("BackgroundPrimary")
+        static let backgroundSecondary = Color("BackgroundSecondary")
+        static let cardBackground = Color("CardBackground")
+        static let cardMutedBackground = Color("CardMutedBackground")
 
-        static let textPrimary = Color(hex: "#1E1E1C")
-        static let textSecondary = Color(hex: "#6E6A63")
-        static let textTertiary = Color(hex: "#9B958C")
+        static let textPrimary = Color.primary
+        static let textSecondary = Color.secondary
+        static let textTertiary = Color("TextTertiary")
 
-        static let accentPrimary = Color(hex: "#5B7F67")
-        static let accentDark = Color(hex: "#486553")
-        static let accentSoft = Color(hex: "#DDEADF")
-        static let accentPositive = Color(hex: "#47624C")
-        static let accentWarning = Color(hex: "#7C6240")
-        static let accentNegative = Color(hex: "#8A4A3D")
-        static let softPeach = Color(hex: "#F2DDD2")
-        static let softSand = Color(hex: "#ECE4D8")
+        static let accentPrimary = Color("AccentPrimary")
+        static let accentDark = Color("AccentDark")
+        static let accentSoft = Color("AccentSoft")
+        static let accentPositive = Color("AccentPositive")
+        static let accentWarning = Color("AccentWarning")
+        static let accentNegative = Color("AccentNegative")
+        static let softPeach = Color("SoftPeach")
+        static let softSand = Color("SoftSand")
 
-        static let separatorSoft = Color(hex: "#ECE4D8")
+        static let separatorSoft = Color("SeparatorSoft")
     }
 
     static let backgroundPrimary = Raw.backgroundPrimary
@@ -54,15 +54,15 @@ enum ColorToken {
 
 enum DetailColorToken {
     fileprivate enum Raw {
-        static let background = Color(hex: "#F4F1EA")
-        static let mutedSurface = Color(hex: "#E9E4DA")
-        static let sage = Color(hex: "#56665B")
-        static let sageSoft = Color(hex: "#DEE5DA")
-        static let neutralStroke = Color(hex: "#DDD6CC")
-        static let warningSoft = Color(hex: "#EEE4D0")
-        static let alertSoft = Color(hex: "#EEDBD7")
-        static let hourlyActiveTop = Color(hex: "#F6E5E0")
-        static let hourlyActiveBottom = Color(hex: "#F4DDD7")
+        static let background = ColorToken.backgroundPrimary
+        static let mutedSurface = ColorToken.cardMutedBackground
+        static let sage = ColorToken.accentPrimary
+        static let sageSoft = ColorToken.accentSoft
+        static let neutralStroke = ColorToken.separatorSoft
+        static let warningSoft = SemanticColorToken.mediumSeverityBackground
+        static let alertSoft = SemanticColorToken.highSeverityBackground
+        static let hourlyActiveTop = SemanticColorToken.highSeverityBackground
+        static let hourlyActiveBottom = SemanticColorToken.highSeverityBackground
     }
 
     static let background = Raw.background
@@ -123,13 +123,13 @@ enum DetailColorToken {
 }
 
 enum SemanticColorToken {
-    static let highSeverityBackground = Color(hex: "#F4DDD7")
-    static let highSeverityText = Color(hex: "#8A4A3D")
-    static let mediumSeverityBackground = Color(hex: "#F2E9D7")
-    static let mediumSeverityText = Color(hex: "#7C6240")
-    static let lowSeverityBackground = Color(hex: "#DCEBDD")
-    static let lowSeverityText = Color(hex: "#47624C")
-    static let disabledButtonBackground = Color(hex: "#C8D6CA")
+    static let highSeverityBackground = Color("HighSeverityBackground")
+    static let highSeverityText = Color("HighSeverityText")
+    static let mediumSeverityBackground = Color("MediumSeverityBackground")
+    static let mediumSeverityText = Color("MediumSeverityText")
+    static let lowSeverityBackground = Color("LowSeverityBackground")
+    static let lowSeverityText = Color("LowSeverityText")
+    static let disabledButtonBackground = Color("DisabledButtonBackground")
 
     static func background(for text: String) -> Color {
         switch text {
@@ -155,50 +155,50 @@ enum SemanticColorToken {
 }
 
 enum TypographyToken {
-    static let largeTitle = Font.system(size: 34, weight: .semibold, design: .rounded)
-    static let detailTitle = Font.system(size: 28, weight: .semibold, design: .rounded)
-    static let heroTitle = Font.system(size: 28, weight: .semibold, design: .rounded)
-    static let sheetTitle = Font.system(size: 20, weight: .semibold, design: .rounded)
-    static let sheetHeading = Font.system(size: 26, weight: .semibold, design: .rounded)
-    static let title = Font.system(size: 28, weight: .semibold, design: .rounded)
-    static let ctaHeroTitle = Font.system(size: 26, weight: .semibold, design: .rounded)
-    static let ctaLabel = Font.system(size: 13, weight: .medium, design: .rounded)
-    static let ctaSupporting = Font.system(size: 15, weight: .regular, design: .rounded)
-    static let ctaButton = Font.system(size: 17, weight: .semibold, design: .rounded)
-    static let headline = Font.system(size: 22, weight: .semibold, design: .rounded)
-    static let weatherTemperature = Font.system(size: 42, weight: .semibold, design: .rounded)
-    static let weatherDescription = Font.system(size: 18, weight: .medium, design: .rounded)
-    static let forecastSectionTitle = Font.system(size: 22, weight: .semibold, design: .rounded)
-    static let loadHeadline = Font.system(size: 18, weight: .semibold, design: .rounded)
-    static let personalStatusTitle = Font.system(size: 18, weight: .semibold, design: .rounded)
-    static let personalStatusSubtitle = Font.system(size: 14, weight: .regular, design: .rounded)
-    static let detailStatusTitle = Font.system(size: 20, weight: .semibold, design: .rounded)
-    static let detailStatusSubtitle = Font.system(size: 15, weight: .regular, design: .rounded)
-    static let detailSegment = Font.system(size: 16, weight: .medium, design: .rounded)
-    static let allergenTitle = Font.system(size: 17, weight: .semibold, design: .rounded)
-    static let allergenDescription = Font.system(size: 14, weight: .regular, design: .rounded)
-    static let symptomHeading = Font.system(size: 24, weight: .semibold, design: .rounded)
-    static let symptomText = Font.system(size: 15, weight: .regular, design: .rounded)
-    static let symptomPill = Font.system(size: 16, weight: .semibold, design: .rounded)
-    static let symptomSectionTitle = Font.system(size: 22, weight: .semibold, design: .rounded)
-    static let symptomSectionDescription = Font.system(size: 14, weight: .regular, design: .rounded)
-    static let symptomInfoTitle = Font.system(size: 22, weight: .semibold, design: .rounded)
-    static let severityControl = Font.system(size: 14, weight: .semibold, design: .rounded)
-    static let hourlyHour = Font.system(size: 12, weight: .medium, design: .rounded)
-    static let hourlySeverity = Font.system(size: 14, weight: .semibold, design: .rounded)
-    static let dayTemperature = Font.system(size: 18, weight: .medium, design: .rounded)
+    static let largeTitle = Font.largeTitle.weight(.semibold)
+    static let detailTitle = Font.title.weight(.semibold)
+    static let heroTitle = Font.title.weight(.semibold)
+    static let sheetTitle = Font.title3.weight(.semibold)
+    static let sheetHeading = Font.title.weight(.semibold)
+    static let title = Font.title.weight(.semibold)
+    static let ctaHeroTitle = Font.title2.weight(.semibold)
+    static let ctaLabel = Font.caption.weight(.medium)
+    static let ctaSupporting = Font.subheadline
+    static let ctaButton = Font.body.weight(.semibold)
+    static let headline = Font.headline.weight(.semibold)
+    static let weatherTemperature = Font.largeTitle.weight(.semibold)
+    static let weatherDescription = Font.headline.weight(.medium)
+    static let forecastSectionTitle = Font.headline.weight(.semibold)
+    static let loadHeadline = Font.headline.weight(.semibold)
+    static let personalStatusTitle = Font.headline.weight(.semibold)
+    static let personalStatusSubtitle = Font.subheadline
+    static let detailStatusTitle = Font.title3.weight(.semibold)
+    static let detailStatusSubtitle = Font.subheadline
+    static let detailSegment = Font.callout.weight(.medium)
+    static let allergenTitle = Font.body.weight(.semibold)
+    static let allergenDescription = Font.subheadline
+    static let symptomHeading = Font.title2.weight(.semibold)
+    static let symptomText = Font.subheadline
+    static let symptomPill = Font.callout.weight(.semibold)
+    static let symptomSectionTitle = Font.headline.weight(.semibold)
+    static let symptomSectionDescription = Font.subheadline
+    static let symptomInfoTitle = Font.headline.weight(.semibold)
+    static let severityControl = Font.subheadline.weight(.semibold)
+    static let hourlyHour = Font.caption.weight(.medium)
+    static let hourlySeverity = Font.subheadline.weight(.semibold)
+    static let dayTemperature = Font.headline.weight(.medium)
 
-    static let body = Font.system(size: 17, weight: .regular, design: .rounded)
-    static let bodyEmphasized = Font.system(size: 17, weight: .semibold, design: .rounded)
-    static let secondaryBody = Font.system(size: 15, weight: .regular, design: .rounded)
+    static let body = Font.body
+    static let bodyEmphasized = Font.body.weight(.semibold)
+    static let secondaryBody = Font.subheadline
 
-    static let caption = Font.system(size: 13, weight: .medium, design: .rounded)
-    static let attribution = Font.system(size: 12, weight: .regular, design: .rounded)
-    static let tinyMeta = Font.system(size: 11, weight: .regular, design: .rounded)
-    static let severityPill = Font.system(size: 14, weight: .medium, design: .rounded)
-    static let footnote = Font.system(size: 15, weight: .regular, design: .rounded)
+    static let caption = Font.footnote.weight(.medium)
+    static let attribution = Font.footnote
+    static let tinyMeta = Font.footnote
+    static let severityPill = Font.subheadline.weight(.medium)
+    static let footnote = Font.footnote
 
-    static let button = Font.system(size: 18, weight: .semibold, design: .rounded)
+    static let button = Font.headline.weight(.semibold)
 }
 
 enum SpacingToken {

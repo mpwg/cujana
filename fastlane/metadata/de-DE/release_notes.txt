@@ -1,6 +1,6 @@
-Erste App-Store-Vorbereitung für Cujana.
+Aktualisierte App-Store-Version für Cujana.
 
-- Symptomtagebuch für Allergiebeschwerden
-- Übersicht über aktuelle Einträge und Kontextdaten
-- lokale Verarbeitung ohne Account
-- vorbereitete Pollen- und Umweltinformationen
+- Symptomtagebuch für Allergiebeschwerden mit mehreren Symptomen pro Eintrag
+- Pollen-, Allergierisiko- und Wetterkontext
+- lokale Verarbeitung ohne Account und ohne eigenes Backend
+- überarbeitete Accessibility-Unterstützung für VoiceOver, Dynamic Type, Dark Mode, hohen Kontrast und Reduce Motion

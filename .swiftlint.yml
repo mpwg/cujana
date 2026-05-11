@@ -221,10 +221,32 @@ custom_rules:
     name: "No direct font size"
     included:
       - "Cujana/.*\\.swift"
-    excluded:
-      - "Cujana/DesignSystem/.*"
     regex: "\\.system\\([^\\n]*size:"
-    message: "Use semantic typography or component font tokens instead of direct font sizes."
+    message: "Use Dynamic-Type text styles instead of fixed SwiftUI font sizes."
+    severity: error
+
+  no_swiftui_system_font:
+    name: "No SwiftUI system font factory"
+    included:
+      - "Cujana/.*\\.swift"
+    regex: "Font\\.system\\(|\\.font\\(\\.system\\("
+    message: "Use iOS Dynamic Type text styles such as .body, .headline, .title3, or TypographyToken."
+    severity: error
+
+  no_text_minimum_scale_factor:
+    name: "No text minimum scale factor"
+    included:
+      - "Cujana/.*\\.swift"
+    regex: "\\.minimumScaleFactor\\("
+    message: "Do not shrink text to fit. Reflow layouts so Dynamic Type can use the requested size."
+    severity: error
+
+  no_single_line_text_limit:
+    name: "No single-line text limit"
+    included:
+      - "Cujana/.*\\.swift"
+    regex: "\\.lineLimit\\(1\\)"
+    message: "Avoid single-line truncation. Let text wrap for larger accessibility text sizes."
     severity: error
 
   no_magic_opacity:

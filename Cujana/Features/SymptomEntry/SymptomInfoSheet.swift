@@ -54,7 +54,7 @@ private struct InfoSheetRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: SpacingToken.md) {
             Image(systemName: iconName)
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(TypographyToken.secondaryBody.weight(.semibold))
                 .foregroundStyle(SymptomCheckInToken.accentPressed)
                 .frame(width: SymptomCheckInToken.hintIconSize)
                 .accessibilityHidden(true)

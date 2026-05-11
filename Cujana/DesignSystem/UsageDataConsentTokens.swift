@@ -1,5 +1,5 @@
 import SwiftUI
 
 enum UsageDataConsentToken {
-    static let iconFont = Font.system(size: 32, weight: .semibold)
+    static let iconFont = Font.largeTitle.weight(.semibold)
 }

@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ForecastDetailView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     let days: [ForecastDetailDayItem]
 
     @State private var selectedDayID: ForecastDetailDayItem.ID?
@@ -73,7 +75,7 @@ struct ForecastDetailView: View {
                     selectedDayID = days.first?.id
                 }
             }
-            .animation(MotionToken.detailSelection, value: selectedDayID)
+            .animation(reduceMotion ? nil : MotionToken.detailSelection, value: selectedDayID)
     }
 
     private var bindingForSelectedDay: Binding<ForecastDetailDayItem.ID?> {
@@ -136,14 +138,12 @@ private struct AllergenFocusRow: View {
                 Text(item.title)
                     .font(TypographyToken.allergenTitle)
                     .foregroundStyle(ColorToken.textPrimary)
-                    .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
                     .multilineTextAlignment(.leading)
 
                 Text(item.symptomImpactText)
                     .font(TypographyToken.allergenDescription)
                     .foregroundStyle(ColorToken.textSecondary.opacity(DetailColorToken.secondaryTextReadable))
-                    .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
                     .multilineTextAlignment(.leading)
             }
@@ -170,10 +170,9 @@ struct RiskBadge: View {
         Text(text)
             .font(TypographyToken.severityPill.weight(.semibold))
             .foregroundStyle(SemanticColorToken.foreground(for: text))
-            .lineLimit(1)
-            .minimumScaleFactor(ForecastDetailToken.badgeTextMinimumScale)
+            .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, ForecastDetailToken.badgeHorizontalPadding)
-            .frame(height: ForecastDetailToken.badgeHeight)
+            .frame(minHeight: ForecastDetailToken.badgeHeight)
             .background(DetailColorToken.riskBackground(for: text))
             .clipShape(RoundedRectangle(cornerRadius: ForecastDetailToken.badgeCornerRadius, style: .continuous))
     }
@@ -186,14 +185,14 @@ private struct CompactNoRiskCard: View {
     var body: some View {
         HStack(spacing: SpacingToken.sm) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(.footnote, design: .rounded).weight(.semibold))
+                .font(TypographyToken.footnote.weight(.semibold))
                 .foregroundStyle(DetailColorToken.sageTertiary)
                 .accessibilityHidden(true)
 
             Text("\(items.count) weitere Allergene aktuell ohne Belastung")
                 .font(TypographyToken.footnote.weight(.medium))
                 .foregroundStyle(ColorToken.textSecondary.opacity(DetailColorToken.secondaryTextReadable))
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
 
             Spacer(minLength: SpacingToken.sm)
         }
@@ -278,6 +277,8 @@ private struct HourlyRiskScroller: View {
 }
 
 private struct HourlyRiskChip: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     let item: ForecastDetailHourlyRiskItem
     let isCurrentHour: Bool
 
@@ -296,19 +297,18 @@ private struct HourlyRiskChip: View {
             Text(item.levelText)
                 .font(TypographyToken.hourlySeverity)
                 .foregroundStyle(ColorToken.textPrimary.opacity(DetailColorToken.hourlyPrimaryText))
-                .lineLimit(1)
-                .minimumScaleFactor(ForecastDetailToken.hourlyTextMinimumScale)
+                .fixedSize(horizontal: false, vertical: true)
 
             Text(item.temperatureText)
                 .font(TypographyToken.tinyMeta)
                 .foregroundStyle(ColorToken.textSecondary.opacity(ForecastDetailToken.hourlyWeatherTextOpacity))
                 .monospacedDigit()
         }
-        .frame(width: chipWidth)
+        .frame(minWidth: chipWidth)
         .frame(minHeight: chipMinHeight)
         .background { chipBackground }
         .clipShape(RoundedRectangle(cornerRadius: chipCornerRadius, style: .continuous))
-        .scaleEffect(isCurrentHour ? ForecastDetailToken.hourlyCurrentScale : 1)
+        .scaleEffect(reduceMotion ? 1 : (isCurrentHour ? ForecastDetailToken.hourlyCurrentScale : 1))
         .softShadow(isCurrentHour ? ShadowToken.floating : ShadowTokenValue(color: .clear, radius: 0, y: 0))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(item.hourText), Belastung \(item.levelText), \(item.temperatureText)")
@@ -364,7 +364,7 @@ private struct SubtleNavigationRow<Destination: View>: View {
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(.caption2, design: .rounded).weight(.semibold))
+                    .font(TypographyToken.tinyMeta.weight(.semibold))
                     .foregroundStyle(ColorToken.textSecondary)
                     .accessibilityHidden(true)
             }

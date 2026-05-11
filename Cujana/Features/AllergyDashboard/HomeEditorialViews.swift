@@ -25,47 +25,48 @@ struct PersonalLoadStatusCard: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: SpacingToken.md) {
-            Image(systemName: "allergens")
-                .font(.system(.title2, design: .rounded).weight(.semibold))
-                .foregroundStyle(SemanticColorToken.foreground(for: severityText))
-                .frame(
-                    width: HomeOverviewToken.personalStatusIconSize,
-                    height: HomeOverviewToken.personalStatusIconSize
-                )
-                .background(SemanticColorToken.background(for: severityText))
-                .clipShape(Circle())
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                    Text(statusTitle)
-                        .font(TypographyToken.personalStatusTitle)
-                        .tracking(HomeOverviewToken.personalStatusTitleTracking)
-                        .foregroundStyle(ColorToken.textPrimary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .multilineTextAlignment(.leading)
-
-                    Text(statusSubtitle)
-                        .font(TypographyToken.personalStatusSubtitle)
-                        .foregroundStyle(
-                            ColorToken.textSecondary.opacity(HomeOverviewToken.personalStatusSubtitleOpacity)
-                        )
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .multilineTextAlignment(.leading)
-                }
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
+            HStack(alignment: .center, spacing: SpacingToken.md) {
+                Image(systemName: "allergens")
+                    .font(TypographyToken.ctaHeroTitle)
+                    .foregroundStyle(SemanticColorToken.foreground(for: severityText))
+                    .frame(
+                        width: HomeOverviewToken.personalStatusIconSize,
+                        height: HomeOverviewToken.personalStatusIconSize
+                    )
+                    .background(SemanticColorToken.background(for: severityText))
+                    .clipShape(Circle())
+                    .accessibilityHidden(true)
 
                 HomeRiskBadge(text: severityText)
+                    .layoutPriority(HomeOverviewToken.titleLayoutPriority)
+            }
+
+            VStack(alignment: .leading, spacing: SpacingToken.xs) {
+                Text(statusTitle)
+                    .font(TypographyToken.personalStatusTitle)
+                    .tracking(HomeOverviewToken.personalStatusTitleTracking)
+                    .foregroundStyle(ColorToken.textPrimary)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityHidden(true)
+
+                Text(statusSubtitle)
+                    .font(TypographyToken.personalStatusSubtitle)
+                    .foregroundStyle(ColorToken.textPrimary)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityHidden(true)
             }
             .layoutPriority(HomeOverviewToken.titleLayoutPriority)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.horizontal, CardToken.padding)
         .padding(.vertical, HomeOverviewToken.personalStatusVerticalPadding)
-        .frame(height: HomeOverviewToken.personalStatusHeight)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(minHeight: HomeOverviewToken.personalStatusHeight)
         .premiumSurface(cornerRadius: HomeOverviewToken.personalStatusCornerRadius)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(statusTitle). \(statusSubtitle)")
     }
 
@@ -78,7 +79,7 @@ struct PersonalLoadStatusCard: View {
     }
 
     private var statusSubtitle: String {
-        primaryAllergen == nil ? "Deine Trigger wirken heute ruhig." : "Mögliche Trigger heute erhöht."
+        primaryAllergen == nil ? "Trigger heute ruhig." : "Trigger heute erhöht."
     }
 
     private var severityText: String {
@@ -108,9 +109,9 @@ private struct HomeRiskBadge: View {
         Text(text)
             .font(TypographyToken.severityPill.weight(.semibold))
             .foregroundStyle(SemanticColorToken.foreground(for: text))
-            .lineLimit(1)
+            .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, HomeOverviewToken.personalStatusBadgePaddingH)
-            .frame(height: HomeOverviewToken.personalStatusBadgeHeight)
+            .frame(minHeight: HomeOverviewToken.personalStatusBadgeHeight)
             .background(SemanticColorToken.background(for: text))
             .clipShape(
                 RoundedRectangle(
@@ -136,14 +137,11 @@ struct FeelingCTAView: View {
                     .font(TypographyToken.ctaHeroTitle)
                     .tracking(HomeOverviewToken.ctaTitleTracking)
                     .foregroundStyle(ColorToken.textPrimary)
-                    .lineLimit(2)
-                    .minimumScaleFactor(HomeOverviewToken.weatherDescriptionMinimumScale)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text("Ein kurzer Check-in hilft dir, Muster und Trigger besser zu verstehen.")
                     .font(TypographyToken.ctaSupporting)
-                    .foregroundStyle(ColorToken.textSecondary.opacity(HomeOverviewToken.ctaSupportingOpacity))
-                    .lineLimit(2)
-                    .minimumScaleFactor(HomeOverviewToken.weatherDescriptionMinimumScale)
+                    .foregroundStyle(ColorToken.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -152,11 +150,7 @@ struct FeelingCTAView: View {
             Button(action: action) {
                 HStack(spacing: HomeOverviewToken.ctaButtonIconSpacing) {
                     Image(systemName: "plus.circle.fill")
-                        .font(.system(
-                            size: HomeOverviewToken.ctaButtonIconSize,
-                            weight: .bold,
-                            design: .rounded
-                        ))
+                        .font(TypographyToken.ctaButton.weight(.bold))
                         .accessibilityHidden(true)
 
                     Text("Symptome erfassen")
@@ -167,18 +161,10 @@ struct FeelingCTAView: View {
             .accessibilityLabel("Symptome erfassen")
         }
         .padding(HomeOverviewToken.ctaPadding)
-        .frame(height: HomeOverviewToken.ctaHeight, alignment: .center)
+        .frame(minHeight: HomeOverviewToken.ctaHeight, alignment: .center)
         .background {
             RoundedRectangle(cornerRadius: HomeOverviewToken.ctaCornerRadius, style: .continuous)
-                .fill(ColorToken.softPeach.opacity(HomeOverviewToken.ctaBackgroundOpacity))
-                .overlay {
-                    Image("HomeCTASoftGradient")
-                        .resizable()
-                        .scaledToFill()
-                        .opacity(HomeOverviewToken.ctaBackgroundOpacity)
-                        .blur(radius: HomeOverviewToken.ctaArtworkBlur)
-                        .accessibilityHidden(true)
-                }
+                .fill(ColorToken.cardBackground)
         }
         .clipShape(RoundedRectangle(cornerRadius: HomeOverviewToken.ctaCornerRadius, style: .continuous))
         .softShadow(ShadowToken.card)
@@ -186,16 +172,26 @@ struct FeelingCTAView: View {
 }
 
 private struct FeelingCTAButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(ColorToken.cardBackground)
             .padding(.horizontal, HomeOverviewToken.ctaButtonPaddingH)
-            .frame(height: HomeOverviewToken.ctaButtonHeight)
+            .frame(minHeight: HomeOverviewToken.ctaButtonHeight)
             .background(ColorToken.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: HomeOverviewToken.ctaButtonCornerRadius, style: .continuous))
             .softShadow(ShadowToken.ctaButton)
             .opacity(configuration.isPressed ? PressFeedbackToken.prominentOpacity : 1)
-            .scaleEffect(configuration.isPressed ? PressFeedbackToken.prominentScale : 1)
-            .animation(.easeInOut(duration: PressFeedbackToken.animationDuration), value: configuration.isPressed)
+            .scaleEffect(pressedScale(configuration: configuration))
+            .animation(pressAnimation, value: configuration.isPressed)
+    }
+
+    private var pressAnimation: Animation? {
+        reduceMotion ? nil : .easeInOut(duration: PressFeedbackToken.animationDuration)
+    }
+
+    private func pressedScale(configuration: Configuration) -> CGFloat {
+        reduceMotion ? 1 : (configuration.isPressed ? PressFeedbackToken.prominentScale : 1)
     }
 }

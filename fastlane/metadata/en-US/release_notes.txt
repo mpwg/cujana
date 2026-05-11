@@ -1,6 +1,6 @@
-Initial App Store preparation for Cujana.
+Updated App Store version for Cujana.
 
-- allergy symptom journal
-- overview of recent entries and context data
-- local processing without an account
-- prepared pollen and environmental information
+- allergy symptom journal with multiple symptoms per entry
+- pollen, allergy-risk, and weather context
+- local processing without an account or custom backend
+- improved accessibility support for VoiceOver, Dynamic Type, Dark Mode, high contrast, and Reduce Motion

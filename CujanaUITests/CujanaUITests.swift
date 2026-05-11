@@ -13,7 +13,7 @@ final class CujanaUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Wie fühlst du dich heute?"].waitForExistence(timeout: 6))
 
         app.buttons["Symptome erfassen"].tap()
-        XCTAssertTrue(app.staticTexts["Welche Symptome hast du?"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Symptome"].waitForExistence(timeout: 3))
 
         app.buttons["Laufende Nase"].tap()
         app.buttons["Mittel"].tap()
@@ -27,7 +27,53 @@ final class CujanaUITests: XCTestCase {
 
         app.tabBars.buttons["Einträge"].tap()
         XCTAssertTrue(app.navigationBars["Einträge"].waitForExistence(timeout: 4))
-        XCTAssertTrue(app.staticTexts["journal-entry-runnyNose"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.descendants(matching: .any)["journal-entry-runnyNose"].waitForExistence(timeout: 4))
+    }
+
+    func testMainScreensPassAccessibilityAudit() throws {
+        let app = XCUIApplication()
+        launchDashboardDemo(app)
+
+        XCTAssertTrue(app.buttons["Symptome erfassen"].waitForExistence(timeout: 6))
+        try performAccessibilityAudit(app)
+
+        app.buttons["Symptome erfassen"].tap()
+        XCTAssertTrue(app.staticTexts["Symptome"].waitForExistence(timeout: 3))
+        try performAccessibilityAudit(app)
+    }
+
+    private func performAccessibilityAudit(_ app: XCUIApplication) throws {
+        try app.performAccessibilityAudit { issue in
+            if self.isBehindPersistentBottomBar(issue: issue, app: app) {
+                print(
+                    "Ignored offscreen accessibility audit issue behind bottom bar: "
+                        + "\(issue.compactDescription) "
+                        + "\(issue.detailedDescription)"
+                        + " Element: \(String(describing: issue.element))"
+                )
+                return true
+            }
+
+            print(
+                "Accessibility audit issue: "
+                    + "\(issue.compactDescription) "
+                    + "\(issue.detailedDescription)"
+                    + " Element: \(String(describing: issue.element))"
+            )
+            return false
+        }
+    }
+
+    private func isBehindPersistentBottomBar(
+        issue: XCUIAccessibilityAuditIssue,
+        app: XCUIApplication
+    ) -> Bool {
+        let saveButton = app.buttons["Eintrag speichern"]
+        guard saveButton.exists, let element = issue.element else {
+            return false
+        }
+
+        return element.frame.minY >= saveButton.frame.minY
     }
 
     private func launchDashboardDemo(_ app: XCUIApplication) {

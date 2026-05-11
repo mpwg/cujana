@@ -55,7 +55,7 @@ struct DetailInfoCard: View {
     var body: some View {
         HStack(alignment: .top, spacing: SpacingToken.md) {
             Image(systemName: "info.circle")
-                .font(.system(.footnote, design: .rounded).weight(.medium))
+                .font(TypographyToken.footnote.weight(.medium))
                 .foregroundStyle(ColorToken.textTertiary)
                 .accessibilityHidden(true)
 
@@ -77,9 +77,8 @@ struct AttributionFooter: View {
 
     var body: some View {
         Text(text)
-            .font(.system(.footnote, design: .rounded))
+            .font(TypographyToken.footnote)
             .foregroundStyle(ColorToken.textSecondary.opacity(DetailColorToken.attributionText))
-            .lineLimit(2)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, SpacingToken.xs)
@@ -113,11 +112,11 @@ struct SectionTitle: View {
     }
 
     private var primaryFont: Font {
-        Font.system(.headline, design: .rounded).weight(.semibold)
+        TypographyToken.headline
     }
 
     private var secondaryFont: Font {
-        Font.system(.subheadline, design: .rounded).weight(.semibold)
+        TypographyToken.secondaryBody.weight(.semibold)
     }
 }
 
@@ -125,7 +124,7 @@ struct CalmEmptyAllergenState: View {
     var body: some View {
         HStack(spacing: SpacingToken.md) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .font(TypographyToken.sheetTitle)
                 .foregroundStyle(DetailColorToken.sageTertiary)
                 .accessibilityHidden(true)
 

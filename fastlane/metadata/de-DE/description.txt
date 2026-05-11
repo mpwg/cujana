@@ -1,16 +1,17 @@
-Cujana ist ein ruhiges Allergie-Tagebuch für Menschen, die Symptome und mögliche Auslöser im Alltag besser verstehen möchten. Die App hilft dir, Beschwerden schnell festzuhalten und sie mit relevanten Kontextdaten wie Pollenbelastung und Umweltbedingungen zusammenzuführen.
+Cujana ist ein ruhiges Allergie-Tagebuch für Menschen, die Symptome und mögliche Auslöser im Alltag besser verstehen möchten. Die App hilft dir, Beschwerden schnell festzuhalten und sie mit relevanten Kontextdaten wie Pollenbelastung, Allergierisiko und Wetterbedingungen zusammenzuführen.
 
-Ein neuer Eintrag ist bewusst einfach gehalten: Symptom auswählen, Stärke erfassen, Zeitpunkt bestätigen und bei Bedarf Notizen ergänzen.
+Ein neuer Eintrag ist bewusst einfach gehalten: Symptome auswählen, Stärke erfassen, Zeitpunkt bestätigen und bei Bedarf Medikamente, Tags oder Notizen ergänzen.
 
-Cujana bleibt klar und privat. Die App ist für lokale Nutzung ohne Account und ohne eigenes Backend ausgelegt.
+Cujana bleibt klar und privat. Die App ist für lokale Nutzung ohne Account und ohne eigenes Backend ausgelegt. Gesundheitsbezogene Beobachtungen bleiben auf deinem Gerät.
 
 Wichtige Funktionen:
 
-- schnelles Tagebuch für Allergiesymptome
-- Schweregrad, Zeitpunkt und Notizen
+- schnelles Tagebuch für ein oder mehrere Allergiesymptome
+- Schweregrad, Zeitpunkt, Medikamente, Tags und Notizen
 - Übersicht über Einträge und aktuelle Belastung
-- Pollen- und Umweltkontext als Orientierung
+- Pollen- und Allergierisiko als Orientierung
+- Wetterkontext über Apple Weather
 - lokale Verarbeitung ohne Account
-- iOS-only Oberfläche mit Fokus auf einfache Bedienung
+- iOS-Oberfläche mit VoiceOver, Dynamic Type, Dark Mode, hohem Kontrast und Reduce-Motion-Unterstützung
 
 Cujana ist keine Diagnose-App und ersetzt keine medizinische Beratung. Die App unterstützt dich dabei, Beobachtungen für dich selbst oder ein Gespräch mit Ärztinnen, Ärzten oder Allergologinnen strukturierter zu dokumentieren.

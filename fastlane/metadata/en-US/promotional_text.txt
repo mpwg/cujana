@@ -1,1 +1,1 @@
-Cujana helps you log allergy symptoms quickly and understand them with pollen and environmental context.
+Cujana helps you log allergy symptoms quickly and understand them with pollen, weather, and allergy-risk context.
