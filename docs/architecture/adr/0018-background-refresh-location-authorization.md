@@ -22,6 +22,8 @@ ihn über `EnvironmentalDataRefreshCoordinator` und erlaubt die Task-ID über
 enthält `fetch` und `location`; die Location-Nutzung ist über
 `NSLocationWhenInUseUsageDescription` und
 `NSLocationAlwaysAndWhenInUseUsageDescription` begründet.
+`remote-notification` ist nicht deklariert, weil Cujana keinen APNS- oder
+Silent-Push-Pfad registriert.
 
 Referenzen:
 
@@ -77,6 +79,9 @@ Processing-Semantik benötigt.
 
 Kontinuierliche Background-Location-Updates wurden verworfen, weil Cujana keine
 Tracking-App ist und nur gelegentlich grob gerasterte Umweltkontexte laden soll.
+
+Remote Notifications wurden verworfen, weil der Background-Refresh vollständig
+über `BGAppRefreshTask` läuft und kein produktiver Push-Flow existiert.
 
 ## Enforcement
 
