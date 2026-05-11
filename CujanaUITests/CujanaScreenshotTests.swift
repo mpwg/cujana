@@ -7,11 +7,21 @@ final class CujanaScreenshotTests: XCTestCase {
         static let environmentKey = "CUJANA_SCREENSHOT_PAGES"
 
         static let storeScreens: [Screen] = [
-            .init(route: "dashboard", germanSnapshotName: "01-allergien-im-blick", englishSnapshotName: "01-allergy-overview"),
-            .init(route: "entry", germanSnapshotName: "02-symptome-schnell-erfassen", englishSnapshotName: "02-log-symptoms-fast")
+            .init(
+                route: "dashboard",
+                germanSnapshotName: "01-allergien-im-blick",
+                englishSnapshotName: "01-allergy-overview"
+            ),
+            .init(
+                route: "entry",
+                germanSnapshotName: "02-symptome-schnell-erfassen",
+                englishSnapshotName: "02-log-symptoms-fast"
+            )
         ]
 
-        static func screens(from environment: [String: String] = ProcessInfo.processInfo.environment) throws -> [Screen] {
+        static func screens(
+            from environment: [String: String] = ProcessInfo.processInfo.environment
+        ) throws -> [Screen] {
             let rawSelection = configuredSelection(from: environment)
             guard let rawSelection, !rawSelection.isEmpty else {
                 return storeScreens
@@ -58,11 +68,14 @@ final class CujanaScreenshotTests: XCTestCase {
             let missingIdentifiers = requestedIdentifiers.filter { screensByIdentifier[$0] == nil }
 
             if !missingIdentifiers.isEmpty {
+                let missingPages = missingIdentifiers.joined(separator: ", ")
+                let allowedPages = storeScreens.map(\.route).joined(separator: ", ")
                 throw NSError(
                     domain: "CujanaScreenshotTests",
                     code: 1,
                     userInfo: [
-                        NSLocalizedDescriptionKey: "Unbekannte Screenshot-Seiten: \(missingIdentifiers.joined(separator: ", ")). Erlaubt sind store, all oder: \(storeScreens.map(\.route).joined(separator: ", "))."
+                        NSLocalizedDescriptionKey: "Unbekannte Screenshot-Seiten: \(missingPages). "
+                            + "Erlaubt sind store, all oder: \(allowedPages)."
                     ]
                 )
             }
