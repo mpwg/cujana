@@ -50,11 +50,25 @@ extension AppDependencies {
         return AppDependencies(
             pollenRepository: DemoPollenRepository(forecasts: AppDemoData.pollenForecasts),
             weatherRepository: DemoWeatherRepository(forecasts: AppDemoData.weatherForecasts),
-            environmentalDataRepository: InMemoryEnvironmentalDataRepository(),
+            environmentalDataRepository: DemoEnvironmentalDataRepository(),
             symptomEntryRepository: DemoSymptomEntryRepository(entries: AppDemoData.symptomEntries),
             locationProvider: locationProvider,
             backgroundLocationAuthorizer: locationProvider
         )
     }
+}
+
+private actor DemoEnvironmentalDataRepository: EnvironmentalDataRepository {
+    func latestPollenEntry(for coordinate: LocationCoordinate) async throws -> PollenDataEntry? {
+        nil
+    }
+
+    func latestWeatherEntry(for coordinate: LocationCoordinate) async throws -> WeatherDataEntry? {
+        nil
+    }
+
+    func savePollenEntries(_ entries: [PollenDataEntry]) async throws {}
+
+    func saveWeatherEntries(_ entries: [WeatherDataEntry]) async throws {}
 }
 #endif

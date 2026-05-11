@@ -167,7 +167,7 @@ struct AllergyDomainTests {
     }
 
     @Test func saveAndLoadSymptomEntriesUseCasesUseRepositoryBoundary() async throws {
-        let repository = InMemorySymptomEntryRepository()
+        let repository = TestSymptomEntryRepository()
         let saveUseCase = SaveAllergySymptomEntryUseCase(repository: repository)
         let loadUseCase = LoadAllergySymptomEntriesUseCase(repository: repository)
         let entry = try AllergySymptomEntry(
@@ -202,7 +202,7 @@ struct AllergyDomainTests {
             coordinate: coordinate
         )
         let pollenRepository = StubPollenRepository(forecasts: [forecast])
-        let symptomRepository = InMemorySymptomEntryRepository(entries: [symptomEntry])
+        let symptomRepository = TestSymptomEntryRepository(entries: [symptomEntry])
         let useCase = LoadAllergyOverviewUseCase(
             pollenRepository: pollenRepository,
             weatherRepository: StubWeatherRepository(forecasts: [weatherForecast]),
@@ -241,7 +241,7 @@ struct AllergyDomainTests {
         let useCase = LoadAllergyOverviewUseCase(
             pollenRepository: FailingPollenRepository(),
             weatherRepository: StubWeatherRepository(forecasts: [weatherForecast]),
-            symptomEntryRepository: InMemorySymptomEntryRepository(entries: [symptomEntry])
+            symptomEntryRepository: TestSymptomEntryRepository(entries: [symptomEntry])
         )
 
         let overview = try await useCase.execute(for: coordinate, from: startDate, to: endDate)
@@ -271,7 +271,7 @@ struct AllergyDomainTests {
         let endDate = Date(timeIntervalSince1970: 1_000)
         let useCase = LoadAllergyOverviewUseCase(
             pollenRepository: StubPollenRepository(forecasts: []),
-            symptomEntryRepository: InMemorySymptomEntryRepository()
+            symptomEntryRepository: TestSymptomEntryRepository()
         )
 
         await #expect(throws: PollenDataError.invalidForecastPeriod(start: startDate, end: endDate)) {
@@ -350,7 +350,7 @@ private struct FailingSymptomEntryRepository: SymptomEntryRepository {
     }
 }
 
-private actor InMemorySymptomEntryRepository: SymptomEntryRepository {
+private actor TestSymptomEntryRepository: SymptomEntryRepository {
     private var entries: [AllergySymptomEntry]
 
     init(entries: [AllergySymptomEntry] = []) {
