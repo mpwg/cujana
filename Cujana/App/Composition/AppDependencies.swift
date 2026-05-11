@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 
 struct AppDependencies {
     let pollenRepository: any PollenRepository
@@ -9,15 +8,9 @@ struct AppDependencies {
     let locationProvider: any LocationCoordinateProviding
     let backgroundLocationAuthorizer: (any BackgroundLocationAuthorizing)?
 
-    static func production() -> AppDependencies {
+    static func production() throws -> AppDependencies {
         let locationProvider = CoreLocationCoordinateProvider()
-        let modelContainer: ModelContainer
-
-        do {
-            modelContainer = try CujanaPersistence.makeProductionModelContainer()
-        } catch {
-            fatalError("SwiftData persistent store could not be created: \(error)")
-        }
+        let modelContainer = try CujanaPersistence.makeProductionModelContainer()
 
         return AppDependencies(
             pollenRepository: PolleninformationPollenRepository(),

@@ -6,13 +6,13 @@ struct AppLaunchComposition {
     private let compositionRoot: AppCompositionRoot
     private let launchConfiguration: AppLaunchConfiguration
 
-    static func current() -> AppLaunchComposition {
+    static func current() throws -> AppLaunchComposition {
         let launchConfiguration = AppLaunchConfiguration.current()
         let compositionRoot: AppCompositionRoot
 
         switch launchConfiguration {
         case .standard:
-            compositionRoot = .production()
+            compositionRoot = try .production()
         case .screenshot:
             compositionRoot = .demo()
         }
@@ -45,8 +45,8 @@ struct AppLaunchComposition {
 struct AppLaunchComposition {
     private let compositionRoot: AppCompositionRoot
 
-    static func current() -> AppLaunchComposition {
-        AppLaunchComposition(compositionRoot: .production())
+    static func current() throws -> AppLaunchComposition {
+        AppLaunchComposition(compositionRoot: try .production())
     }
 
     @ViewBuilder
