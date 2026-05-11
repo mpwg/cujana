@@ -6,7 +6,15 @@ on:
       - "release/**"
   pull_request:
     branches:
+      - main
       - "release/**"
+    paths:
+      - "Cujana/**"
+      - "CujanaTests/**"
+      - "CujanaUITests/**"
+      - "Cujana.xcodeproj/**"
+      - "Configuration/**"
+      - ".github/workflows/codeql.yml"
   workflow_dispatch:
 
 concurrency:

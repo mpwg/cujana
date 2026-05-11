@@ -39,6 +39,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: ios-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -71,6 +72,8 @@ jobs:
       - name: Relevante Änderungen bestimmen
         id: filter
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
 
@@ -80,8 +83,32 @@ jobs:
             exit 0
           fi
 
-          echo "iphone_tests=false" >> "$GITHUB_OUTPUT"
-          echo "ui_smoke=false" >> "$GITHUB_OUTPUT"
+          changed_files="$(
+            gh api \
+              --paginate \
+              "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
+              --jq '.[].filename'
+          )"
+
+          iphone_tests=false
+          ui_smoke=false
+
+          while IFS= read -r file; do
+            case "$file" in
+              Cujana/*|CujanaTests/*|CujanaUITests/*|Cujana.xcodeproj/*|Configuration/*|scripts/run_xcode_tests.sh|fastlane/Fastfile|fastlane/Snapfile|.github/workflows/ios-ci.yml)
+                iphone_tests=true
+                ;;
+            esac
+
+            case "$file" in
+              Cujana/App/*|Cujana/Assets.xcassets/*|Cujana/DesignSystem/*|Cujana/Features/*|Cujana/Resources/*|CujanaUITests/*|Cujana.xcodeproj/*|Configuration/*|fastlane/Snapfile|.github/workflows/ios-ci.yml)
+                ui_smoke=true
+                ;;
+            esac
+          done <<< "$changed_files"
+
+          echo "iphone_tests=$iphone_tests" >> "$GITHUB_OUTPUT"
+          echo "ui_smoke=$ui_smoke" >> "$GITHUB_OUTPUT"
 
   lint:
     name: SwiftLint

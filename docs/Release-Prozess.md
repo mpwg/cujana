@@ -79,7 +79,7 @@ Manuell entspricht das diesen Schritten:
 ### CodeQL
 
 - Datei: `.github/workflows/codeql.yml`
-- Start: Pushes und Pull Requests auf `release/**`, manueller Start
+- Start: Pull Requests auf `main` mit produktiven Swift- oder Projektänderungen, Pushes und Pull Requests auf `release/**`, manueller Start
 - Zweck: Swift-Codeanalyse mit manuellem App-Build
 
 ### TestFlight
