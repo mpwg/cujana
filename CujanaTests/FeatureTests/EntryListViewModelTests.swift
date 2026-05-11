@@ -217,6 +217,7 @@ struct EntryListViewModelTests {
         )
     }
 
+    @MainActor
     private func makeEntryListViewModel(
         entries: [AllergySymptomEntry],
         forecasts: [PollenForecast],

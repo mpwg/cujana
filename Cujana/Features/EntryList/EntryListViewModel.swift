@@ -54,6 +54,17 @@ final class EntryListViewModel {
         }
     }
 
+    func observeEntryChanges() async {
+        for await notification in NotificationCenter.default.notifications(named: .symptomEntryDidChange) {
+            guard let change = notification.object as? SymptomEntryChange else {
+                await load()
+                continue
+            }
+
+            apply(change)
+        }
+    }
+
     func makeEditorViewModel(for entry: HealthEntry) -> EntryEditorViewModel {
         EntryEditorViewModel(
             saveUseCase: saveEntryUseCase,
@@ -75,12 +86,20 @@ final class EntryListViewModel {
     func delete(_ entry: HealthEntry) async {
         do {
             try await deleteEntryUseCase.execute(id: entry.id)
-            withAnimation(.smooth) {
-                entries.removeAll { $0.id == entry.id }
-                publishCurrentContent()
-            }
         } catch {
             state = .failure("Die Einträge konnten gerade nicht geladen werden. Bitte versuche es erneut.")
+        }
+    }
+
+    private func apply(_ change: SymptomEntryChange) {
+        withAnimation(.smooth) {
+            switch change {
+            case .saved(let entry):
+                upsertLocal(entry)
+            case .deleted(let id):
+                entries.removeAll { $0.id == id }
+                publishCurrentContent()
+            }
         }
     }
 

@@ -17,14 +17,12 @@ struct EntryListView: View {
             .task {
                 await viewModel.load()
             }
+            .task {
+                await viewModel.observeEntryChanges()
+            }
             .sheet(item: $editingEntry) { entry in
                 SymptomEntryView(
-                    viewModel: viewModel.makeEditorViewModel(for: entry),
-                    onSaved: { savedEntry in
-                        withAnimation(.smooth) {
-                            viewModel.upsertLocal(savedEntry)
-                        }
-                    }
+                    viewModel: viewModel.makeEditorViewModel(for: entry)
                 )
 #if os(iOS)
                 .presentationCornerRadius(TabBarToken.sheetCornerRadius)
