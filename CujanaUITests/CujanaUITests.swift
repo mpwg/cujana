@@ -30,6 +30,30 @@ final class CujanaUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["journal-entry-runnyNose"].waitForExistence(timeout: 4))
     }
 
+    func testMainScreensPassAccessibilityAudit() throws {
+        let app = XCUIApplication()
+        launchDashboardDemo(app)
+
+        XCTAssertTrue(app.buttons["Symptome erfassen"].waitForExistence(timeout: 6))
+        try performAccessibilityAudit(app)
+
+        app.buttons["Symptome erfassen"].tap()
+        XCTAssertTrue(app.staticTexts["Symptome"].waitForExistence(timeout: 3))
+        try performAccessibilityAudit(app)
+    }
+
+    private func performAccessibilityAudit(_ app: XCUIApplication) throws {
+        try app.performAccessibilityAudit { issue in
+            print(
+                "Accessibility audit issue: "
+                    + "\(issue.compactDescription) "
+                    + "\(issue.detailedDescription)"
+                    + " Element: \(String(describing: issue.element))"
+            )
+            return false
+        }
+    }
+
     private func launchDashboardDemo(_ app: XCUIApplication) {
         app.launchArguments += [
             "-ui_testing",

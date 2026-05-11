@@ -88,10 +88,10 @@ enum SurfaceOpacityToken {
 }
 
 enum SurfaceStyleToken {
-    static let backgroundOpacity = 0.68
-    static let gradientTopOpacity = 0.28
-    static let gradientBottomOpacity = 0.08
-    static let strokeOpacity = 0.45
+    static let backgroundOpacity = 1.0
+    static let gradientTopOpacity = 0.0
+    static let gradientBottomOpacity = 0.0
+    static let strokeOpacity = 0.72
 }
 
 enum HomeOverviewToken {
@@ -106,17 +106,17 @@ enum HomeOverviewToken {
     static let titleLayoutPriority = 1.0
     static let detailsButtonLayoutPriority = 2.0
     static let dayCardPadding: CGFloat = 16
-    static let dayCardWidth: CGFloat = 168
-    static let dayCardHeight: CGFloat = 150
+    static let dayCardWidth: CGFloat = 348
+    static let dayCardHeight: CGFloat = 280
     static let dayCardCornerRadius: CGFloat = 28
     static let dayLabelTracking = 1.6
     static let dayWeatherIconSmallSize: CGFloat = 26
-    static let dayWeatherIconFont = Font.system(size: 14, weight: .medium, design: .rounded)
+    static let dayWeatherIconFont = Font.footnote.weight(.medium)
     static let dayWeatherIconOpacity = 0.58
     static let dayWeatherIconBackgroundOpacity = 0.72
     static let loadHeadlineTracking = -0.5
     static let forecastTitleTracking = -0.5
-    static let weatherContextText = Color(hex: "#8E8A84")
+    static let weatherContextText = ColorToken.textTertiary
     static let weatherContextOpacity = 0.64
     static let weatherDescriptionMinimumScale = 0.82
     static let loadHeadlineMinimumScale = 0.92
@@ -132,7 +132,7 @@ enum HomeOverviewToken {
     static let ctaPadding: CGFloat = 10
     static let ctaHeight: CGFloat = 160
     static let ctaCornerRadius: CGFloat = 32
-    static let ctaLabelText = Color(hex: "#6E6A63")
+    static let ctaLabelText = ColorToken.textPrimary
     static let ctaLabelTracking = 0.2
     static let ctaTitleTracking = -0.9
     static let ctaSupportingOpacity = 0.9
@@ -161,7 +161,7 @@ enum AllergenLoadToken {
 
 enum ForecastDetailToken {
     static let titleBottomPadding: CGFloat = 18
-    static let allergenIconFont = Font.system(size: 18, weight: .semibold, design: .rounded)
+    static let allergenIconFont = Font.headline.weight(.semibold)
     static let dayIconSize: CGFloat = 42
     static let weatherIconWidth: CGFloat = 30
     static let hourlyRiskGridMinimumWidth: CGFloat = 92
@@ -214,7 +214,7 @@ enum ForecastDetailToken {
     static let hourlyActiveTopOpacity = 0.82
     static let hourlyActiveBottomOpacity = 0.68
     static let hourlyInactiveBackgroundOpacity = 0.58
-    static let allergyWeatherContextText = Color(hex: "#7C7871")
+    static let allergyWeatherContextText = ColorToken.textSecondary
     static let allergyWeatherContextOpacity = 0.66
     static let subtleNavigationRowMinHeight: CGFloat = 42
     static let subtleNavigationHorizontalPadding: CGFloat = 14
@@ -233,34 +233,34 @@ enum PressFeedbackToken {
 }
 
 enum SymptomCheckInToken {
-    static let accent = Color(hex: "#6D8F76")
-    static let accentPressed = Color(hex: "#5E7D66")
-    static let selectedBorder = Color(hex: "#7C9A82")
-    static let selectedIcon = Color(hex: "#5F8168")
-    static let selectedText = Color(hex: "#355240")
-    static let secondaryText = Color(hex: "#6B6B6E")
-    static let tertiaryText = Color(hex: "#8A8A8E")
+    static let accent = ColorToken.accentPrimary
+    static let accentPressed = ColorToken.accentDark
+    static let selectedBorder = ColorToken.accentDark
+    static let selectedIcon = ColorToken.accentDark
+    static let selectedText = ColorToken.accentDark
+    static let secondaryText = ColorToken.textSecondary
+    static let tertiaryText = ColorToken.textTertiary
     static let sectionTitleTracking = -0.02
     static let screenHorizontalPadding: CGFloat = 20
     static let sectionSpacing: CGFloat = 28
     static let topContentPadding: CGFloat = 24
     static let symptomGridMinimumWidth: CGFloat = 160
     static let symptomPillGridSpacing: CGFloat = 14
-    static let scrollBottomPadding: CGFloat = 120
-    static let bottomBarBackgroundOpacity = 0.96
+    static let scrollBottomPadding: CGFloat = 180
+    static let bottomBarBackgroundOpacity = 1.0
     static let symptomPillMinHeight: CGFloat = 76
     static let symptomPillPaddingH: CGFloat = 16
     static let symptomPillPaddingV: CGFloat = 14
     static let symptomPillSpacing: CGFloat = 14
     static let symptomTextMinimumScale = 0.96
-    static let symptomSelectedBackground = Color(hex: "#E7EFE8")
-    static let symptomUnselectedBorder = Color(hex: "#3C3C43").opacity(0.1)
+    static let symptomSelectedBackground = ColorToken.accentSoft
+    static let symptomUnselectedBorder = ColorToken.separatorSoft
     static let symptomUnselectedIconOpacity = 0.85
     static let symptomSelectedBorderWidth: CGFloat = 1
     static let symptomUnselectedBorderWidth: CGFloat = 1
-    static let symptomIconFont = Font.system(size: 18, weight: .medium, design: .rounded)
+    static let symptomIconFont = Font.headline.weight(.medium)
     static let symptomIconFrameWidth: CGFloat = 26
-    static let symptomCheckmarkFont = Font.system(size: 14, weight: .semibold)
+    static let symptomCheckmarkFont = Font.footnote.weight(.semibold)
     static let symptomCheckmarkOpacity = 0.82
     static let symptomPressedScale = 0.97
     static let symptomPillCornerRadius: CGFloat = 24
@@ -270,29 +270,29 @@ enum SymptomCheckInToken {
     static let severityPillPaddingH: CGFloat = 18
     static let severityPillCornerRadius: CGFloat = 20
     static let severityTextMinimumScale = 0.8
-    static let severityUnselectedText = Color(hex: "#474747")
+    static let severityUnselectedText = ColorToken.textPrimary
     static let severityUnselectedBackground = ColorToken.cardBackground
-    static let severityUnselectedBorder = Color(hex: "#3C3C43").opacity(0.1)
+    static let severityUnselectedBorder = ColorToken.separatorSoft
     static let dateCardCornerRadius: CGFloat = 24
     static let dateCardShadow = ShadowTokenValue(color: Color.black.opacity(0.04), radius: 12, y: 2)
     static let dateCardCollapsedHeight: CGFloat = 70
     static let dateIconSize: CGFloat = 34
     static let datePickerMinHeight: CGFloat = 44
-    static let hintBackground = Color(hex: "#6D8F76").opacity(0.08)
+    static let hintBackground = ColorToken.accentSoft.opacity(0.62)
     static let hintIconSize: CGFloat = 15
-    static let hintIconFont = Font.system(size: 15, weight: .medium, design: .rounded)
-    static let hintDisclosureIconFont = Font.system(size: 15, weight: .semibold, design: .rounded)
+    static let hintIconFont = Font.subheadline.weight(.medium)
+    static let hintDisclosureIconFont = Font.subheadline.weight(.semibold)
     static let chevronOpacity = 0.86
     static let notesMinHeight: CGFloat = 140
     static let notesPadding: CGFloat = 16
     static let notesCornerRadius: CGFloat = 24
-    static let notesBorder = Color(hex: "#3C3C43").opacity(0.08)
+    static let notesBorder = ColorToken.separatorSoft
     static let notesBorderWidth: CGFloat = 0.5
     static let saveButtonMinHeight: CGFloat = 54
     static let saveButtonRadius: CGFloat = 27
     static let saveButtonPressedBackground = accentPressed
-    static let disabledButtonBackground = Color(hex: "#D9E4DA")
-    static let saveButtonShadow = ShadowTokenValue(color: Color(hex: "#6D8F76").opacity(0.14), radius: 18, y: 6)
+    static let disabledButtonBackground = SemanticColorToken.disabledButtonBackground
+    static let saveButtonShadow = ShadowTokenValue(color: ColorToken.accentPrimary.opacity(0.14), radius: 18, y: 6)
     static let infoButtonSize: CGFloat = 48
     static let infoButtonBackground = Color.white.opacity(0.64)
     static let animationDuration = 0.24

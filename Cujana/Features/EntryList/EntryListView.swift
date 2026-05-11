@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct EntryListView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     @Bindable var viewModel: EntryListViewModel
     @State private var editingEntry: HealthEntry?
     @State private var pendingDeleteEntry: HealthEntry?
@@ -112,7 +114,7 @@ struct EntryListView: View {
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .contentMargins(.bottom, SpacingToken.xxl, for: .scrollContent)
-        .animation(EntryListToken.journalAnimation, value: content.sections)
+        .animation(reduceMotion ? nil : EntryListToken.journalAnimation, value: content.sections)
     }
 
     private var loadingView: some View {
@@ -224,6 +226,8 @@ private struct TimelineMarker: View {
 }
 
 private struct EntryCard: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     let item: JournalEntryItem
 
     var body: some View {
@@ -265,7 +269,7 @@ private struct EntryCard: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
         .accessibilityIdentifier("journal-entry-\(item.symptoms.map(\.type.rawValue).joined(separator: "-"))")
-        .animation(EntryListToken.journalAnimation, value: item.symptoms)
+        .animation(reduceMotion ? nil : EntryListToken.journalAnimation, value: item.symptoms)
     }
 
     private var accessibilityText: String {
@@ -305,6 +309,8 @@ private extension View {
 }
 
 private struct FlexibleSymptomChips: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     let items: [JournalEntrySymptomItem]
 
     var body: some View {
@@ -326,7 +332,7 @@ private struct FlexibleSymptomChips: View {
                     .accessibilityLabel(item.title)
             }
         }
-        .animation(EntryListToken.journalAnimation, value: items)
+        .animation(reduceMotion ? nil : EntryListToken.journalAnimation, value: items)
     }
 }
 
@@ -403,44 +409,6 @@ private struct FlowLayout: Layout {
         var indices: [Subviews.Index] = []
         var width: CGFloat = 0
         var height: CGFloat = 0
-    }
-}
-
-private struct EntryPlaceholderRow: View {
-    let systemImageName: String
-    let title: String
-    let subtitle: String
-
-    var body: some View {
-        HStack(alignment: .top, spacing: SpacingToken.md) {
-            EntryIcon(systemImageName: systemImageName, background: ChipToken.calmBackground)
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                Text(title)
-                    .font(TypographyToken.bodyEmphasized)
-                    .foregroundStyle(ColorToken.textPrimary)
-
-                Text(subtitle)
-                    .font(TypographyToken.footnote)
-                    .foregroundStyle(ColorToken.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-    }
-}
-
-private struct EntryIcon: View {
-    let systemImageName: String
-    let background: Color
-
-    var body: some View {
-        Image(systemName: systemImageName)
-            .font(TypographyToken.bodyEmphasized)
-            .foregroundStyle(ColorToken.accentPrimary)
-            .frame(width: SelectionToken.size, height: SelectionToken.size)
-            .background(background)
-            .clipShape(Circle())
     }
 }
 

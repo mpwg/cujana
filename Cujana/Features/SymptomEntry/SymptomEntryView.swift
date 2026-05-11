@@ -46,41 +46,33 @@ struct EntryFormView: View {
                     .padding(.bottom, SpacingToken.md)
                     .background {
                         ColorToken.backgroundPrimary.opacity(SymptomCheckInToken.bottomBarBackgroundOpacity)
-                            .background(.ultraThinMaterial)
                     }
             }
 #if os(iOS)
+            .navigationTitle(viewModel.screenTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(ColorToken.backgroundPrimary, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
 #endif
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    HStack(spacing: SpacingToken.sm) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(.body, design: .rounded).weight(.semibold))
-                                .foregroundStyle(ColorToken.textPrimary)
-                                .frame(
-                                    width: SymptomCheckInToken.infoButtonSize,
-                                    height: SymptomCheckInToken.infoButtonSize
-                                )
-                                .background(SymptomCheckInToken.infoButtonBackground)
-                                .background(.ultraThinMaterial)
-                                .clipShape(Circle())
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Schließen")
-
-                        Text(viewModel.screenTitle)
-                            .font(TypographyToken.sheetTitle)
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(TypographyToken.bodyEmphasized)
                             .foregroundStyle(ColorToken.textPrimary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.82)
+                            .frame(
+                                width: SymptomCheckInToken.infoButtonSize,
+                                height: SymptomCheckInToken.infoButtonSize
+                            )
+                            .background(SymptomCheckInToken.infoButtonBackground)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
+                            .contentShape(Circle())
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Schließen")
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
@@ -88,7 +80,7 @@ struct EntryFormView: View {
                         isInfoPresented = true
                     } label: {
                         Image(systemName: "info.circle")
-                            .font(.system(.body, design: .rounded).weight(.medium))
+                            .font(TypographyToken.body.weight(.medium))
                             .foregroundStyle(ColorToken.textSecondary)
                             .frame(
                                 width: SymptomCheckInToken.infoButtonSize,
@@ -150,10 +142,6 @@ struct EntryFormSections: View {
         GridItem(
             .flexible(minimum: SymptomCheckInToken.symptomGridMinimumWidth),
             spacing: SymptomCheckInToken.symptomPillGridSpacing
-        ),
-        GridItem(
-            .flexible(minimum: SymptomCheckInToken.symptomGridMinimumWidth),
-            spacing: SymptomCheckInToken.symptomPillGridSpacing
         )
     ]
 
@@ -170,8 +158,8 @@ struct EntryFormSections: View {
     private var symptomSection: some View {
         VStack(alignment: .leading, spacing: SpacingToken.md) {
             SectionHeader(
-                title: "Welche Symptome hast du?",
-                subtitle: "Du kannst mehrere Symptome auswählen."
+                title: "Symptome",
+                subtitle: "Mehrere Symptome auswählbar."
             )
 
             LazyVGrid(columns: symptomColumns, spacing: SymptomCheckInToken.symptomPillGridSpacing) {

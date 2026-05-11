@@ -1,17 +1,17 @@
 import SwiftUI
 
 enum EntryListToken {
-    static let screenBackground = Color(hex: "#F6F4EF")
-    static let dayHeaderText = Color(hex: "#8B857C")
-    static let timeText = Color(hex: "#6E6A64")
-    static let contextText = Color(hex: "#6B6B6E")
+    static let screenBackground = ColorToken.backgroundPrimary
+    static let dayHeaderText = ColorToken.textSecondary
+    static let timeText = ColorToken.textSecondary
+    static let contextText = ColorToken.textSecondary
     static let cardGlassTint = ColorToken.cardBackground.opacity(0.72)
     static let cardFallbackBackground = ColorToken.cardBackground.opacity(0.94)
-    static let dayHeaderFont = Font.system(size: 18, weight: .medium, design: .rounded)
-    static let timeFont = Font.system(size: 18, weight: .medium, design: .rounded)
-    static let contextIconFont = Font.system(size: 14, weight: .medium, design: .rounded)
-    static let contextFont = Font.system(size: 15, weight: .medium, design: .rounded)
-    static let symptomChipFont = Font.system(size: 16, weight: .semibold, design: .rounded)
+    static let dayHeaderFont = Font.headline.weight(.medium)
+    static let timeFont = Font.headline.weight(.medium)
+    static let contextIconFont = Font.footnote.weight(.medium)
+    static let contextFont = Font.footnote.weight(.medium)
+    static let symptomChipFont = Font.callout.weight(.semibold)
     static let timeline = Color.black.opacity(0.08)
     static let timelineDot = Color.black.opacity(0.18)
     static let screenHorizontalPadding: CGFloat = 22
@@ -45,22 +45,22 @@ enum EntryListToken {
     static func symptomBackground(for severity: SymptomSeverity) -> Color {
         switch severity.rawValue {
         case SymptomSeverity.severe.rawValue...:
-            Color(hex: "#F2D7D1")
+            SemanticColorToken.highSeverityBackground
         case SymptomSeverity.moderate.rawValue..<SymptomSeverity.severe.rawValue:
-            Color(hex: "#EFE5D5")
+            SemanticColorToken.mediumSeverityBackground
         default:
-            Color(hex: "#EDF3EC")
+            SemanticColorToken.lowSeverityBackground
         }
     }
 
     static func symptomForeground(for severity: SymptomSeverity) -> Color {
         switch severity.rawValue {
         case SymptomSeverity.severe.rawValue...:
-            Color(hex: "#6B3B34")
+            SemanticColorToken.highSeverityText
         case SymptomSeverity.moderate.rawValue..<SymptomSeverity.severe.rawValue:
-            Color(hex: "#5A4732")
+            SemanticColorToken.mediumSeverityText
         default:
-            Color(hex: "#314235")
+            SemanticColorToken.lowSeverityText
         }
     }
 }

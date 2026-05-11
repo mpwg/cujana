@@ -84,15 +84,12 @@ private struct ForecastSummaryCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: SpacingToken.section) {
             VStack(alignment: .leading, spacing: SpacingToken.md) {
-                HStack(alignment: .firstTextBaseline, spacing: SpacingToken.md) {
+                VStack(alignment: .leading, spacing: SpacingToken.sm) {
                     Text("Belastungsausblick")
                         .font(TypographyToken.forecastSectionTitle)
                         .tracking(HomeOverviewToken.forecastTitleTracking)
                         .foregroundStyle(ColorToken.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
-
-                    Spacer(minLength: SpacingToken.sm)
-
                     if detailDays.isEmpty == false {
                         NavigationLink {
                             ForecastDetailView(days: detailDays)
@@ -157,9 +154,9 @@ private struct DayOverviewCard: View {
                 .font(TypographyToken.attribution.weight(.semibold))
                 .tracking(HomeOverviewToken.dayLabelTracking)
                 .textCase(.uppercase)
-                .foregroundStyle(ColorToken.textSecondary)
-                .lineLimit(1)
-                .minimumScaleFactor(HomeOverviewToken.weatherDescriptionMinimumScale)
+                .foregroundStyle(ColorToken.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityHidden(true)
 
             HStack(alignment: .top, spacing: SpacingToken.sm) {
                 VStack(alignment: .leading, spacing: SpacingToken.xs) {
@@ -167,17 +164,16 @@ private struct DayOverviewCard: View {
                         .font(TypographyToken.loadHeadline)
                         .tracking(HomeOverviewToken.loadHeadlineTracking)
                         .foregroundStyle(ColorToken.textPrimary)
-                        .lineLimit(2)
-                        .minimumScaleFactor(HomeOverviewToken.loadHeadlineMinimumScale)
                         .fixedSize(horizontal: false, vertical: true)
                         .multilineTextAlignment(.leading)
+                        .accessibilityHidden(true)
                 }
                 .layoutPriority(HomeOverviewToken.titleLayoutPriority)
 
                 Spacer(minLength: SpacingToken.sm)
 
                 Image(systemName: day.weatherSystemImageName)
-                    .font(HomeOverviewToken.dayWeatherIconFont)
+                .font(HomeOverviewToken.dayWeatherIconFont)
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(ColorToken.accentDark)
                     .opacity(HomeOverviewToken.dayWeatherIconOpacity)
@@ -193,9 +189,10 @@ private struct DayOverviewCard: View {
             if day.allergenItems.isEmpty {
                 Text("Keine relevante Belastung")
                     .font(TypographyToken.caption)
-                    .foregroundStyle(ColorToken.textSecondary)
+                    .foregroundStyle(ColorToken.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, SpacingToken.xs)
+                    .accessibilityHidden(true)
             } else {
                 WrappingChipLayout(spacing: SpacingToken.xs) {
                     ForEach(day.allergenItems.prefix(2)) { item in
@@ -205,19 +202,13 @@ private struct DayOverviewCard: View {
             }
 
             Spacer(minLength: 0)
-
-            Text(weatherContextText)
-                .font(TypographyToken.tinyMeta)
-                .foregroundStyle(HomeOverviewToken.weatherContextText.opacity(HomeOverviewToken.weatherContextOpacity))
-                .lineLimit(1)
-                .minimumScaleFactor(HomeOverviewToken.weatherMetaMinimumScale)
         }
         .padding(.top, HomeOverviewToken.dayCardPadding)
         .padding(.horizontal, HomeOverviewToken.dayCardPadding)
         .padding(.bottom, HomeOverviewToken.dayCardBottomPadding)
         .frame(
-            width: HomeOverviewToken.dayCardWidth,
-            height: HomeOverviewToken.dayCardHeight,
+            minWidth: HomeOverviewToken.dayCardWidth,
+            minHeight: HomeOverviewToken.dayCardHeight,
             alignment: .topLeading
         )
         .premiumSurface(cornerRadius: HomeOverviewToken.dayCardCornerRadius)
@@ -260,10 +251,10 @@ private struct AllergenLoadBadge: View {
         Text("\(item.title) · \(item.levelText)")
                 .font(TypographyToken.caption)
                 .foregroundStyle(SemanticColorToken.foreground(for: item.levelText))
-                .lineLimit(1)
-                .minimumScaleFactor(HomeOverviewToken.weatherMetaMinimumScale)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityHidden(true)
                 .padding(.horizontal, HomeOverviewToken.severityPillPaddingH)
-                .frame(height: HomeOverviewToken.severityPillHeight)
+                .frame(minHeight: HomeOverviewToken.severityPillHeight)
                 .background(SemanticColorToken.background(for: item.levelText))
                 .clipShape(
                     RoundedRectangle(cornerRadius: HomeOverviewToken.severityPillCornerRadius, style: .continuous)
