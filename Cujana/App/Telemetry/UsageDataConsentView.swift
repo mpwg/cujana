@@ -62,6 +62,7 @@ private struct UsageDataConsentSheet: View {
                 Image(systemName: "chart.line.uptrend.xyaxis")
                     .font(UsageDataConsentToken.iconFont)
                     .foregroundStyle(.teal)
+                    .accessibilityHidden(true)
 
                 Text("Nutzungsdaten teilen?")
                     .font(.title2.weight(.semibold))

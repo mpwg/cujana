@@ -195,6 +195,8 @@ private struct TimelineEntryRow: View {
                     }
                     .tint(ColorToken.accentPrimary)
                 }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityHint("Zum Bearbeiten doppeltippen")
                 .accessibilityAction(named: "Bearbeiten", onEdit)
                 .accessibilityAction(named: "Löschen", onDelete)
         }
@@ -245,6 +247,7 @@ private struct EntryCard: View {
                 Image(systemName: item.contextSystemImageName)
                     .font(EntryListToken.contextIconFont)
                     .foregroundStyle(EntryListToken.contextText)
+                    .accessibilityHidden(true)
 
                 Text(item.contextText)
                     .font(EntryListToken.contextFont)
@@ -411,6 +414,7 @@ private struct EntryPlaceholderRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: SpacingToken.md) {
             EntryIcon(systemImageName: systemImageName, background: ChipToken.calmBackground)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: SpacingToken.xs) {
                 Text(title)

@@ -59,6 +59,7 @@ struct SymptomChip: View {
         }
         .buttonStyle(SymptomChipButtonStyle())
         .accessibilityLabel(option.title)
+        .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
         .accessibilityHint("Mehrfachauswahl möglich")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .sensoryFeedback(.selection, trigger: isSelected)
@@ -180,6 +181,7 @@ private struct SeverityPill: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(option.title)
+        .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .sensoryFeedback(.selection, trigger: isSelected)
         .animation(
@@ -221,30 +223,31 @@ struct ExpandableDateCard: View {
     let reduceMotion: Bool
 
     var body: some View {
-        Button {
-            withAnimation(animation) {
-                isExpanded.toggle()
-            }
-        } label: {
-            VStack(alignment: .leading, spacing: SpacingToken.md) {
-                collapsedHeader
-
-                if isExpanded {
-                    compactPickers
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
+            Button {
+                withAnimation(animation) {
+                    isExpanded.toggle()
                 }
+            } label: {
+                collapsedHeader
             }
-            .padding(SpacingToken.lg)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(minHeight: isExpanded ? nil : SymptomCheckInToken.dateCardCollapsedHeight)
-            .background(ColorToken.cardBackground)
-            .clipShape(
-                RoundedRectangle(cornerRadius: SymptomCheckInToken.dateCardCornerRadius, style: .continuous)
-            )
-            .softShadow(SymptomCheckInToken.dateCardShadow)
+            .buttonStyle(DateCardButtonStyle())
+            .accessibilityLabel("Zeitpunkt")
+            .accessibilityValue(dateSummary)
+            .accessibilityHint(isExpanded ? "Zum Einklappen tippen" : "Zum Bearbeiten tippen")
+
+            if isExpanded {
+                compactPickers
+            }
         }
-        .buttonStyle(DateCardButtonStyle())
-        .accessibilityLabel("Zeitpunkt, \(dateSummary)")
-        .accessibilityHint(isExpanded ? "Zum Einklappen tippen" : "Zum Bearbeiten tippen")
+        .padding(SpacingToken.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(minHeight: isExpanded ? nil : SymptomCheckInToken.dateCardCollapsedHeight)
+        .background(ColorToken.cardBackground)
+        .clipShape(
+            RoundedRectangle(cornerRadius: SymptomCheckInToken.dateCardCornerRadius, style: .continuous)
+        )
+        .softShadow(SymptomCheckInToken.dateCardShadow)
     }
 
     private var collapsedHeader: some View {
@@ -284,11 +287,13 @@ struct ExpandableDateCard: View {
                 .datePickerStyle(.compact)
                 .tint(SymptomCheckInToken.accent)
                 .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.datePickerMinHeight)
+                .accessibilityHint("Ändert das Datum des Eintrags")
 
             DatePicker("Uhrzeit", selection: $entryDate, displayedComponents: .hourAndMinute)
                 .datePickerStyle(.compact)
                 .tint(SymptomCheckInToken.accent)
                 .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.datePickerMinHeight)
+                .accessibilityHint("Ändert die Uhrzeit des Eintrags")
         }
         .padding(.top, SpacingToken.xs)
     }
@@ -391,6 +396,7 @@ struct PrimaryCTAButton: View {
                 if isLoading {
                     ProgressView()
                         .tint(ColorToken.cardBackground)
+                        .accessibilityHidden(true)
                 }
 
                 Text(title)
@@ -399,6 +405,8 @@ struct PrimaryCTAButton: View {
         }
         .buttonStyle(PrimaryCTAButtonStyle(isEnabled: isEnabled))
         .disabled(isEnabled == false)
+        .accessibilityLabel(title)
+        .accessibilityValue(isLoading ? "Wird gespeichert" : "")
     }
 }
 

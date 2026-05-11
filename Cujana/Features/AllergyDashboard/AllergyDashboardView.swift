@@ -137,6 +137,7 @@ private struct ForecastLoadingState: View {
         HStack(spacing: SpacingToken.md) {
             ProgressView()
                 .tint(ColorToken.accentPrimary)
+                .accessibilityHidden(true)
 
             Text("Allergenlage wird geladen.")
                 .font(TypographyToken.body)

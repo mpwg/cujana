@@ -265,7 +265,7 @@ enum SymptomCheckInToken {
     static let symptomPressedScale = 0.97
     static let symptomPillCornerRadius: CGFloat = 24
     static let symptomPillShadow = ShadowTokenValue(color: Color.black.opacity(0.04), radius: 8, y: 1)
-    static let severityPillMinHeight: CGFloat = 40
+    static let severityPillMinHeight: CGFloat = 44
     static let severityPillSpacing: CGFloat = 10
     static let severityPillPaddingH: CGFloat = 18
     static let severityPillCornerRadius: CGFloat = 20

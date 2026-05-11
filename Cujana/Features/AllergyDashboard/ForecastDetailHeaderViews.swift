@@ -32,6 +32,7 @@ struct DetailDayPicker: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("\(day.title) auswählen")
+                .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
                 .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
         }
