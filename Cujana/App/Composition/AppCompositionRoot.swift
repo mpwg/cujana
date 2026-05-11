@@ -17,7 +17,16 @@ struct AppCompositionRoot {
             dashboardViewModel: makeAllergyDashboardViewModel(),
             entryListViewModel: makeEntryListViewModel(),
             symptomEntryViewModel: makeSymptomEntryViewModel(),
+            backgroundLocationAuthorizer: dependencies.backgroundLocationAuthorizer,
             telemetryService: telemetryService
+        )
+    }
+
+    func makeEnvironmentalDataRefreshCoordinator() -> EnvironmentalDataRefreshCoordinator {
+        EnvironmentalDataRefreshCoordinator(
+            refreshUseCase: makeRefreshEnvironmentalDataUseCase(),
+            locationProvider: dependencies.locationProvider,
+            backgroundLocationAuthorizer: dependencies.backgroundLocationAuthorizer
         )
     }
 
@@ -50,5 +59,13 @@ struct AppCompositionRoot {
 
     private func makeSaveAllergySymptomEntryUseCase() -> SaveAllergySymptomEntryUseCase {
         SaveAllergySymptomEntryUseCase(repository: dependencies.symptomEntryRepository)
+    }
+
+    private func makeRefreshEnvironmentalDataUseCase() -> RefreshEnvironmentalDataUseCase {
+        RefreshEnvironmentalDataUseCase(
+            pollenRepository: dependencies.pollenRepository,
+            weatherRepository: dependencies.weatherRepository,
+            environmentalDataRepository: dependencies.environmentalDataRepository
+        )
     }
 }

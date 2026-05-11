@@ -6,15 +6,35 @@ protocol LocationCoordinateProviding: AnyObject {
 }
 
 @MainActor
-final class FixedLocationCoordinateProvider: LocationCoordinateProviding {
+protocol BackgroundLocationAuthorizing: AnyObject {
+    var allowsBackgroundLocationRefresh: Bool { get }
+    var backgroundLocationStatusText: String { get }
+
+    func requestBackgroundLocationRefreshAuthorization() async -> Bool
+}
+
+@MainActor
+final class FixedLocationCoordinateProvider: LocationCoordinateProviding, BackgroundLocationAuthorizing {
     private let coordinate: LocationCoordinate
 
     init(coordinate: LocationCoordinate) {
         self.coordinate = coordinate
     }
 
+    var allowsBackgroundLocationRefresh: Bool {
+        true
+    }
+
+    var backgroundLocationStatusText: String {
+        "Immer erlaubt"
+    }
+
     func currentCoordinate() async -> LocationCoordinate? {
         coordinate
+    }
+
+    func requestBackgroundLocationRefreshAuthorization() async -> Bool {
+        true
     }
 }
 

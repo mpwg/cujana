@@ -44,6 +44,64 @@ struct AllergyDomainTests {
         }
     }
 
+    @Test func pollenForecastCanStoreHourlyAllergenLevelsIndependentlyFromSymptoms() throws {
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let startDate = Date(timeIntervalSince1970: 0)
+        let hourDate = Date(timeIntervalSince1970: 3_600)
+        let hourlyLevel = PollenForecast.HourlyLevel(
+            date: hourDate,
+            pollenType: .birch,
+            level: .high
+        )
+        let symptomEntry = try AllergySymptomEntry(
+            date: Date(timeIntervalSince1970: 5_400),
+            symptomType: .itchyEyes,
+            severity: .moderate
+        )
+
+        let forecast = try PollenForecast(
+            coordinate: coordinate,
+            sourceKind: .forecast,
+            generatedAt: startDate,
+            validFrom: startDate,
+            validUntil: Date(timeIntervalSince1970: 86_400),
+            dailyLevels: [],
+            hourlyLevels: [hourlyLevel]
+        )
+
+        #expect(forecast.hourlyLevels == [hourlyLevel])
+        #expect(forecast.hourlyLevels.first?.date == hourDate)
+        #expect(symptomEntry.date != forecast.hourlyLevels.first?.date)
+    }
+
+    @Test func weatherForecastCanStoreHourlyConditionsIndependentlyFromSymptoms() throws {
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let hourDate = Date(timeIntervalSince1970: 3_600)
+        let hourlyCondition = WeatherForecast.HourlyCondition(
+            date: hourDate,
+            temperature: 18.4,
+            conditionCode: 2,
+            humidityPercent: 58,
+            windSpeedKilometersPerHour: 12
+        )
+        let symptomEntry = try AllergySymptomEntry(
+            date: Date(timeIntervalSince1970: 5_400),
+            symptomType: .sneezing,
+            severity: .mild
+        )
+
+        let forecast = WeatherForecast(
+            coordinate: coordinate,
+            generatedAt: Date(timeIntervalSince1970: 0),
+            dailyConditions: [],
+            hourlyConditions: [hourlyCondition]
+        )
+
+        #expect(forecast.hourlyConditions == [hourlyCondition])
+        #expect(forecast.hourlyConditions.first?.date == hourDate)
+        #expect(symptomEntry.date != forecast.hourlyConditions.first?.date)
+    }
+
     @Test func symptomEntryNormalizesBlankNote() throws {
         let entry = try AllergySymptomEntry(
             date: Date(timeIntervalSince1970: 0),
@@ -208,6 +266,56 @@ struct AllergyDomainTests {
         }
     }
 
+    @Test func refreshEnvironmentalDataSavesWeatherAndPollenWithoutSymptoms() async throws {
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let currentDate = Date(timeIntervalSince1970: 7_200)
+        let pollenForecast = try sampleForecast(coordinate: coordinate)
+        let weatherForecast = WeatherForecast(
+            coordinate: coordinate,
+            generatedAt: currentDate,
+            dailyConditions: [],
+            hourlyConditions: [
+                WeatherForecast.HourlyCondition(date: currentDate, temperature: 18.4, conditionCode: 2)
+            ]
+        )
+        let environmentalRepository = StubEnvironmentalDataRepository()
+        let useCase = RefreshEnvironmentalDataUseCase(
+            pollenRepository: StubPollenRepository(forecasts: [pollenForecast]),
+            weatherRepository: StubWeatherRepository(forecasts: [weatherForecast]),
+            environmentalDataRepository: environmentalRepository
+        )
+
+        let snapshot = try await useCase.execute(for: coordinate, currentDate: currentDate)
+
+        #expect(snapshot?.coordinate == coordinate)
+        #expect(snapshot?.pollenForecasts == [pollenForecast])
+        #expect(snapshot?.weatherForecasts == [weatherForecast])
+        #expect(try await environmentalRepository.latestSnapshot() == snapshot)
+    }
+
+    @Test func refreshEnvironmentalDataSkipsWhenLastSnapshotIsLessThanSixHoursOld() async throws {
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let previousDate = Date(timeIntervalSince1970: 1_000)
+        let currentDate = previousDate.addingTimeInterval(RefreshEnvironmentalDataUseCase.minimumRefreshInterval - 60)
+        let previousSnapshot = EnvironmentalDataSnapshot(
+            coordinate: coordinate,
+            collectedAt: previousDate,
+            pollenForecasts: [],
+            weatherForecasts: []
+        )
+        let environmentalRepository = StubEnvironmentalDataRepository(snapshot: previousSnapshot)
+        let useCase = RefreshEnvironmentalDataUseCase(
+            pollenRepository: StubPollenRepository(forecasts: []),
+            weatherRepository: StubWeatherRepository(forecasts: []),
+            environmentalDataRepository: environmentalRepository
+        )
+
+        let snapshot = try await useCase.execute(for: coordinate, currentDate: currentDate)
+
+        #expect(snapshot == nil)
+        #expect(try await environmentalRepository.latestSnapshot() == previousSnapshot)
+    }
+
     private func sampleForecast(coordinate: LocationCoordinate) throws -> PollenForecast {
         let validFrom = Date(timeIntervalSince1970: 0)
         let validUntil = Date(timeIntervalSince1970: 86_400)
@@ -256,6 +364,22 @@ private struct StubWeatherRepository: WeatherRepository {
         forecasts.filter { forecast in
             forecast.coordinate == coordinate
         }
+    }
+}
+
+private actor StubEnvironmentalDataRepository: EnvironmentalDataRepository {
+    private var snapshot: EnvironmentalDataSnapshot?
+
+    init(snapshot: EnvironmentalDataSnapshot? = nil) {
+        self.snapshot = snapshot
+    }
+
+    func latestSnapshot() async throws -> EnvironmentalDataSnapshot? {
+        snapshot
+    }
+
+    func save(_ snapshot: EnvironmentalDataSnapshot) async throws {
+        self.snapshot = snapshot
     }
 }
 

@@ -2,12 +2,26 @@ import SwiftUI
 
 struct SettingsView: View {
     @Bindable var telemetryService: AppTelemetryService
+    let backgroundLocationAuthorizer: (any BackgroundLocationAuthorizing)?
+    @State private var locationStatusText: String
+
+    init(
+        telemetryService: AppTelemetryService,
+        backgroundLocationAuthorizer: (any BackgroundLocationAuthorizing)? = nil
+    ) {
+        self.telemetryService = telemetryService
+        self.backgroundLocationAuthorizer = backgroundLocationAuthorizer
+        let statusText = backgroundLocationAuthorizer?.backgroundLocationStatusText
+            ?? "Nicht verfügbar"
+        self.locationStatusText = statusText
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: SpacingToken.section) {
                     header
+                    backgroundLocationSection
                     usageDataSection
                 }
                 .padding(.horizontal, SpacingToken.xl)
@@ -26,6 +40,44 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    private var backgroundLocationSection: some View {
+        VStack(alignment: .leading, spacing: SpacingToken.lg) {
+            VStack(alignment: .leading, spacing: SpacingToken.xs) {
+                Text("Wetter und Pollen")
+                    .font(TypographyToken.headline)
+                    .foregroundStyle(ColorToken.textPrimary)
+
+                Text(locationStatusText)
+                    .font(TypographyToken.footnote)
+                    .foregroundStyle(locationStatusColor)
+            }
+
+            Button {
+                Task {
+                    await requestBackgroundLocationAuthorization()
+                }
+            } label: {
+                Label("Immer-Standort erlauben", systemImage: "location")
+                    .font(TypographyToken.bodyEmphasized)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(ColorToken.accentPrimary)
+            .disabled(backgroundLocationAuthorizer == nil)
+
+            VStack(alignment: .leading, spacing: SpacingToken.sm) {
+                Label("Cujana speichert Wetter- und Pollendaten höchstens viermal pro Tag.", systemImage: "clock")
+                Label(
+                    "Ohne Immer-Zugriff werden diese Daten nur beim Starten der App geladen.",
+                    systemImage: "arrow.clockwise"
+                )
+            }
+            .font(TypographyToken.footnote)
+            .foregroundStyle(ColorToken.textSecondary)
+        }
+        .cujanaCard()
     }
 
     private var header: some View {
@@ -103,5 +155,23 @@ struct SettingsView: View {
         case .denied:
             ColorToken.textSecondary
         }
+    }
+
+    private var locationStatusColor: Color {
+        guard backgroundLocationAuthorizer?.allowsBackgroundLocationRefresh == true else {
+            return ColorToken.textSecondary
+        }
+
+        return ColorToken.accentPositive
+    }
+
+    @MainActor
+    private func requestBackgroundLocationAuthorization() async {
+        guard let backgroundLocationAuthorizer else {
+            return
+        }
+
+        _ = await backgroundLocationAuthorizer.requestBackgroundLocationRefreshAuthorization()
+        locationStatusText = backgroundLocationAuthorizer.backgroundLocationStatusText
     }
 }
