@@ -57,6 +57,13 @@ is_allowed_swiftdata_path() {
     || "$file" == CujanaUITests/* ]]
 }
 
+is_allowed_userdefaults_path() {
+  local file="$1"
+  [[ "$file" == Cujana/Infrastructure/Persistence/* \
+    || "$file" == CujanaTests/* \
+    || "$file" == CujanaUITests/* ]]
+}
+
 scan_pattern() {
   local file="$1"
   local pattern="$2"
@@ -94,6 +101,11 @@ else
       if ! is_allowed_swiftdata_path "$normalized"; then
         scan_pattern "$file" '(^import[[:space:]]+SwiftData$|@Model\b|\b(ModelContainer|ModelContext)\b)' \
           "SwiftData APIs are only allowed in Cujana/Infrastructure/Persistence or ADR-approved test code."
+      fi
+
+      if ! is_allowed_userdefaults_path "$normalized"; then
+        scan_pattern "$file" '\bUserDefaults\.standard\b' \
+          "UserDefaults.standard is only allowed behind stores in Cujana/Infrastructure/Persistence."
       fi
     fi
 

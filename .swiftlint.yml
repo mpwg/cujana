@@ -117,6 +117,18 @@ custom_rules:
     message: "SwiftData APIs must stay in Cujana/Infrastructure/Persistence unless an ADR explicitly allows another path."
     severity: error
 
+  no_userdefaults_standard_outside_persistence:
+    name: "No UserDefaults.standard outside Persistence"
+    included:
+      - "^Cujana/.*\\.swift"
+    excluded:
+      - "^Cujana/Infrastructure/Persistence/.*\\.swift"
+      - ".*CujanaTests/.*\\.swift"
+      - ".*CujanaUITests/.*\\.swift"
+    regex: "\\bUserDefaults\\.standard\\b"
+    message: "UserDefaults.standard must stay behind stores in Cujana/Infrastructure/Persistence."
+    severity: error
+
   no_manager_suffix:
     name: "No Manager suffix"
     included:

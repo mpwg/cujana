@@ -14,32 +14,12 @@ protocol UsageDataConsentService: AnyObject {
     func setUsageDataCollectionAllowed(_ allowed: Bool)
 }
 
-final class UsageDataConsentStore {
-    private let defaults: UserDefaults
-    private let consentKey = "usageDataCollectionAllowed"
-
-    init(defaults: UserDefaults = .standard) {
-        self.defaults = defaults
-    }
-
+protocol UsageDataConsentStoring: AnyObject {
     var consent: UsageDataConsent {
-        guard defaults.object(forKey: consentKey) != nil else {
-            return .undecided
-        }
-
-        return defaults.bool(forKey: consentKey) ? .allowed : .denied
+        get
     }
 
-    func setConsent(_ consent: UsageDataConsent) {
-        switch consent {
-        case .undecided:
-            defaults.removeObject(forKey: consentKey)
-        case .allowed:
-            defaults.set(true, forKey: consentKey)
-        case .denied:
-            defaults.set(false, forKey: consentKey)
-        }
-    }
+    func setConsent(_ consent: UsageDataConsent)
 }
 
 protocol AppTelemetryGatewaying: AnyObject {
@@ -85,13 +65,13 @@ struct AppTelemetryConfiguration {
 @Observable
 final class AppTelemetryService: UsageDataConsentService {
     private static let logger = Logger(subsystem: "Cujana", category: "Telemetry")
-    private let store: UsageDataConsentStore
+    private let store: any UsageDataConsentStoring
     private let gateway: AppTelemetryGatewaying
     private let configuration: AppTelemetryConfiguration
     private var isTelemetrySuppressed = false
 
     init(
-        store: UsageDataConsentStore = UsageDataConsentStore(),
+        store: any UsageDataConsentStoring = UserDefaultsUsageDataConsentStore(),
         gateway: AppTelemetryGatewaying = AppTelemetryGateway(),
         configuration: AppTelemetryConfiguration = .bundle(.main)
     ) {
