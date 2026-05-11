@@ -43,12 +43,14 @@ actor DashboardCapturingPollenRepository: PollenRepository {
 }
 
 struct DashboardFailingPollenRepository: PollenRepository {
+    let error: any Error
+
     func pollenForecast(
         for coordinate: LocationCoordinate,
         from startDate: Date,
         to endDate: Date
     ) async throws -> [PollenForecast] {
-        throw PollenDataError.unavailable
+        throw error
     }
 }
 

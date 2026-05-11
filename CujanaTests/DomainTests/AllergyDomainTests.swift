@@ -219,9 +219,28 @@ struct AllergyDomainTests {
         #expect(overview.pollenForecasts == [forecast])
         #expect(overview.weatherForecasts == [weatherForecast])
         #expect(overview.symptomEntries == [symptomEntry])
+        #expect(overview.sourceStatuses == [
+            AllergyOverviewSourceStatus(source: .pollen, state: .available),
+            AllergyOverviewSourceStatus(source: .weather, state: .available)
+        ])
     }
 
-    @Test func loadAllergyOverviewKeepsWeatherAndSymptomsWhenPollenFails() async throws {
+    @Test func loadAllergyOverviewMarksPollenNoDataWhenRepositoryReturnsEmptyForecasts() async throws {
+        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
+        let startDate = Date(timeIntervalSince1970: 0)
+        let endDate = Date(timeIntervalSince1970: 86_400)
+        let useCase = LoadAllergyOverviewUseCase(
+            pollenRepository: StubPollenRepository(forecasts: []),
+            symptomEntryRepository: TestSymptomEntryRepository()
+        )
+
+        let overview = try await useCase.execute(for: coordinate, from: startDate, to: endDate)
+
+        #expect(overview.pollenForecasts.isEmpty)
+        #expect(overview.sourceStatuses.contains(AllergyOverviewSourceStatus(source: .pollen, state: .noData)))
+    }
+
+    @Test func loadAllergyOverviewKeepsWeatherAndSymptomsWhenPollenNetworkFails() async throws {
         let coordinate = try LocationCoordinate(latitude: 37.75, longitude: -122.4)
         let startDate = Date(timeIntervalSince1970: 0)
         let endDate = Date(timeIntervalSince1970: 86_400)
@@ -239,7 +258,7 @@ struct AllergyDomainTests {
             coordinate: coordinate
         )
         let useCase = LoadAllergyOverviewUseCase(
-            pollenRepository: FailingPollenRepository(),
+            pollenRepository: FailingPollenRepository(error: PollenDataError.networkFailure),
             weatherRepository: StubWeatherRepository(forecasts: [weatherForecast]),
             symptomEntryRepository: TestSymptomEntryRepository(entries: [symptomEntry])
         )
@@ -249,6 +268,37 @@ struct AllergyDomainTests {
         #expect(overview.pollenForecasts.isEmpty)
         #expect(overview.weatherForecasts == [weatherForecast])
         #expect(overview.symptomEntries == [symptomEntry])
+        #expect(
+            overview.sourceStatuses.contains(
+                AllergyOverviewSourceStatus(source: .pollen, state: .unavailable(.network))
+            )
+        )
+    }
+
+    @Test func loadAllergyOverviewMarksDecodingFailureWithoutDroppingOtherSources() async throws {
+        let coordinate = try LocationCoordinate(latitude: 37.75, longitude: -122.4)
+        let startDate = Date(timeIntervalSince1970: 0)
+        let endDate = Date(timeIntervalSince1970: 86_400)
+        let useCase = LoadAllergyOverviewUseCase(
+            pollenRepository: FailingPollenRepository(error: PollenDataError.decodingFailed),
+            weatherRepository: FailingWeatherRepository(error: PollenDataError.apiFailure(reason: "WeatherKit")),
+            symptomEntryRepository: TestSymptomEntryRepository()
+        )
+
+        let overview = try await useCase.execute(for: coordinate, from: startDate, to: endDate)
+
+        #expect(overview.pollenForecasts.isEmpty)
+        #expect(overview.weatherForecasts.isEmpty)
+        #expect(
+            overview.sourceStatuses.contains(
+                AllergyOverviewSourceStatus(source: .pollen, state: .unavailable(.decoding))
+            )
+        )
+        #expect(
+            overview.sourceStatuses.contains(
+                AllergyOverviewSourceStatus(source: .weather, state: .unavailable(.api))
+            )
+        )
     }
 
     @Test func loadAllergyOverviewStillThrowsWhenSymptomsCannotLoad() async throws {
@@ -331,12 +381,26 @@ private struct StubWeatherRepository: WeatherRepository {
 }
 
 private struct FailingPollenRepository: PollenRepository {
+    let error: any Error
+
     func pollenForecast(
         for coordinate: LocationCoordinate,
         from startDate: Date,
         to endDate: Date
     ) async throws -> [PollenForecast] {
-        throw PollenDataError.decodingFailed
+        throw error
+    }
+}
+
+private struct FailingWeatherRepository: WeatherRepository {
+    let error: any Error
+
+    func weatherForecast(
+        for coordinate: LocationCoordinate,
+        from startDate: Date,
+        to endDate: Date
+    ) async throws -> [WeatherForecast] {
+        throw error
     }
 }
 
