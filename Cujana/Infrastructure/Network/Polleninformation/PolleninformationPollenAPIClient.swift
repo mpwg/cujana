@@ -114,7 +114,7 @@ nonisolated public struct PolleninformationURLSessionClient: PolleninformationPo
             } catch let error as PollenDataError {
                 throw error
             } catch let error as PolleninformationError {
-                if case .decoding = error {
+                if Self.isMissingLocationPayload(error) {
                     AppObservability.log(
                         .info,
                         "Keine Polleninformationen für diesen Standort.",
@@ -169,7 +169,7 @@ nonisolated public struct PolleninformationURLSessionClient: PolleninformationPo
             allDates.firstIndex(of: date)
         }
 
-        let variables = forecast.contamination.compactMap { contamination
+        let variables = try forecast.contamination.compactMap { contamination
             -> PolleninformationPollenResponseDTO.DailyVariable? in
             guard let pollenType = pollenType(for: contamination) else {
                 return nil
@@ -177,14 +177,28 @@ nonisolated public struct PolleninformationURLSessionClient: PolleninformationPo
 
             return PolleninformationPollenResponseDTO.DailyVariable(
                 pollenType: pollenType,
-                values: dateOffsets.map { contamination.dailyValues[$0] }
+                values: try values(
+                    from: contamination.dailyValues,
+                    offsets: dateOffsets,
+                    fieldName: "contamination.dailyValues"
+                )
             )
         }
-        let dailyAllergyRisks = zip(dates, dateOffsets).map { date, offset in
+        let allergyRiskValues = try values(
+            from: forecast.allergyRisk.dailyValues,
+            offsets: dateOffsets,
+            fieldName: "allergyRisk.dailyValues"
+        )
+        let hourlyAllergyRiskValues = try values(
+            from: forecast.hourlyAllergyRisk.dailyValues,
+            offsets: dateOffsets,
+            fieldName: "hourlyAllergyRisk.dailyValues"
+        )
+        let dailyAllergyRisks = zip(dates, zip(allergyRiskValues, hourlyAllergyRiskValues)).map { date, risk in
             PolleninformationPollenResponseDTO.DailyAllergyRisk(
                 date: date,
-                value: forecast.allergyRisk.dailyValues[offset],
-                hourlyValues: forecast.hourlyAllergyRisk.dailyValues[offset]
+                value: risk.0,
+                hourlyValues: risk.1
             )
         }
 
@@ -202,6 +216,30 @@ nonisolated public struct PolleninformationURLSessionClient: PolleninformationPo
     private static func forecastDates(generatedAt: Date, calendar: Calendar) -> [Date] {
         let firstDate = calendar.startOfDay(for: generatedAt)
         return (0..<4).compactMap { calendar.date(byAdding: .day, value: $0, to: firstDate) }
+    }
+
+    static func values<Value>(
+        from source: [Value],
+        offsets: [Int],
+        fieldName: String
+    ) throws -> [Value] {
+        try offsets.map { offset in
+            guard source.indices.contains(offset) else {
+                AppObservability.log(
+                    .error,
+                    "Polleninformation API-Payload enthält zu wenige Tageswerte.",
+                    category: "Polleninformation",
+                    metadata: [
+                        "field": fieldName,
+                        "offset": "\(offset)",
+                        "count": "\(source.count)"
+                    ]
+                )
+                throw PollenDataError.decodingFailed
+            }
+
+            return source[offset]
+        }
     }
 
     private static func pollenType(for contamination: PollenContamination) -> PollenType? {
@@ -252,6 +290,14 @@ nonisolated public struct PolleninformationURLSessionClient: PolleninformationPo
         case .decoding:
             return .decodingFailed
         }
+    }
+
+    private static func isMissingLocationPayload(_ error: PolleninformationError) -> Bool {
+        guard case let .decoding(message) = error else {
+            return false
+        }
+
+        return message.localizedCaseInsensitiveContains("no payload for coordinate")
     }
 
     public static func defaultAPIKey(bundle: Bundle = .main) -> String? {
