@@ -9,6 +9,7 @@ final class EntryListViewModel {
 
     private enum Constant {
         static let visiblePollenCount = 4
+        static let germanLocale = Locale(identifier: "de_AT")
     }
 
     private let loadEntriesUseCase: LoadAllergySymptomEntriesUseCase
@@ -16,37 +17,32 @@ final class EntryListViewModel {
     private let locationProvider: (any LocationCoordinateProviding)?
     private let previewCoordinate: LocationCoordinate?
     private let calendar: Calendar
-    private let now: () -> Date
 
     init(
         loadEntriesUseCase: LoadAllergySymptomEntriesUseCase,
         loadPollenUseCase: LoadPollenForecastUseCase,
         locationProvider: (any LocationCoordinateProviding)? = nil,
         coordinate: LocationCoordinate? = nil,
-        calendar: Calendar = .current,
-        now: @escaping () -> Date = Date.init
+        calendar: Calendar = .current
     ) {
         self.loadEntriesUseCase = loadEntriesUseCase
         self.loadPollenUseCase = loadPollenUseCase
         self.locationProvider = locationProvider
         self.previewCoordinate = coordinate
         self.calendar = calendar
-        self.now = now
     }
 
     func load() async {
         state = .loading
 
         do {
-            let currentDate = now()
             let entries = try await loadEntriesUseCase.execute(from: .distantPast, to: .distantFuture)
                 .sorted { $0.date > $1.date }
 
             let pollenForecasts = try await loadPollenForecasts(for: entries)
             let content = makeContent(
                 entries: entries,
-                pollenForecasts: pollenForecasts,
-                currentDate: currentDate
+                pollenForecasts: pollenForecasts
             )
 
             state = entries.isEmpty ? .empty(content) : .loaded(content)
@@ -84,16 +80,10 @@ final class EntryListViewModel {
 
     private func makeContent(
         entries: [AllergySymptomEntry],
-        pollenForecasts: [PollenForecast],
-        currentDate: Date
+        pollenForecasts: [PollenForecast]
     ) -> EntryListContent {
         EntryListContent(
-            title: "Alle Einträge",
-            subtitle: entries.isEmpty
-                ? "Noch keine Symptome erfasst."
-                : "\(journalEntries(from: entries).count) Check-ins nach Tagen sortiert.",
-            sections: makeSections(entries: entries, pollenForecasts: pollenForecasts),
-            generatedAtText: "Aktualisiert \(relativeText(for: currentDate, currentDate: currentDate))"
+            sections: makeSections(entries: entries, pollenForecasts: pollenForecasts)
         )
     }
 
@@ -160,25 +150,25 @@ final class EntryListViewModel {
             id: entry.date.ISO8601Format(),
             dateText: dateText(for: entry.date),
             timeText: entry.date.formatted(.dateTime.hour().minute()),
-            severityText: AllergyDashboardPresentationState.severityText(for: entry.severity),
             noteText: entry.note,
-            contextText: contextText(for: entry.date, pollenForecasts: pollenForecasts),
+            contextText: contextText(for: entry.date, severity: entry.severity, pollenForecasts: pollenForecasts),
             contextSystemImageName: "cloud.sun",
             symptoms: entry.symptoms.map { symptom in
                 JournalEntrySymptomItem(
                     type: symptom,
                     title: AllergyDashboardPresentationState.title(for: symptom),
-                    background: symptomBackground(for: entry.severity)
+                    background: EntryListToken.symptomBackground(for: entry.severity),
+                    foreground: EntryListToken.symptomForeground(for: entry.severity)
                 )
-            },
-            severityBackground: AllergyDashboardPresentationState.symptomBackground(for: entry.severity)
+            }
         )
     }
 
     private func contextText(
         for date: Date,
+        severity: SymptomSeverity,
         pollenForecasts: [PollenForecast]
-    ) -> String? {
+    ) -> String {
         let pollenItems = pollenForecasts
             .flatMap(\.dailyLevels)
             .filter { calendar.isDate($0.date, inSameDayAs: date) }
@@ -193,14 +183,10 @@ final class EntryListViewModel {
             }
             .prefix(Constant.visiblePollenCount)
             .map { level in
-                "\(pollenContextPrefix(for: level.level)) \(AllergyDashboardPresentationState.title(for: level.pollenType))belastung"
+                pollenContextText(for: level)
             }
 
-        guard pollenItems.isEmpty == false else {
-            return nil
-        }
-
-        return pollenItems.joined(separator: " · ")
+        return ([severityContextText(for: severity)] + pollenItems).joined(separator: " · ")
     }
 
     private func endOfDay(for date: Date) -> Date {
@@ -220,7 +206,13 @@ final class EntryListViewModel {
             return "Gestern"
         }
 
-        return date.formatted(.dateTime.weekday(.abbreviated).day().month(.wide).year())
+        return date.formatted(
+            .dateTime
+                .weekday(.wide)
+                .day()
+                .month(.wide)
+                .locale(Constant.germanLocale)
+        )
     }
 
     private func sectionTitle(for date: Date) -> String {
@@ -232,21 +224,29 @@ final class EntryListViewModel {
             return "Gestern"
         }
 
-        return date.formatted(.dateTime.weekday(.wide).day().month(.wide))
+        return date.formatted(
+            .dateTime
+                .weekday(.wide)
+                .day()
+                .month(.wide)
+                .locale(Constant.germanLocale)
+        )
     }
 
-    private func relativeText(for date: Date, currentDate: Date) -> String {
-        if calendar.isDate(date, inSameDayAs: currentDate) {
-            return "heute"
+    private func severityContextText(for severity: SymptomSeverity) -> String {
+        switch severity.rawValue {
+        case 0...3:
+            "Mild"
+        case 4...6:
+            "Mittel"
+        default:
+            "Stark"
         }
-
-        return date.formatted(.dateTime.day().month(.abbreviated))
     }
 
-    private func symptomBackground(for severity: SymptomSeverity) -> Color {
-        severity.rawValue >= SymptomSeverity.moderate.rawValue
-            ? Color(hex: "#F3E8D7")
-            : Color(hex: "#EEF3ED")
+    private func pollenContextText(for level: PollenForecast.DailyLevel) -> String {
+        let title = AllergyDashboardPresentationState.title(for: level.pollenType)
+        return "\(pollenContextPrefix(for: level.level)) \(title)belastung"
     }
 
     private func pollenContextPrefix(for level: PollenLevel) -> String {

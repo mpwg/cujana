@@ -119,8 +119,7 @@ enum AppDemoData {
                 symptomEntryRepository: DemoSymptomEntryRepository(entries: symptomEntries)
             ),
             coordinate: coordinate,
-            calendar: calendar,
-            now: { now }
+            calendar: calendar
         )
     }
 
@@ -133,8 +132,7 @@ enum AppDemoData {
                 repository: DemoPollenRepository(forecasts: pollenForecasts)
             ),
             coordinate: coordinate,
-            calendar: calendar,
-            now: { now }
+            calendar: calendar
         )
     }
 

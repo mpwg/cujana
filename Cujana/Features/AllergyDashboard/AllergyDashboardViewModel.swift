@@ -421,12 +421,7 @@ private extension AllergyDashboardViewModel {
 
     private func symptomTitle(for symptoms: [SymptomType]) -> String {
         let titles = symptoms.map { AllergyDashboardPresentationState.title(for: $0) }
-
-        guard titles.count > 2 else {
-            return titles.joined(separator: ", ")
-        }
-
-        return "\(titles[0]), \(titles[1]) +\(titles.count - 2)"
+        return titles.count > 2 ? "\(titles[0]), \(titles[1]) +\(titles.count - 2)" : titles.joined(separator: ", ")
     }
 
     private func startOfHistory(for date: Date) -> Date {
@@ -450,8 +445,6 @@ private extension AllergyDashboardViewModel {
     }
 
     private func systemImageName(for symptomType: SymptomType) -> String {
-        SymptomEntryPresentationState.symptomOptions
-            .first { $0.type == symptomType }?
-            .systemImageName ?? "sparkle"
+        SymptomEntryPresentationState.symptomOptions.first { $0.type == symptomType }?.systemImageName ?? "sparkle"
     }
 }

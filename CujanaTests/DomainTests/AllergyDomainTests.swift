@@ -114,22 +114,15 @@ struct AllergyDomainTests {
     }
 
     @Test func symptomEntryStoresMultipleSymptomsAsOneCheckIn() throws {
-        let entry = try AllergySymptomEntry(
-            date: Date(timeIntervalSince1970: 0),
-            symptoms: [.sneezing, .itchyEyes, .sneezing],
-            severity: .moderate
-        )
+        let date = Date(timeIntervalSince1970: 0)
+        let entry = try AllergySymptomEntry(date: date, symptoms: [.sneezing, .itchyEyes], severity: .moderate)
 
         #expect(entry.symptoms == [.sneezing, .itchyEyes])
     }
 
     @Test func symptomEntryRejectsEmptySymptoms() {
         #expect(throws: SymptomEntryError.emptySymptoms) {
-            _ = try AllergySymptomEntry(
-                date: Date(timeIntervalSince1970: 0),
-                symptoms: [],
-                severity: .mild
-            )
+            _ = try AllergySymptomEntry(date: Date(timeIntervalSince1970: 0), symptoms: [], severity: .mild)
         }
     }
 

@@ -10,20 +10,15 @@ struct EntryListView: View {
                     content
                 }
                 .padding(.horizontal, SpacingToken.xl)
-                .padding(.vertical, SpacingToken.xl)
+                .padding(.top, SpacingToken.lg)
+                .padding(.bottom, SpacingToken.xxl)
             }
-            .background(ColorToken.backgroundPrimary)
+            .background(EntryListToken.screenBackground)
+            .navigationTitle("Einträge")
 #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(ColorToken.backgroundPrimary, for: .navigationBar)
+            .navigationBarTitleDisplayMode(.large)
+            .toolbarBackground(EntryListToken.screenBackground, for: .navigationBar)
 #endif
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Einträge")
-                        .font(TypographyToken.headline)
-                        .foregroundStyle(ColorToken.textPrimary)
-                }
-            }
             .task {
                 await viewModel.load()
             }
@@ -45,44 +40,18 @@ struct EntryListView: View {
     }
 
     private func listView(_ content: EntryListContent) -> some View {
-        VStack(alignment: .leading, spacing: SpacingToken.section) {
-            header(content)
-
-            LazyVStack(alignment: .leading, spacing: SpacingToken.xl) {
-                ForEach(content.sections) { section in
-                    EntryDaySection(section: section)
-                }
+        LazyVStack(alignment: .leading, spacing: SpacingToken.xl) {
+            ForEach(content.sections) { section in
+                EntryDaySection(section: section)
             }
-        }
-    }
-
-    private func header(_ content: EntryListContent) -> some View {
-        VStack(alignment: .leading, spacing: SpacingToken.sm) {
-            Text(content.title)
-                .font(TypographyToken.largeTitle)
-                .foregroundStyle(ColorToken.textPrimary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text(content.subtitle)
-                .font(TypographyToken.body)
-                .foregroundStyle(ColorToken.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text(content.generatedAtText)
-                .font(TypographyToken.footnote)
-                .foregroundStyle(ColorToken.textTertiary)
         }
     }
 
     private var loadingView: some View {
         VStack(alignment: .leading, spacing: SpacingToken.section) {
-            Text("Alle Einträge")
-                .font(TypographyToken.largeTitle)
-                .foregroundStyle(ColorToken.textPrimary)
-
             VStack(spacing: SpacingToken.lg) {
                 ProgressView()
-                Text("Einträge, Polleninfos und Wetterstatus werden geladen ...")
+                Text("Einträge werden geladen ...")
                     .font(TypographyToken.body)
                     .foregroundStyle(ColorToken.textSecondary)
                     .multilineTextAlignment(.center)
@@ -94,8 +63,6 @@ struct EntryListView: View {
 
     private func emptyView(_ content: EntryListContent) -> some View {
         VStack(alignment: .leading, spacing: SpacingToken.section) {
-            header(content)
-
             EntryPlaceholderRow(
                 systemImageName: "list.bullet.rectangle",
                 title: "Noch keine Einträge",
@@ -107,10 +74,6 @@ struct EntryListView: View {
 
     private func errorView(message: String) -> some View {
         VStack(alignment: .leading, spacing: SpacingToken.section) {
-            Text("Alle Einträge")
-                .font(TypographyToken.largeTitle)
-                .foregroundStyle(ColorToken.textPrimary)
-
             VStack(alignment: .leading, spacing: SpacingToken.lg) {
                 EntryPlaceholderRow(
                     systemImageName: "exclamationmark.triangle",
@@ -137,16 +100,47 @@ private struct EntryDaySection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: SpacingToken.md) {
-            Text(section.title.uppercased())
-                .font(TypographyToken.caption)
-                .foregroundStyle(ColorToken.textTertiary)
+            Text(section.title)
+                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .foregroundStyle(EntryListToken.dayHeaderText)
+                .fixedSize(horizontal: false, vertical: true)
 
-            LazyVStack(spacing: SpacingToken.md) {
+            LazyVStack(spacing: EntryListToken.cardSpacing) {
                 ForEach(section.entries) { item in
-                    EntryCard(item: item)
+                    TimelineEntryRow(item: item)
                 }
             }
         }
+    }
+}
+
+private struct TimelineEntryRow: View {
+    let item: JournalEntryItem
+
+    var body: some View {
+        HStack(alignment: .top, spacing: EntryListToken.timelineCardSpacing) {
+            TimelineMarker()
+            EntryCard(item: item)
+        }
+    }
+}
+
+private struct TimelineMarker: View {
+    var body: some View {
+        ZStack(alignment: .top) {
+            Rectangle()
+                .fill(EntryListToken.timeline)
+                .frame(width: EntryListToken.timelineLineWidth)
+                .padding(.top, EntryListToken.cardPadding + EntryListToken.timelineDotSize)
+
+            Circle()
+                .fill(EntryListToken.timelineDot)
+                .frame(width: EntryListToken.timelineDotSize, height: EntryListToken.timelineDotSize)
+                .padding(.top, EntryListToken.cardPadding + 4)
+        }
+        .frame(width: EntryListToken.timelineWidth)
+        .frame(maxHeight: .infinity)
+        .accessibilityHidden(true)
     }
 }
 
@@ -154,57 +148,60 @@ private struct EntryCard: View {
     let item: JournalEntryItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.md) {
-            HStack(alignment: .top, spacing: SpacingToken.md) {
-                VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                    Text(item.dateText)
-                        .font(TypographyToken.headline)
-                        .foregroundStyle(ColorToken.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
+        VStack(alignment: .leading, spacing: 0) {
+            Text(item.dateText)
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundStyle(EntryListToken.entryDateText)
+                .fixedSize(horizontal: false, vertical: true)
 
-                    Text(item.timeText)
-                        .font(TypographyToken.caption)
-                        .foregroundStyle(ColorToken.textSecondary)
-                }
-
-                Spacer(minLength: SpacingToken.sm)
-
-                Text(item.severityText)
-                    .font(TypographyToken.caption)
-                    .foregroundStyle(ColorToken.accentPrimary)
-                    .padding(.horizontal, EntryListToken.severityPillPaddingH)
-                    .frame(height: EntryListToken.severityPillHeight)
-                    .background(item.severityBackground)
-                    .clipShape(Capsule())
-            }
+            Text(item.timeText)
+                .font(.system(size: 17, weight: .medium, design: .rounded))
+                .foregroundStyle(EntryListToken.timeText)
+                .padding(.top, EntryListToken.dateTimeSpacing)
 
             FlexibleSymptomChips(items: item.symptoms)
+                .padding(.top, EntryListToken.timeSymptomSpacing)
 
             if let noteText = item.noteText {
                 Text(noteText)
                     .font(TypographyToken.footnote)
                     .foregroundStyle(ColorToken.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, SpacingToken.md)
             }
 
-            if let contextText = item.contextText {
-                HStack(spacing: SpacingToken.xs) {
-                    Image(systemName: item.contextSystemImageName)
-                        .font(TypographyToken.caption)
-                        .foregroundStyle(ColorToken.textTertiary)
+            HStack(alignment: .firstTextBaseline, spacing: SpacingToken.xs) {
+                Image(systemName: item.contextSystemImageName)
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundStyle(EntryListToken.contextText)
 
-                    Text(contextText)
-                        .font(TypographyToken.caption)
-                        .foregroundStyle(ColorToken.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                Text(item.contextText)
+                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .foregroundStyle(EntryListToken.contextText)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            .padding(.top, EntryListToken.symptomContextSpacing)
         }
         .padding(EntryListToken.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(ColorToken.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: EntryListToken.cardCornerRadius, style: .continuous))
         .softShadow(EntryListToken.cardShadow)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityText)
+        .animation(EntryListToken.journalAnimation, value: item.symptoms)
+    }
+
+    private var accessibilityText: String {
+        [
+            item.dateText,
+            item.timeText,
+            item.symptoms.map(\.title).joined(separator: ", "),
+            item.contextText,
+            item.noteText
+        ]
+        .compactMap(\.self)
+        .joined(separator: ", ")
     }
 }
 
@@ -212,30 +209,101 @@ private struct FlexibleSymptomChips: View {
     let items: [JournalEntrySymptomItem]
 
     var body: some View {
-        LazyVGrid(
-            columns: [
-                GridItem(
-                    .adaptive(minimum: EntryListToken.symptomChipGridMinimumWidth),
-                    spacing: SpacingToken.sm,
-                    alignment: .leading
-                )
-            ],
-            alignment: .leading,
-            spacing: SpacingToken.sm
-        ) {
+        FlowLayout(spacing: EntryListToken.chipSpacing, rowSpacing: EntryListToken.chipRowSpacing) {
             ForEach(items) { item in
                 Text(item.title)
-                    .font(TypographyToken.caption)
-                    .foregroundStyle(ColorToken.textPrimary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.82)
+                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .foregroundStyle(item.foreground)
+                    .fixedSize(horizontal: true, vertical: false)
                     .padding(.horizontal, EntryListToken.symptomChipPaddingH)
-                    .frame(height: EntryListToken.symptomChipHeight)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                .background(item.background)
-                    .clipShape(Capsule())
+                    .padding(.vertical, EntryListToken.symptomChipPaddingV)
+                    .frame(minHeight: EntryListToken.symptomChipMinHeight)
+                    .background(item.background)
+                    .clipShape(RoundedRectangle(
+                        cornerRadius: EntryListToken.symptomChipCornerRadius,
+                        style: .continuous
+                    ))
+                    .transition(.scale(scale: 0.98).combined(with: .opacity))
+                    .accessibilityLabel(item.title)
             }
         }
+        .animation(EntryListToken.journalAnimation, value: items)
+    }
+}
+
+private struct FlowLayout: Layout {
+    let spacing: CGFloat
+    let rowSpacing: CGFloat
+
+    func sizeThatFits(
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout Void
+    ) -> CGSize {
+        let rows = rows(for: subviews, proposal: proposal)
+        let height = rows.reduce(CGFloat.zero) { result, row in
+            result + row.height
+        } + rowSpacing * CGFloat(max(rows.count - 1, 0))
+
+        return CGSize(width: proposal.width ?? rows.map(\.width).max() ?? 0, height: height)
+    }
+
+    func placeSubviews(
+        in bounds: CGRect,
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout Void
+    ) {
+        let rows = rows(for: subviews, proposal: ProposedViewSize(width: bounds.width, height: proposal.height))
+        var y = bounds.minY
+
+        for row in rows {
+            var x = bounds.minX
+
+            for index in row.indices {
+                let size = subviews[index].sizeThatFits(.unspecified)
+                subviews[index].place(
+                    at: CGPoint(x: x, y: y),
+                    anchor: .topLeading,
+                    proposal: ProposedViewSize(size)
+                )
+                x += size.width + spacing
+            }
+
+            y += row.height + rowSpacing
+        }
+    }
+
+    private func rows(for subviews: Subviews, proposal: ProposedViewSize) -> [FlowRow] {
+        let maxWidth = proposal.width ?? .infinity
+        var rows: [FlowRow] = []
+        var current = FlowRow()
+
+        for index in subviews.indices {
+            let size = subviews[index].sizeThatFits(.unspecified)
+            let proposedWidth = current.indices.isEmpty ? size.width : current.width + spacing + size.width
+
+            if proposedWidth > maxWidth && current.indices.isEmpty == false {
+                rows.append(current)
+                current = FlowRow()
+            }
+
+            current.indices.append(index)
+            current.width = current.width == 0 ? size.width : current.width + spacing + size.width
+            current.height = max(current.height, size.height)
+        }
+
+        if current.indices.isEmpty == false {
+            rows.append(current)
+        }
+
+        return rows
+    }
+
+    private struct FlowRow {
+        var indices: [Subviews.Index] = []
+        var width: CGFloat = 0
+        var height: CGFloat = 0
     }
 }
 

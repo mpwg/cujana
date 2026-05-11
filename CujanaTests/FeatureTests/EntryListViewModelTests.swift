@@ -46,8 +46,7 @@ struct EntryListViewModelTests {
                 repository: StubEntryListPollenRepository(forecasts: [forecast])
             ),
             coordinate: coordinate,
-            calendar: calendar,
-            now: { date }
+            calendar: calendar
         )
 
         await viewModel.load()
@@ -59,17 +58,18 @@ struct EntryListViewModelTests {
 
         #expect(content.sections.flatMap(\.entries).count == 2)
         #expect(content.sections.first?.entries.first?.symptoms.map(\.title) == ["Juckende Augen", "Husten"])
-        #expect(content.sections.first?.entries.first?.severityText == "Sehr stark")
         #expect(content.sections.first?.entries.first?.noteText == "Nach dem Park.")
-        #expect(content.sections.first?.entries.first?.contextText == "Hohe Birkebelastung · Mittlere Gräserbelastung")
+        #expect(
+            content.sections.first?.entries.first?.contextText
+                == "Stark · Hohe Birkebelastung · Mittlere Gräserbelastung"
+        )
         #expect(content.sections.last?.entries.first?.symptoms.map(\.title) == ["Verstopfte Nase"])
-        #expect(content.sections.last?.entries.first?.contextText == "Sehr hohe Ragweedbelastung")
+        #expect(content.sections.last?.entries.first?.contextText == "Mild · Sehr hohe Ragweedbelastung")
     }
 
     @Test
     @MainActor
     func loadShowsEmptyStateWithoutRequestingPollenWhenNoEntriesExist() async throws {
-        let date = Date(timeIntervalSince1970: 86_400)
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let pollenRepository = CapturingEntryListPollenRepository()
         let viewModel = EntryListViewModel(
@@ -78,8 +78,7 @@ struct EntryListViewModelTests {
             ),
             loadPollenUseCase: LoadPollenForecastUseCase(repository: pollenRepository),
             coordinate: coordinate,
-            calendar: calendar,
-            now: { date }
+            calendar: calendar
         )
 
         await viewModel.load()
@@ -114,8 +113,7 @@ struct EntryListViewModelTests {
             ),
             loadPollenUseCase: LoadPollenForecastUseCase(repository: pollenRepository),
             locationProvider: StubEntryListLocationProvider(coordinate: nil),
-            calendar: calendar,
-            now: { date }
+            calendar: calendar
         )
 
         await viewModel.load()
@@ -126,14 +124,13 @@ struct EntryListViewModelTests {
         }
 
         #expect(content.sections.flatMap(\.entries).first?.symptoms.map(\.title) == ["Juckende Augen"])
-        #expect(content.sections.flatMap(\.entries).first?.contextText == nil)
+        #expect(content.sections.flatMap(\.entries).first?.contextText == "Stark")
         #expect(await pollenRepository.requestCount() == 0)
     }
 
     @Test
     @MainActor
     func loadShowsFailureStateWhenEntriesCannotBeLoaded() async throws {
-        let date = Date(timeIntervalSince1970: 86_400)
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let viewModel = EntryListViewModel(
             loadEntriesUseCase: LoadAllergySymptomEntriesUseCase(
@@ -143,8 +140,7 @@ struct EntryListViewModelTests {
                 repository: StubEntryListPollenRepository(forecasts: [])
             ),
             coordinate: coordinate,
-            calendar: calendar,
-            now: { date }
+            calendar: calendar
         )
 
         await viewModel.load()
