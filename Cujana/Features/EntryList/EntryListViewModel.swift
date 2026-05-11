@@ -148,7 +148,6 @@ final class EntryListViewModel {
     ) -> JournalEntryItem {
         JournalEntryItem(
             id: entry.date.ISO8601Format(),
-            dateText: dateText(for: entry.date),
             timeText: entry.date.formatted(.dateTime.hour().minute()),
             noteText: entry.note,
             contextText: contextText(for: entry.date, severity: entry.severity, pollenForecasts: pollenForecasts),
@@ -195,24 +194,6 @@ final class EntryListViewModel {
         }
 
         return nextDay.addingTimeInterval(-1)
-    }
-
-    private func dateText(for date: Date) -> String {
-        if calendar.isDateInToday(date) {
-            return "Heute"
-        }
-
-        if calendar.isDateInYesterday(date) {
-            return "Gestern"
-        }
-
-        return date.formatted(
-            .dateTime
-                .weekday(.wide)
-                .day()
-                .month(.wide)
-                .locale(Constant.germanLocale)
-        )
     }
 
     private func sectionTitle(for date: Date) -> String {

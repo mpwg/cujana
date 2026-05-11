@@ -10,7 +10,7 @@ struct EntryListView: View {
                     content
                 }
                 .padding(.horizontal, SpacingToken.xl)
-                .padding(.top, SpacingToken.lg)
+                .padding(.top, SpacingToken.sm)
                 .padding(.bottom, SpacingToken.xxl)
             }
             .background(EntryListToken.screenBackground)
@@ -101,7 +101,7 @@ private struct EntryDaySection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: SpacingToken.md) {
             Text(section.title)
-                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .font(.system(size: 20, weight: .semibold, design: .rounded))
                 .foregroundStyle(EntryListToken.dayHeaderText)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -131,12 +131,13 @@ private struct TimelineMarker: View {
             Rectangle()
                 .fill(EntryListToken.timeline)
                 .frame(width: EntryListToken.timelineLineWidth)
-                .padding(.top, EntryListToken.cardPadding + EntryListToken.timelineDotSize)
+                .padding(.top, EntryListToken.timelineLineTopInset)
+                .padding(.bottom, EntryListToken.timelineLineBottomInset)
 
             Circle()
                 .fill(EntryListToken.timelineDot)
                 .frame(width: EntryListToken.timelineDotSize, height: EntryListToken.timelineDotSize)
-                .padding(.top, EntryListToken.cardPadding + 4)
+                .padding(.top, EntryListToken.timelineDotTopInset)
         }
         .frame(width: EntryListToken.timelineWidth)
         .frame(maxHeight: .infinity)
@@ -149,15 +150,9 @@ private struct EntryCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(item.dateText)
-                .font(.system(size: 28, weight: .bold, design: .rounded))
-                .foregroundStyle(EntryListToken.entryDateText)
-                .fixedSize(horizontal: false, vertical: true)
-
             Text(item.timeText)
-                .font(.system(size: 17, weight: .medium, design: .rounded))
+                .font(.system(size: 18, weight: .medium, design: .rounded))
                 .foregroundStyle(EntryListToken.timeText)
-                .padding(.top, EntryListToken.dateTimeSpacing)
 
             FlexibleSymptomChips(items: item.symptoms)
                 .padding(.top, EntryListToken.timeSymptomSpacing)
@@ -182,7 +177,9 @@ private struct EntryCard: View {
             }
             .padding(.top, EntryListToken.symptomContextSpacing)
         }
-        .padding(EntryListToken.cardPadding)
+        .padding(.top, EntryListToken.cardPaddingTop)
+        .padding(.horizontal, EntryListToken.cardPaddingHorizontal)
+        .padding(.bottom, EntryListToken.cardPaddingBottom)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(ColorToken.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: EntryListToken.cardCornerRadius, style: .continuous))
@@ -194,7 +191,6 @@ private struct EntryCard: View {
 
     private var accessibilityText: String {
         [
-            item.dateText,
             item.timeText,
             item.symptoms.map(\.title).joined(separator: ", "),
             item.contextText,
@@ -212,7 +208,7 @@ private struct FlexibleSymptomChips: View {
         FlowLayout(spacing: EntryListToken.chipSpacing, rowSpacing: EntryListToken.chipRowSpacing) {
             ForEach(items) { item in
                 Text(item.title)
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundStyle(item.foreground)
                     .fixedSize(horizontal: true, vertical: false)
                     .padding(.horizontal, EntryListToken.symptomChipPaddingH)
