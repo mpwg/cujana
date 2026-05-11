@@ -23,7 +23,7 @@ struct SymptomEntryViewModelTests {
         let entries = await repository.savedEntries()
         #expect(entries.count == 1)
         #expect(entries.first?.date == entryDate)
-        #expect(entries.first?.symptomType == .itchyEyes)
+        #expect(entries.first?.symptoms == [.itchyEyes])
         #expect(entries.first?.severity == SymptomSeverity(rawValue: 6))
         #expect(entries.first?.note == "Draußen stärker gespürt.")
         #expect(viewModel.saveStatus == .success("Dein Symptom wurde gespeichert."))
@@ -92,8 +92,9 @@ struct SymptomEntryViewModelTests {
         await viewModel.submit()
 
         let entries = await repository.savedEntries()
-        #expect(entries.map(\.symptomType) == [.sneezing, .itchyEyes])
-        #expect(entries.allSatisfy { $0.severity == SymptomSeverity(rawValue: 4) })
+        #expect(entries.count == 1)
+        #expect(entries.first?.symptoms == [.sneezing, .itchyEyes])
+        #expect(entries.first?.severity == SymptomSeverity(rawValue: 4))
         #expect(viewModel.saveStatus == .success("Deine Symptome wurden gespeichert."))
     }
 

@@ -9,21 +9,16 @@ struct EntryListView: View {
                 VStack(alignment: .leading, spacing: SpacingToken.section) {
                     content
                 }
-                .padding(.horizontal, SpacingToken.xl)
-                .padding(.vertical, SpacingToken.xl)
+                .padding(.horizontal, EntryListToken.screenHorizontalPadding)
+                .padding(.top, SpacingToken.sm)
+                .padding(.bottom, SpacingToken.xxl)
             }
-            .background(ColorToken.backgroundPrimary)
+            .background(EntryListToken.screenBackground)
+            .navigationTitle("Einträge")
 #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(ColorToken.backgroundPrimary, for: .navigationBar)
+            .navigationBarTitleDisplayMode(.large)
+            .toolbarBackground(EntryListToken.screenBackground, for: .navigationBar)
 #endif
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Einträge")
-                        .font(TypographyToken.headline)
-                        .foregroundStyle(ColorToken.textPrimary)
-                }
-            }
             .task {
                 await viewModel.load()
             }
@@ -45,44 +40,18 @@ struct EntryListView: View {
     }
 
     private func listView(_ content: EntryListContent) -> some View {
-        VStack(alignment: .leading, spacing: SpacingToken.section) {
-            header(content)
-
-            LazyVStack(spacing: SpacingToken.lg) {
-                ForEach(content.items) { item in
-                    EntryCard(item: item)
-                }
+        LazyVStack(alignment: .leading, spacing: SpacingToken.xl) {
+            ForEach(content.sections) { section in
+                EntryDaySection(section: section)
             }
-        }
-    }
-
-    private func header(_ content: EntryListContent) -> some View {
-        VStack(alignment: .leading, spacing: SpacingToken.sm) {
-            Text(content.title)
-                .font(TypographyToken.largeTitle)
-                .foregroundStyle(ColorToken.textPrimary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text(content.subtitle)
-                .font(TypographyToken.body)
-                .foregroundStyle(ColorToken.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text(content.generatedAtText)
-                .font(TypographyToken.footnote)
-                .foregroundStyle(ColorToken.textTertiary)
         }
     }
 
     private var loadingView: some View {
         VStack(alignment: .leading, spacing: SpacingToken.section) {
-            Text("Alle Einträge")
-                .font(TypographyToken.largeTitle)
-                .foregroundStyle(ColorToken.textPrimary)
-
             VStack(spacing: SpacingToken.lg) {
                 ProgressView()
-                Text("Einträge, Polleninfos und Wetterstatus werden geladen ...")
+                Text("Einträge werden geladen ...")
                     .font(TypographyToken.body)
                     .foregroundStyle(ColorToken.textSecondary)
                     .multilineTextAlignment(.center)
@@ -94,12 +63,10 @@ struct EntryListView: View {
 
     private func emptyView(_ content: EntryListContent) -> some View {
         VStack(alignment: .leading, spacing: SpacingToken.section) {
-            header(content)
-
             EntryPlaceholderRow(
                 systemImageName: "list.bullet.rectangle",
                 title: "Noch keine Einträge",
-                subtitle: "Sobald du Symptome erfasst, erscheinen sie hier mit Datum, Wetterstatus und Polleninfos."
+                subtitle: "Sobald du Symptome erfasst, erscheinen deine Check-ins hier als ruhiges Journal."
             )
             .cujanaCard()
         }
@@ -107,10 +74,6 @@ struct EntryListView: View {
 
     private func errorView(message: String) -> some View {
         VStack(alignment: .leading, spacing: SpacingToken.section) {
-            Text("Alle Einträge")
-                .font(TypographyToken.largeTitle)
-                .foregroundStyle(ColorToken.textPrimary)
-
             VStack(alignment: .leading, spacing: SpacingToken.lg) {
                 EntryPlaceholderRow(
                     systemImageName: "exclamationmark.triangle",
@@ -132,126 +95,233 @@ struct EntryListView: View {
     }
 }
 
-private struct EntryCard: View {
-    let item: EntryListItem
+private struct EntryDaySection: View {
+    let section: EntryListDaySection
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.lg) {
-            HStack(alignment: .top, spacing: SpacingToken.md) {
-                EntryIcon(systemImageName: item.symptomSystemImageName, background: item.symptomBackground)
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
+            Text(section.title)
+                .font(EntryListToken.dayHeaderFont)
+                .foregroundStyle(EntryListToken.dayHeaderText)
+                .fixedSize(horizontal: false, vertical: true)
 
-                VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                    HStack(alignment: .firstTextBaseline, spacing: SpacingToken.sm) {
-                        Text(item.symptomTitle)
-                            .font(TypographyToken.headline)
-                            .foregroundStyle(ColorToken.textPrimary)
-
-                        Spacer(minLength: SpacingToken.sm)
-
-                        Text(item.severityText)
-                            .font(TypographyToken.footnote)
-                            .foregroundStyle(ColorToken.accentPrimary)
-                            .cujanaChip()
-                    }
-
-                    Text("\(item.dateText), \(item.timeText)")
-                        .font(TypographyToken.footnote)
-                        .foregroundStyle(ColorToken.textSecondary)
-
-                    if let noteText = item.noteText {
-                        Text(noteText)
-                            .font(TypographyToken.footnote)
-                            .foregroundStyle(ColorToken.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
-
-            Divider()
-
-            EntryInfoBlock(
-                systemImageName: "cloud.sun",
-                title: item.weatherTitle,
-                subtitle: item.weatherDescription
-            )
-
-            VStack(alignment: .leading, spacing: SpacingToken.md) {
-                EntryInfoBlock(
-                    systemImageName: "leaf",
-                    title: "Polleninfos",
-                    subtitle: item.pollenItems.isEmpty
-                        ? "Keine Pollenwerte für dieses Datum."
-                        : "Belastung am Tag des Eintrags."
-                )
-
-                if !item.pollenItems.isEmpty {
-                    FlexiblePollenChips(items: item.pollenItems)
+            LazyVStack(spacing: EntryListToken.cardSpacing) {
+                ForEach(section.entries) { item in
+                    TimelineEntryRow(item: item)
                 }
             }
         }
-        .cujanaCard()
     }
 }
 
-private struct EntryInfoBlock: View {
-    let systemImageName: String
-    let title: String
-    let subtitle: String
+private struct TimelineEntryRow: View {
+    let item: JournalEntryItem
 
     var body: some View {
-        HStack(alignment: .top, spacing: SpacingToken.md) {
-            EntryIcon(systemImageName: systemImageName, background: ChipToken.calmBackground)
+        HStack(alignment: .top, spacing: EntryListToken.timelineCardSpacing) {
+            TimelineMarker()
+            EntryCard(item: item)
+        }
+    }
+}
 
-            VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                Text(title)
-                    .font(TypographyToken.bodyEmphasized)
-                    .foregroundStyle(ColorToken.textPrimary)
+private struct TimelineMarker: View {
+    var body: some View {
+        ZStack(alignment: .top) {
+            Rectangle()
+                .fill(EntryListToken.timeline)
+                .frame(width: EntryListToken.timelineLineWidth)
+                .padding(.top, EntryListToken.timelineLineTopInset)
+                .padding(.bottom, EntryListToken.timelineLineBottomInset)
 
-                Text(subtitle)
+            Circle()
+                .fill(EntryListToken.timelineDot)
+                .frame(width: EntryListToken.timelineDotSize, height: EntryListToken.timelineDotSize)
+                .padding(.top, EntryListToken.timelineDotTopInset)
+        }
+        .frame(width: EntryListToken.timelineWidth)
+        .frame(maxHeight: .infinity)
+        .accessibilityHidden(true)
+    }
+}
+
+private struct EntryCard: View {
+    let item: JournalEntryItem
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(item.timeText)
+                .font(EntryListToken.timeFont)
+                .foregroundStyle(EntryListToken.timeText)
+
+            FlexibleSymptomChips(items: item.symptoms)
+                .padding(.top, EntryListToken.timeSymptomSpacing)
+
+            if let noteText = item.noteText {
+                Text(noteText)
                     .font(TypographyToken.footnote)
                     .foregroundStyle(ColorToken.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, SpacingToken.md)
             }
+
+            HStack(alignment: .firstTextBaseline, spacing: SpacingToken.xs) {
+                Image(systemName: item.contextSystemImageName)
+                    .font(EntryListToken.contextIconFont)
+                    .foregroundStyle(EntryListToken.contextText)
+
+                Text(item.contextText)
+                    .font(EntryListToken.contextFont)
+                    .foregroundStyle(EntryListToken.contextText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.top, EntryListToken.symptomContextSpacing)
+        }
+        .padding(.top, EntryListToken.cardPaddingTop)
+        .padding(.horizontal, EntryListToken.cardPaddingHorizontal)
+        .padding(.bottom, EntryListToken.cardPaddingBottom)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .entryJournalSurface()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityText)
+        .animation(EntryListToken.journalAnimation, value: item.symptoms)
+    }
+
+    private var accessibilityText: String {
+        [
+            item.timeText,
+            item.symptoms.map(\.title).joined(separator: ", "),
+            item.contextText,
+            item.noteText
+        ]
+        .compactMap(\.self)
+        .joined(separator: ", ")
+    }
+}
+
+private struct EntryJournalSurfaceModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26, *) {
+            content
+                .glassEffect(
+                    .regular.tint(EntryListToken.cardGlassTint),
+                    in: .rect(cornerRadius: EntryListToken.cardCornerRadius)
+                )
+                .softShadow(EntryListToken.cardShadow)
+        } else {
+            content
+                .background(EntryListToken.cardFallbackBackground)
+                .clipShape(RoundedRectangle(cornerRadius: EntryListToken.cardCornerRadius, style: .continuous))
+                .softShadow(EntryListToken.cardShadow)
         }
     }
 }
 
-private struct FlexiblePollenChips: View {
-    let items: [EntryListPollenItem]
+private extension View {
+    func entryJournalSurface() -> some View {
+        modifier(EntryJournalSurfaceModifier())
+    }
+}
+
+private struct FlexibleSymptomChips: View {
+    let items: [JournalEntrySymptomItem]
 
     var body: some View {
-        LazyVGrid(
-            columns: [
-                GridItem(
-                    .adaptive(minimum: EntryListToken.pollenChipGridMinimumWidth),
-                    spacing: SpacingToken.sm,
-                    alignment: .leading
-                )
-            ],
-            alignment: .leading,
-            spacing: SpacingToken.sm
-        ) {
+        FlowLayout(spacing: EntryListToken.chipSpacing, rowSpacing: EntryListToken.chipRowSpacing) {
             ForEach(items) { item in
-                VStack(alignment: .leading, spacing: SpacingToken.xs) {
-                    Text(item.title)
-                        .font(TypographyToken.footnote)
-                        .foregroundStyle(ColorToken.textPrimary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-
-                    Text(item.levelText)
-                        .font(TypographyToken.caption)
-                        .foregroundStyle(ColorToken.textSecondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                }
-                .padding(.horizontal, SpacingToken.md)
-                .padding(.vertical, SpacingToken.sm)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(item.background)
-                .clipShape(RoundedRectangle(cornerRadius: RadiusToken.radiusSmall, style: .continuous))
+                Text(item.title)
+                    .font(EntryListToken.symptomChipFont)
+                    .foregroundStyle(item.foreground)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .padding(.horizontal, EntryListToken.symptomChipPaddingH)
+                    .padding(.vertical, EntryListToken.symptomChipPaddingV)
+                    .frame(minHeight: EntryListToken.symptomChipMinHeight)
+                    .background(item.background)
+                    .clipShape(RoundedRectangle(
+                        cornerRadius: EntryListToken.symptomChipCornerRadius,
+                        style: .continuous
+                    ))
+                    .transition(.scale(scale: 0.98).combined(with: .opacity))
+                    .accessibilityLabel(item.title)
             }
         }
+        .animation(EntryListToken.journalAnimation, value: items)
+    }
+}
+
+private struct FlowLayout: Layout {
+    let spacing: CGFloat
+    let rowSpacing: CGFloat
+
+    func sizeThatFits(
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout Void
+    ) -> CGSize {
+        let rows = rows(for: subviews, proposal: proposal)
+        let height = rows.reduce(CGFloat.zero) { result, row in
+            result + row.height
+        } + rowSpacing * CGFloat(max(rows.count - 1, 0))
+
+        return CGSize(width: proposal.width ?? rows.map(\.width).max() ?? 0, height: height)
+    }
+
+    func placeSubviews(
+        in bounds: CGRect,
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout Void
+    ) {
+        let rows = rows(for: subviews, proposal: ProposedViewSize(width: bounds.width, height: proposal.height))
+        var y = bounds.minY
+
+        for row in rows {
+            var x = bounds.minX
+
+            for index in row.indices {
+                let size = subviews[index].sizeThatFits(.unspecified)
+                subviews[index].place(
+                    at: CGPoint(x: x, y: y),
+                    anchor: .topLeading,
+                    proposal: ProposedViewSize(size)
+                )
+                x += size.width + spacing
+            }
+
+            y += row.height + rowSpacing
+        }
+    }
+
+    private func rows(for subviews: Subviews, proposal: ProposedViewSize) -> [FlowRow] {
+        let maxWidth = proposal.width ?? .infinity
+        var rows: [FlowRow] = []
+        var current = FlowRow()
+
+        for index in subviews.indices {
+            let size = subviews[index].sizeThatFits(.unspecified)
+            let proposedWidth = current.indices.isEmpty ? size.width : current.width + spacing + size.width
+
+            if proposedWidth > maxWidth && current.indices.isEmpty == false {
+                rows.append(current)
+                current = FlowRow()
+            }
+
+            current.indices.append(index)
+            current.width = current.width == 0 ? size.width : current.width + spacing + size.width
+            current.height = max(current.height, size.height)
+        }
+
+        if current.indices.isEmpty == false {
+            rows.append(current)
+        }
+
+        return rows
+    }
+
+    private struct FlowRow {
+        var indices: [Subviews.Index] = []
+        var width: CGFloat = 0
+        var height: CGFloat = 0
     }
 }
 

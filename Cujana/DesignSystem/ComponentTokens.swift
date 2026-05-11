@@ -111,7 +111,7 @@ enum HomeOverviewToken {
     static let dayCardCornerRadius: CGFloat = 28
     static let dayLabelTracking = 1.6
     static let dayWeatherIconSmallSize: CGFloat = 26
-    static let dayWeatherIconFontSize: CGFloat = 14
+    static let dayWeatherIconFont = Font.system(size: 14, weight: .medium, design: .rounded)
     static let dayWeatherIconOpacity = 0.58
     static let dayWeatherIconBackgroundOpacity = 0.72
     static let loadHeadlineTracking = -0.5
@@ -161,6 +161,7 @@ enum AllergenLoadToken {
 
 enum ForecastDetailToken {
     static let titleBottomPadding: CGFloat = 18
+    static let allergenIconFont = Font.system(size: 18, weight: .semibold, design: .rounded)
     static let dayIconSize: CGFloat = 42
     static let weatherIconWidth: CGFloat = 30
     static let hourlyRiskGridMinimumWidth: CGFloat = 92
@@ -220,10 +221,6 @@ enum ForecastDetailToken {
     static let overviewDotSize: CGFloat = 8
 }
 
-enum EntryListToken {
-    static let pollenChipGridMinimumWidth: CGFloat = 132
-}
-
 enum TabBarToken {
     static let backgroundOpacity = 0.82
     static let sheetCornerRadius: CGFloat = 34
@@ -261,9 +258,9 @@ enum SymptomCheckInToken {
     static let symptomUnselectedIconOpacity = 0.85
     static let symptomSelectedBorderWidth: CGFloat = 1
     static let symptomUnselectedBorderWidth: CGFloat = 1
-    static let symptomIconSize: CGFloat = 18
+    static let symptomIconFont = Font.system(size: 18, weight: .medium, design: .rounded)
     static let symptomIconFrameWidth: CGFloat = 26
-    static let symptomCheckmarkSize: CGFloat = 14
+    static let symptomCheckmarkFont = Font.system(size: 14, weight: .semibold)
     static let symptomCheckmarkOpacity = 0.82
     static let symptomPressedScale = 0.97
     static let symptomPillCornerRadius: CGFloat = 24
@@ -283,6 +280,8 @@ enum SymptomCheckInToken {
     static let datePickerMinHeight: CGFloat = 44
     static let hintBackground = Color(hex: "#6D8F76").opacity(0.08)
     static let hintIconSize: CGFloat = 15
+    static let hintIconFont = Font.system(size: 15, weight: .medium, design: .rounded)
+    static let hintDisclosureIconFont = Font.system(size: 15, weight: .semibold, design: .rounded)
     static let chevronOpacity = 0.86
     static let notesMinHeight: CGFloat = 140
     static let notesPadding: CGFloat = 16

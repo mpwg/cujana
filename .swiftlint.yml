@@ -176,6 +176,16 @@ custom_rules:
     message: "Move adaptive grid minimums into semantic design or component tokens."
     severity: error
 
+  no_direct_font_size:
+    name: "No direct font size"
+    included:
+      - "Cujana/.*\\.swift"
+    excluded:
+      - "Cujana/DesignSystem/.*"
+    regex: "\\.system\\([^\\n]*size:"
+    message: "Use semantic typography or component font tokens instead of direct font sizes."
+    severity: error
+
   no_magic_opacity:
     name: "No magic opacity"
     included:

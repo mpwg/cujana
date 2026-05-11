@@ -176,7 +176,7 @@ private struct DayOverviewCard: View {
                 Spacer(minLength: SpacingToken.sm)
 
                 Image(systemName: day.weatherSystemImageName)
-                    .font(.system(size: HomeOverviewToken.dayWeatherIconFontSize, weight: .medium, design: .rounded))
+                    .font(HomeOverviewToken.dayWeatherIconFont)
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(ColorToken.accentDark)
                     .opacity(HomeOverviewToken.dayWeatherIconOpacity)

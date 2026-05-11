@@ -122,7 +122,7 @@ private struct AllergenFocusRow: View {
     var body: some View {
         HStack(alignment: .center, spacing: SpacingToken.md) {
             Image(systemName: "leaf.fill")
-                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .font(ForecastDetailToken.allergenIconFont)
                 .foregroundStyle(SemanticColorToken.foreground(for: item.levelText))
                 .frame(
                     width: ForecastDetailToken.allergenIconFrameSize,

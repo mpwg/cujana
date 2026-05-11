@@ -63,17 +63,14 @@ final class SymptomEntryViewModel {
 
         do {
             let savedSymptomCount = selectedSymptoms.count
+            let entry = try AllergySymptomEntry(
+                date: entryDate,
+                symptoms: selectedSymptoms.sorted(by: symptomSortOrder),
+                severity: severity,
+                note: note
+            )
 
-            for symptom in selectedSymptoms.sorted(by: symptomSortOrder) {
-                let entry = try AllergySymptomEntry(
-                    date: entryDate,
-                    symptomType: symptom,
-                    severity: severity,
-                    note: note
-                )
-
-                try await saveUseCase.execute(entry)
-            }
+            try await saveUseCase.execute(entry)
 
             note = ""
             selectedSymptoms.removeAll()

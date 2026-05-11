@@ -6,7 +6,7 @@ struct EntryListViewModelTests {
 
     @Test
     @MainActor
-    func loadMapsAllEntriesWithWeatherStatusAndMatchingPollen() async throws {
+    func loadGroupsSymptomsByCheckInTimeWithMatchingPollenContext() async throws {
         let date = Date(timeIntervalSince1970: 86_400)
         let olderDate = Date(timeIntervalSince1970: 3_600)
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
@@ -21,7 +21,7 @@ struct EntryListViewModelTests {
             symptom(seed: SymptomSeed(
                 id: "F2F0C101-6F5B-4AA4-9867-66D9BA7B0483",
                 date: date,
-                type: .itchyEyes,
+                symptoms: [.itchyEyes, .coughing],
                 severity: .severe,
                 note: "Nach dem Park."
             ), coordinate: coordinate)
@@ -46,8 +46,7 @@ struct EntryListViewModelTests {
                 repository: StubEntryListPollenRepository(forecasts: [forecast])
             ),
             coordinate: coordinate,
-            calendar: calendar,
-            now: { date }
+            calendar: calendar
         )
 
         await viewModel.load()
@@ -57,19 +56,20 @@ struct EntryListViewModelTests {
             return
         }
 
-        #expect(content.items.map(\.symptomTitle) == ["Juckende Augen", "Verstopfte Nase"])
-        #expect(content.items.first?.severityText == "Sehr stark")
-        #expect(content.items.first?.noteText == "Nach dem Park.")
-        #expect(content.items.first?.weatherTitle == "Wetterdaten")
-        #expect(content.items.first?.weatherDescription == "Noch nicht angebunden.")
-        #expect(content.items.first?.pollenItems.map(\.title) == ["Birke", "Gräser"])
-        #expect(content.items.last?.pollenItems.map(\.title) == ["Ragweed"])
+        #expect(content.sections.flatMap(\.entries).count == 2)
+        #expect(content.sections.first?.entries.first?.symptoms.map(\.title) == ["Juckende Augen", "Husten"])
+        #expect(content.sections.first?.entries.first?.noteText == "Nach dem Park.")
+        #expect(
+            content.sections.first?.entries.first?.contextText
+                == "Stark · Hohe Birkebelastung · Mittlere Gräserbelastung"
+        )
+        #expect(content.sections.last?.entries.first?.symptoms.map(\.title) == ["Verstopfte Nase"])
+        #expect(content.sections.last?.entries.first?.contextText == "Mild · Sehr hohe Ragweedbelastung")
     }
 
     @Test
     @MainActor
     func loadShowsEmptyStateWithoutRequestingPollenWhenNoEntriesExist() async throws {
-        let date = Date(timeIntervalSince1970: 86_400)
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let pollenRepository = CapturingEntryListPollenRepository()
         let viewModel = EntryListViewModel(
@@ -78,8 +78,7 @@ struct EntryListViewModelTests {
             ),
             loadPollenUseCase: LoadPollenForecastUseCase(repository: pollenRepository),
             coordinate: coordinate,
-            calendar: calendar,
-            now: { date }
+            calendar: calendar
         )
 
         await viewModel.load()
@@ -89,7 +88,7 @@ struct EntryListViewModelTests {
             return
         }
 
-        #expect(content.items.isEmpty)
+        #expect(content.sections.isEmpty)
         #expect(await pollenRepository.requestCount() == 0)
     }
 
@@ -114,8 +113,7 @@ struct EntryListViewModelTests {
             ),
             loadPollenUseCase: LoadPollenForecastUseCase(repository: pollenRepository),
             locationProvider: StubEntryListLocationProvider(coordinate: nil),
-            calendar: calendar,
-            now: { date }
+            calendar: calendar
         )
 
         await viewModel.load()
@@ -125,15 +123,14 @@ struct EntryListViewModelTests {
             return
         }
 
-        #expect(content.items.map(\.symptomTitle) == ["Juckende Augen"])
-        #expect(content.items.first?.pollenItems.isEmpty == true)
+        #expect(content.sections.flatMap(\.entries).first?.symptoms.map(\.title) == ["Juckende Augen"])
+        #expect(content.sections.flatMap(\.entries).first?.contextText == "Stark")
         #expect(await pollenRepository.requestCount() == 0)
     }
 
     @Test
     @MainActor
     func loadShowsFailureStateWhenEntriesCannotBeLoaded() async throws {
-        let date = Date(timeIntervalSince1970: 86_400)
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let viewModel = EntryListViewModel(
             loadEntriesUseCase: LoadAllergySymptomEntriesUseCase(
@@ -143,8 +140,7 @@ struct EntryListViewModelTests {
                 repository: StubEntryListPollenRepository(forecasts: [])
             ),
             coordinate: coordinate,
-            calendar: calendar,
-            now: { date }
+            calendar: calendar
         )
 
         await viewModel.load()
@@ -163,16 +159,44 @@ struct EntryListViewModelTests {
     private struct SymptomSeed {
         let id: String
         let date: Date
-        let type: SymptomType
+        let symptoms: [SymptomType]
         let severity: SymptomSeverity
         let note: String?
+
+        init(
+            id: String,
+            date: Date,
+            type: SymptomType,
+            severity: SymptomSeverity,
+            note: String?
+        ) {
+            self.id = id
+            self.date = date
+            self.symptoms = [type]
+            self.severity = severity
+            self.note = note
+        }
+
+        init(
+            id: String,
+            date: Date,
+            symptoms: [SymptomType],
+            severity: SymptomSeverity,
+            note: String?
+        ) {
+            self.id = id
+            self.date = date
+            self.symptoms = symptoms
+            self.severity = severity
+            self.note = note
+        }
     }
 
     private func symptom(seed: SymptomSeed, coordinate: LocationCoordinate) throws -> AllergySymptomEntry {
         try AllergySymptomEntry(
             id: UUID(uuidString: seed.id) ?? UUID(),
             date: seed.date,
-            symptomType: seed.type,
+            symptoms: seed.symptoms,
             severity: seed.severity,
             note: seed.note,
             coordinate: coordinate
