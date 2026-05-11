@@ -5,13 +5,16 @@ enum EntryListToken {
     static let dayHeaderText = Color(hex: "#8B857C")
     static let timeText = Color(hex: "#6E6A64")
     static let contextText = Color(hex: "#6B6B6E")
-    static let dayHeaderFont = Font.system(size: 18, weight: .semibold, design: .rounded)
+    static let cardGlassTint = ColorToken.cardBackground.opacity(0.72)
+    static let cardFallbackBackground = ColorToken.cardBackground.opacity(0.94)
+    static let dayHeaderFont = Font.system(size: 18, weight: .medium, design: .rounded)
     static let timeFont = Font.system(size: 18, weight: .medium, design: .rounded)
     static let contextIconFont = Font.system(size: 14, weight: .medium, design: .rounded)
     static let contextFont = Font.system(size: 15, weight: .medium, design: .rounded)
     static let symptomChipFont = Font.system(size: 16, weight: .semibold, design: .rounded)
     static let timeline = Color.black.opacity(0.08)
     static let timelineDot = Color.black.opacity(0.18)
+    static let screenHorizontalPadding: CGFloat = 22
     static let cardPaddingTop: CGFloat = 22
     static let cardPaddingHorizontal: CGFloat = 24
     static let cardPaddingBottom: CGFloat = 20

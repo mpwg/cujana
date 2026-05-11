@@ -9,7 +9,7 @@ struct EntryListView: View {
                 VStack(alignment: .leading, spacing: SpacingToken.section) {
                     content
                 }
-                .padding(.horizontal, SpacingToken.xl)
+                .padding(.horizontal, EntryListToken.screenHorizontalPadding)
                 .padding(.top, SpacingToken.sm)
                 .padding(.bottom, SpacingToken.xxl)
             }
@@ -181,9 +181,7 @@ private struct EntryCard: View {
         .padding(.horizontal, EntryListToken.cardPaddingHorizontal)
         .padding(.bottom, EntryListToken.cardPaddingBottom)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ColorToken.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: EntryListToken.cardCornerRadius, style: .continuous))
-        .softShadow(EntryListToken.cardShadow)
+        .entryJournalSurface()
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
         .animation(EntryListToken.journalAnimation, value: item.symptoms)
@@ -198,6 +196,30 @@ private struct EntryCard: View {
         ]
         .compactMap(\.self)
         .joined(separator: ", ")
+    }
+}
+
+private struct EntryJournalSurfaceModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26, *) {
+            content
+                .glassEffect(
+                    .regular.tint(EntryListToken.cardGlassTint),
+                    in: .rect(cornerRadius: EntryListToken.cardCornerRadius)
+                )
+                .softShadow(EntryListToken.cardShadow)
+        } else {
+            content
+                .background(EntryListToken.cardFallbackBackground)
+                .clipShape(RoundedRectangle(cornerRadius: EntryListToken.cardCornerRadius, style: .continuous))
+                .softShadow(EntryListToken.cardShadow)
+        }
+    }
+}
+
+private extension View {
+    func entryJournalSurface() -> some View {
+        modifier(EntryJournalSurfaceModifier())
     }
 }
 
