@@ -50,6 +50,13 @@ is_allowed_uikit_path() {
     || "$file" == *"UITests/"* ]]
 }
 
+is_allowed_swiftdata_path() {
+  local file="$1"
+  [[ "$file" == Cujana/Infrastructure/Persistence/* \
+    || "$file" == CujanaTests/* \
+    || "$file" == CujanaUITests/* ]]
+}
+
 scan_pattern() {
   local file="$1"
   local pattern="$2"
@@ -58,7 +65,7 @@ scan_pattern() {
   while IFS=: read -r match_file line _; do
     [[ -z "${match_file:-}" ]] && continue
     report_error "$match_file" "$line" "$message"
-  done < <(grep -nE "$pattern" "$file" || true)
+  done < <(grep -nHE "$pattern" "$file" || true)
 }
 
 swift_files=()
@@ -82,6 +89,13 @@ if [[ ${#swift_files[@]} -eq 0 ]]; then
 else
   for file in "${swift_files[@]}"; do
     normalized="${file#./}"
+
+    if [[ "$normalized" == Cujana/* || "$normalized" == CujanaTests/* || "$normalized" == CujanaUITests/* ]]; then
+      if ! is_allowed_swiftdata_path "$normalized"; then
+        scan_pattern "$file" '(^import[[:space:]]+SwiftData$|@Model\b|\b(ModelContainer|ModelContext)\b)' \
+          "SwiftData APIs are only allowed in Cujana/Infrastructure/Persistence or ADR-approved test code."
+      fi
+    fi
 
     if [[ "$normalized" == Cujana/Domain/* ]]; then
       scan_pattern "$file" '^import[[:space:]]+(SwiftUI|UIKit|SwiftData|CoreData)$' \
