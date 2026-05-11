@@ -26,3 +26,6 @@ jobs:
 
       - name: Run architecture checks
         run: ./scripts/check_architecture.sh
+
+      - name: Run secret leak checks
+        run: ./scripts/check_secret_leaks.sh
