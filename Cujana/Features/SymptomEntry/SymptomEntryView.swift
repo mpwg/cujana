@@ -1,21 +1,21 @@
 import SwiftUI
 
 struct SymptomEntryView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Bindable var viewModel: SymptomEntryViewModel
+    @Namespace private var symptomSelectionNamespace
+    @Namespace private var severitySelectionNamespace
+    @State private var isDateExpanded = false
 
     private let symptomColumns = [
         GridItem(.adaptive(minimum: SymptomCheckInToken.symptomGridMinimumWidth), spacing: SpacingToken.md)
-    ]
-
-    private let severityColumns = [
-        GridItem(.adaptive(minimum: SymptomCheckInToken.severityPillMinWidth), spacing: SpacingToken.sm)
     ]
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: SymptomCheckInToken.sectionSpacing) {
-                    header
                     symptomSection
                     severitySection
                     dateSection
@@ -39,42 +39,61 @@ struct SymptomEntryView: View {
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(ColorToken.backgroundPrimary, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
 #endif
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Symptom erfassen")
-                        .font(TypographyToken.sheetTitle)
-                        .foregroundStyle(ColorToken.textPrimary)
+                ToolbarItem(placement: .topBarLeading) {
+                    HStack(spacing: SpacingToken.sm) {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(.body, design: .rounded).weight(.semibold))
+                                .foregroundStyle(ColorToken.textPrimary)
+                                .frame(
+                                    width: SymptomCheckInToken.navigationButtonSize,
+                                    height: SymptomCheckInToken.navigationButtonSize
+                                )
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Schließen")
+
+                        Text("Symptome erfassen")
+                            .font(TypographyToken.sheetTitle)
+                            .foregroundStyle(ColorToken.textPrimary)
+                    }
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Image(systemName: "info.circle")
+                        .font(.system(.body, design: .rounded).weight(.medium))
+                        .foregroundStyle(
+                            ColorToken.textSecondary.opacity(SymptomCheckInToken.navigationInfoOpacity)
+                        )
+                        .frame(
+                            width: SymptomCheckInToken.navigationButtonSize,
+                            height: SymptomCheckInToken.navigationButtonSize
+                        )
+                        .accessibilityLabel("Information")
                 }
             }
         }
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.sm) {
-            Text("Welche Symptome spürst du?")
-                .font(TypographyToken.symptomHeading)
-                .tracking(-0.9)
-                .foregroundStyle(ColorToken.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            Text("Dokumentiere Symptome und mögliche allergische Reaktionen.")
-                .font(TypographyToken.symptomText)
-                .foregroundStyle(ColorToken.textSecondary)
-                .frame(maxWidth: SymptomCheckInToken.introMaxWidth, alignment: .leading)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
     private var symptomSection: some View {
         VStack(alignment: .leading, spacing: SpacingToken.lg) {
-            SectionHeader(title: "Symptom", subtitle: "Wähle aus, was gerade am besten passt.")
+            SectionHeader(
+                title: "Welche Symptome hast du?",
+                subtitle: "Wähle aus, was gerade am besten passt."
+            )
 
             LazyVGrid(columns: symptomColumns, spacing: SpacingToken.md) {
                 ForEach(viewModel.symptomOptions) { option in
                     SymptomChip(
                         option: option,
-                        isSelected: viewModel.selectedSymptom == option.type
+                        isSelected: viewModel.selectedSymptom == option.type,
+                        namespace: symptomSelectionNamespace
                     ) {
                         viewModel.selectSymptom(option.type)
                     }
@@ -87,59 +106,24 @@ struct SymptomEntryView: View {
         VStack(alignment: .leading, spacing: SpacingToken.lg) {
             SectionHeader(title: "Wie belastend sind die Symptome?", subtitle: "1 ist sehr mild, 5 sehr stark.")
 
-            LazyVGrid(columns: severityColumns, spacing: SpacingToken.sm) {
-                ForEach(viewModel.severityOptions) { option in
-                    SeverityButton(
-                        option: option,
-                        isSelected: viewModel.selectedSeverityLevel == option.level
-                    ) {
-                        viewModel.selectSeverity(level: option.level)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity)
+            SeveritySelector(
+                options: viewModel.severityOptions,
+                selectedLevel: viewModel.selectedSeverityLevel,
+                namespace: severitySelectionNamespace,
+                onSelect: viewModel.selectSeverity(level:)
+            )
         }
     }
 
     private var dateSection: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.lg) {
-            SectionHeader(title: "Zeitpunkt", subtitle: "Du kannst auch frühere Einträge nachtragen.")
-
-            VStack(spacing: SpacingToken.md) {
-                DatePicker(
-                    "Datum",
-                    selection: $viewModel.entryDate,
-                    displayedComponents: .date
-                )
-                .datePickerStyle(.graphical)
-                .font(TypographyToken.body)
-                .foregroundStyle(ColorToken.textPrimary)
-                .tint(ColorToken.accentPrimary)
-                .frame(maxHeight: SymptomCheckInToken.calendarMaxHeight)
-
-                Divider()
-                    .overlay(ColorToken.separatorSoft)
-
-                DatePicker(
-                    "Uhrzeit",
-                    selection: $viewModel.entryDate,
-                    displayedComponents: .hourAndMinute
-                )
-                .font(TypographyToken.body)
-                .foregroundStyle(ColorToken.textPrimary)
-                .tint(ColorToken.accentPrimary)
-                .frame(minHeight: SymptomCheckInToken.timePickerHeight)
-                .padding(.horizontal, SpacingToken.md)
-                .background(ColorToken.backgroundPrimary)
-                .clipShape(
-                    RoundedRectangle(cornerRadius: SymptomCheckInToken.timePickerCornerRadius, style: .continuous)
-                )
-            }
-            .padding(SymptomCheckInToken.fieldContainerPadding)
-            .background(ColorToken.cardBackground.opacity(SymptomCheckInToken.calendarContainerOpacity))
-            .clipShape(
-                RoundedRectangle(cornerRadius: SymptomCheckInToken.calendarContainerCornerRadius, style: .continuous)
+        VStack(alignment: .leading, spacing: SpacingToken.md) {
+            ExpandableDateCard(
+                entryDate: $viewModel.entryDate,
+                isExpanded: $isDateExpanded,
+                reduceMotion: reduceMotion
             )
+
+            DateHintBox()
         }
     }
 
@@ -167,140 +151,14 @@ struct SymptomEntryView: View {
     }
 
     private var saveButton: some View {
-        Button {
+        PrimaryCTAButton(
+            title: viewModel.isSaving ? "Speichern ..." : "Eintrag speichern",
+            isLoading: viewModel.isSaving,
+            isEnabled: viewModel.canSubmit
+        ) {
             Task {
                 await viewModel.submit()
             }
-        } label: {
-            HStack(spacing: SymptomCheckInToken.symptomPillSpacing) {
-                if viewModel.isSaving {
-                    ProgressView()
-                }
-
-                Text(viewModel.isSaving ? "Speichern ..." : "Eintrag speichern")
-            }
         }
-        .buttonStyle(SymptomSaveButtonStyle(isEnabled: viewModel.canSubmit))
-        .disabled(!viewModel.canSubmit)
-    }
-}
-
-private struct SectionHeader: View {
-    let title: String
-    let subtitle: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: SpacingToken.xs) {
-            Text(title)
-                .font(TypographyToken.symptomSectionTitle)
-                .tracking(-0.4)
-                .foregroundStyle(ColorToken.textPrimary)
-
-            Text(subtitle)
-                .font(TypographyToken.symptomSectionDescription)
-                .foregroundStyle(ColorToken.textSecondary.opacity(SymptomCheckInToken.sectionDescriptionOpacity))
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-}
-
-private struct SymptomChip: View {
-    let option: SymptomOption
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: SpacingToken.sm) {
-                Image(systemName: option.systemImageName)
-                    .font(.system(size: SymptomCheckInToken.symptomIconSize, weight: .medium, design: .rounded))
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(ColorToken.accentPrimary.opacity(SymptomCheckInToken.symptomIconOpacity))
-                    .frame(
-                        width: SymptomCheckInToken.symptomIconSize,
-                        height: SymptomCheckInToken.symptomIconSize
-                    )
-
-                Text(option.title)
-                    .font(TypographyToken.symptomPill)
-                    .foregroundStyle(ColorToken.textPrimary)
-                    .lineLimit(2)
-                    .minimumScaleFactor(SymptomCheckInToken.symptomTextMinimumScale)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Spacer(minLength: SpacingToken.xs)
-            }
-            .padding(.horizontal, SymptomCheckInToken.symptomPillPaddingH)
-            .padding(.vertical, ChipToken.paddingV)
-            .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.symptomPillMinHeight, alignment: .leading)
-            .background(isSelected ? SymptomCheckInToken.symptomSelectedBackground : ColorToken.cardBackground)
-            .clipShape(Capsule())
-            .overlay(
-                Capsule()
-                    .stroke(
-                        isSelected
-                            ? ColorToken.accentPrimary.opacity(SymptomCheckInToken.symptomBorderOpacity)
-                            : ColorToken.accentPrimary.opacity(SymptomCheckInToken.symptomBorderOpacity),
-                        lineWidth: ChipToken.borderWidth
-                    )
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(option.title)
-    }
-}
-
-private struct SeverityButton: View {
-    let option: SeverityOption
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(option.title)
-                .font(TypographyToken.severityControl)
-                .foregroundStyle(isSelected ? SelectionToken.selectedText : SymptomCheckInToken.severityUnselectedText)
-                .lineLimit(1)
-                .minimumScaleFactor(SymptomCheckInToken.severityTextMinimumScale)
-                .frame(
-                    minWidth: SymptomCheckInToken.severityPillMinWidth,
-                    maxWidth: .infinity,
-                    minHeight: SymptomCheckInToken.severityPillMinHeight
-                )
-                .padding(.horizontal, SpacingToken.sm)
-                .background(isSelected ? ColorToken.accentPrimary : ColorToken.backgroundSecondary)
-                .clipShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(option.title)
-    }
-}
-
-private struct SymptomSaveButtonStyle: ButtonStyle {
-    let isEnabled: Bool
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(TypographyToken.button)
-            .foregroundStyle(
-                isEnabled
-                    ? ColorToken.cardBackground
-                    : ColorToken.cardBackground.opacity(SymptomCheckInToken.disabledTextOpacity)
-            )
-            .frame(maxWidth: .infinity, minHeight: SymptomCheckInToken.saveButtonMinHeight)
-            .background(isEnabled ? ColorToken.accentPrimary : SemanticColorToken.disabledButtonBackground)
-            .clipShape(RoundedRectangle(cornerRadius: SymptomCheckInToken.saveButtonRadius, style: .continuous))
-            .opacity(disabledOrPressedOpacity(configuration: configuration))
-            .scaleEffect(configuration.isPressed ? PressFeedbackToken.prominentScale : 1)
-            .animation(.easeInOut(duration: PressFeedbackToken.animationDuration), value: configuration.isPressed)
-    }
-
-    private func disabledOrPressedOpacity(configuration: Configuration) -> Double {
-        if isEnabled == false {
-            return SymptomCheckInToken.disabledButtonOpacity
-        }
-
-        return configuration.isPressed ? PressFeedbackToken.prominentOpacity : ButtonToken.Primary.enabledOpacity
     }
 }
