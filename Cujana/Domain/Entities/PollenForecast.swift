@@ -1,7 +1,7 @@
 import Foundation
 
-nonisolated public struct PollenForecast: Equatable, Identifiable, Sendable {
-    nonisolated public struct DailyLevel: Equatable, Identifiable, Sendable {
+nonisolated public struct PollenForecast: Codable, Equatable, Identifiable, Sendable {
+    nonisolated public struct DailyLevel: Codable, Equatable, Identifiable, Sendable {
         public var id: String {
             "\(date.timeIntervalSince1970)-\(pollenType.rawValue)"
         }
@@ -17,7 +17,23 @@ nonisolated public struct PollenForecast: Equatable, Identifiable, Sendable {
         }
     }
 
-    nonisolated public struct DailyAllergyRisk: Equatable, Identifiable, Sendable {
+    nonisolated public struct HourlyLevel: Codable, Equatable, Identifiable, Sendable {
+        public var id: String {
+            "\(date.timeIntervalSince1970)-\(pollenType.rawValue)"
+        }
+
+        public let date: Date
+        public let pollenType: PollenType
+        public let level: PollenLevel
+
+        public init(date: Date, pollenType: PollenType, level: PollenLevel) {
+            self.date = date
+            self.pollenType = pollenType
+            self.level = level
+        }
+    }
+
+    nonisolated public struct DailyAllergyRisk: Codable, Equatable, Identifiable, Sendable {
         public var id: String {
             "\(date.timeIntervalSince1970)-allergy-risk"
         }
@@ -40,6 +56,7 @@ nonisolated public struct PollenForecast: Equatable, Identifiable, Sendable {
     public let validFrom: Date
     public let validUntil: Date
     public let dailyLevels: [DailyLevel]
+    public let hourlyLevels: [HourlyLevel]
     public let dailyAllergyRisks: [DailyAllergyRisk]
 
     public init(
@@ -50,6 +67,7 @@ nonisolated public struct PollenForecast: Equatable, Identifiable, Sendable {
         validFrom: Date,
         validUntil: Date,
         dailyLevels: [DailyLevel],
+        hourlyLevels: [HourlyLevel] = [],
         dailyAllergyRisks: [DailyAllergyRisk] = []
     ) throws {
         guard validFrom <= validUntil else {
@@ -63,6 +81,7 @@ nonisolated public struct PollenForecast: Equatable, Identifiable, Sendable {
         self.validFrom = validFrom
         self.validUntil = validUntil
         self.dailyLevels = dailyLevels
+        self.hourlyLevels = hourlyLevels
         self.dailyAllergyRisks = dailyAllergyRisks
     }
 }

@@ -45,11 +45,15 @@ extension AppCompositionRoot {
 
 extension AppDependencies {
     static func demo() -> AppDependencies {
-        AppDependencies(
+        let locationProvider = FixedLocationCoordinateProvider(coordinate: AppDemoData.coordinate)
+
+        return AppDependencies(
             pollenRepository: DemoPollenRepository(forecasts: AppDemoData.pollenForecasts),
             weatherRepository: DemoWeatherRepository(forecasts: AppDemoData.weatherForecasts),
+            environmentalDataRepository: InMemoryEnvironmentalDataRepository(),
             symptomEntryRepository: DemoSymptomEntryRepository(entries: AppDemoData.symptomEntries),
-            locationProvider: FixedLocationCoordinateProvider(coordinate: AppDemoData.coordinate)
+            locationProvider: locationProvider,
+            backgroundLocationAuthorizer: locationProvider
         )
     }
 }

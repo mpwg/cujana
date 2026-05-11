@@ -30,6 +30,15 @@ struct AppLaunchComposition {
             telemetryService: telemetryService
         )
     }
+
+    func makeEnvironmentalDataRefreshCoordinator() -> EnvironmentalDataRefreshCoordinator? {
+        switch launchConfiguration {
+        case .standard:
+            compositionRoot.makeEnvironmentalDataRefreshCoordinator()
+        case .screenshot:
+            nil
+        }
+    }
 }
 #else
 @MainActor
@@ -43,6 +52,10 @@ struct AppLaunchComposition {
     @ViewBuilder
     func makeRootView(telemetryService: AppTelemetryService) -> some View {
         compositionRoot.makeContentView(telemetryService: telemetryService)
+    }
+
+    func makeEnvironmentalDataRefreshCoordinator() -> EnvironmentalDataRefreshCoordinator? {
+        compositionRoot.makeEnvironmentalDataRefreshCoordinator()
     }
 }
 #endif

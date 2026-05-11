@@ -1,7 +1,7 @@
 import Foundation
 
-nonisolated public struct WeatherForecast: Equatable, Identifiable, Sendable {
-    nonisolated public struct DailyCondition: Equatable, Identifiable, Sendable {
+nonisolated public struct WeatherForecast: Codable, Equatable, Identifiable, Sendable {
+    nonisolated public struct DailyCondition: Codable, Equatable, Identifiable, Sendable {
         public var id: String {
             "\(date.timeIntervalSince1970)"
         }
@@ -27,7 +27,7 @@ nonisolated public struct WeatherForecast: Equatable, Identifiable, Sendable {
         }
     }
 
-    nonisolated public struct HourlyCondition: Equatable, Identifiable, Sendable {
+    nonisolated public struct HourlyCondition: Codable, Equatable, Identifiable, Sendable {
         public var id: String {
             "\(date.timeIntervalSince1970)"
         }

@@ -1,4 +1,4 @@
-nonisolated public struct PollenLevel: Comparable, Equatable, Hashable, Sendable {
+nonisolated public struct PollenLevel: Codable, Comparable, Equatable, Hashable, Sendable {
     public static let none = PollenLevel(rawValue: 0)
     public static let low = PollenLevel(rawValue: 1)
     public static let moderate = PollenLevel(rawValue: 2)

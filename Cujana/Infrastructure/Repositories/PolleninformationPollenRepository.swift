@@ -77,7 +77,7 @@ public actor PolleninformationPollenResponseCache {
 
     public init(
         userDefaults: UserDefaults = .standard,
-        storageKey: String = "at.cujana.polleninformation.response-cache"
+        storageKey: String = "eu.mpwg.cujana.polleninformation.response-cache"
     ) {
         self.userDefaults = userDefaults
         self.storageKey = storageKey

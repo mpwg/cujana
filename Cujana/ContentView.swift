@@ -6,16 +6,19 @@ struct ContentView: View {
     @State private var entryListViewModel: EntryListViewModel
     @State private var symptomEntryViewModel: SymptomEntryViewModel
     @State private var isShowingSymptomEntry = false
+    private let backgroundLocationAuthorizer: (any BackgroundLocationAuthorizing)?
 
     init(
         dashboardViewModel: AllergyDashboardViewModel,
         entryListViewModel: EntryListViewModel,
         symptomEntryViewModel: SymptomEntryViewModel,
+        backgroundLocationAuthorizer: (any BackgroundLocationAuthorizing)? = nil,
         telemetryService: AppTelemetryService
     ) {
         self.dashboardViewModel = dashboardViewModel
         self.entryListViewModel = entryListViewModel
         self.symptomEntryViewModel = symptomEntryViewModel
+        self.backgroundLocationAuthorizer = backgroundLocationAuthorizer
         self.telemetryService = telemetryService
     }
 
@@ -36,7 +39,10 @@ struct ContentView: View {
                     Label("Einträge", systemImage: "list.bullet.rectangle")
                 }
 
-            SettingsView(telemetryService: telemetryService)
+            SettingsView(
+                telemetryService: telemetryService,
+                backgroundLocationAuthorizer: backgroundLocationAuthorizer
+            )
                 .tabItem {
                     Label("Einstellungen", systemImage: "gearshape")
                 }
