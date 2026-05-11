@@ -1,16 +1,17 @@
 # Architekturkonzept für Cujana
 
 Status: **verbindlicher Startpunkt**  
-Geltungsbereich: **iOS-only App**  
+Geltungsbereich: **iOS-App für iPhone und iPad inklusive Mac Catalyst**<br>
 Primäres Ziel: **wartbar, einfach verständlich, automatisch überprüfbar**
 
 ## 1. Kurzfassung
 
-Cujana wird als **SwiftUI-first iOS-App mit modular-monolithischer Struktur** gebaut.
+Cujana wird als **SwiftUI-first iOS-App mit modular-monolithischer Struktur** gebaut. Mac Catalyst ist Teil dieser Plattformentscheidung, damit die iPad-orientierte App auch auf macOS gebaut und getestet werden kann.
 
 Das bedeutet:
 
 - Es gibt **keine Cross-Platform-Abstraktion** für Android, Web, Flutter, React Native oder Kotlin Multiplatform.
+- Mac Catalyst ist erlaubt; native macOS- oder visionOS-Targets gehören nicht zur unterstützten Produktmatrix.
 - Die App bleibt zunächst in einem verständlichen iOS-Codebestand statt in vielen kleinen Modulen.
 - Der Code wird nach **Features und klaren Verantwortlichkeiten** organisiert.
 - Business-Logik ist unabhängig von SwiftUI, UIKit, Netzwerk, Persistenz und konkreten Apple-Frameworks.
@@ -27,7 +28,7 @@ Der wichtigste Satz für jede Code-Entscheidung:
 1. **Einfach lesbar:** Neue Entwickler sollen nach wenigen Minuten wissen, wo Code hingehört.
 2. **Wartbar:** Änderungen an UI, Netzwerk, Persistenz oder Fachlogik sollen möglichst lokal bleiben.
 3. **Testbar:** Business-Logik soll ohne Simulator, Netzwerk und Datenbank testbar sein.
-4. **iOS-nativ:** Cujana nutzt Swift, SwiftUI und Apple-Werkzeuge direkt statt Cross-Platform-Komplexität.
+4. **iOS-nativ:** Cujana nutzt Swift, SwiftUI, iPadOS und Mac Catalyst direkt statt Cross-Platform-Komplexität.
 5. **Enforced:** Die Architektur ist nicht nur Dokumentation, sondern wird automatisch geprüft.
 
 ### Nicht-Ziele
@@ -39,7 +40,7 @@ Der wichtigste Satz für jede Code-Entscheidung:
 
 ## 3. Leitentscheidung
 
-**Entscheidung:** Cujana startet als iOS-only modularer Monolith.
+**Entscheidung:** Cujana startet als iOS-fokussierter modularer Monolith mit Mac-Catalyst-Unterstützung.
 
 Ein modularer Monolith heißt hier:
 

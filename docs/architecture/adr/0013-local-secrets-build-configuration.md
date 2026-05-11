@@ -11,9 +11,12 @@ Werte aus `Configuration/LocalSecrets.xcconfig` verwenden.
 
 ## Entscheidung
 
-Das Xcode-Projekt bindet `Configuration/LocalSecrets.xcconfig` als Base Configuration
-für Debug- und Release-Builds ein. Secrets werden damit als Build Settings aufgelöst
-und können in generierte App-Konfiguration übernommen werden.
+Das Xcode-Projekt bindet `Configuration/TargetDefaults.xcconfig` als Base Configuration
+für Debug- und Release-Builds ein. Diese checked-in Datei inkludiert
+`Configuration/Architecture.xcconfig` und optional `Configuration/LocalSecrets.xcconfig`.
+Secrets werden damit als Build Settings aufgelöst und können in generierte
+App-Konfiguration übernommen werden, ohne die gemeinsamen Architektur-Guardrails zu
+umgehen.
 
 ## Konsequenzen
 

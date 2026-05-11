@@ -1,6 +1,6 @@
 # Cujana
 
-Cujana ist eine **iOS-only App**. Das Repository startet bewusst mit einer klaren Architektur, bevor Implementierungsdetails wachsen.
+Cujana ist eine **iOS-App für iPhone und iPad mit Mac-Catalyst-Unterstützung**. Das Repository startet bewusst mit einer klaren Architektur, bevor Implementierungsdetails wachsen.
 
 ## Architektur
 
@@ -15,9 +15,9 @@ Das verbindliche Architekturkonzept liegt hier:
 
 > Einfachheit vor Framework-Sammlung. Jede neue Abstraktion braucht einen sichtbaren Nutzen.
 
-Cujana verwendet eine **SwiftUI-first, iOS-only, modular-monolithische Architektur**:
+Cujana verwendet eine **SwiftUI-first, iOS-fokussierte, modular-monolithische Architektur**:
 
-- ein Produkt, eine Plattform: iOS
+- ein Produkt, eine Plattformfamilie: iOS/iPadOS inklusive Mac Catalyst
 - klare Feature-Slices statt technischer Monsterordner
 - Domain-Logik ohne UI-, Netzwerk- oder Persistenz-Abhängigkeit
 - Infrastruktur nur hinter Protokollen
