@@ -1,12 +1,14 @@
 import Foundation
+import SwiftData
 import Testing
 @testable import Cujana
 
+@MainActor
 struct LocalSymptomEntryRepositoryTests {
 
-    @Test func savePersistsEntryThroughStore() async throws {
-        let store = FakeSymptomEntryStore()
-        let repository = LocalSymptomEntryRepository(store: store)
+    @Test func savePersistsEntryThroughSwiftData() async throws {
+        let modelContainer = try CujanaPersistence.makeInMemoryModelContainer()
+        let repository = LocalSymptomEntryRepository(modelContainer: modelContainer)
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let entryID = try #require(UUID(uuidString: "11111111-1111-1111-1111-111111111111"))
         let entry = try AllergySymptomEntry(
@@ -15,27 +17,28 @@ struct LocalSymptomEntryRepositoryTests {
             symptoms: [.itchyEyes],
             severity: .moderate,
             note: "Draußen stärker gespürt.",
+            medications: [Medication(name: "Cetirizin")],
+            tags: ["Park"],
             coordinate: coordinate
         )
 
         try await repository.save(entry)
 
-        let storedEntries = await store.entries()
-        #expect(storedEntries == [
-            StoredSymptomEntry(
-                id: entry.id,
-                date: entry.date,
-                symptomTypeRawValues: [SymptomType.itchyEyes.rawValue],
-                severityRawValue: SymptomSeverity.moderate.rawValue,
-                note: "Draußen stärker gespürt.",
-                latitude: coordinate.latitude,
-                longitude: coordinate.longitude
-            )
-        ])
+        let records = try fetchSymptomEntryRecords(from: modelContainer)
+        #expect(records.count == 1)
+        #expect(records.first?.id == entry.id)
+        #expect(records.first?.date == entry.date)
+        #expect(records.first?.symptomTypeRawValues == [SymptomType.itchyEyes.rawValue])
+        #expect(records.first?.severityRawValue == SymptomSeverity.moderate.rawValue)
+        #expect(records.first?.note == "Draußen stärker gespürt.")
+        #expect(records.first?.medicationNames == ["Cetirizin"])
+        #expect(records.first?.tags == ["Park"])
+        #expect(records.first?.latitude == coordinate.latitude)
+        #expect(records.first?.longitude == coordinate.longitude)
     }
 
     @Test func loadReturnsEmptyArrayWhenStoreIsEmpty() async throws {
-        let repository = LocalSymptomEntryRepository(store: FakeSymptomEntryStore())
+        let repository = LocalSymptomEntryRepository(modelContainer: try CujanaPersistence.makeInMemoryModelContainer())
 
         let entries = try await repository.symptomEntries(
             from: Date(timeIntervalSince1970: 0),
@@ -46,6 +49,7 @@ struct LocalSymptomEntryRepositoryTests {
     }
 
     @Test func loadMapsStoredEntriesToDomainAndFiltersDateRange() async throws {
+        let modelContainer = try CujanaPersistence.makeInMemoryModelContainer()
         let inRangeEntryID = try #require(UUID(uuidString: "22222222-2222-2222-2222-222222222222"))
         let laterEntryID = try #require(UUID(uuidString: "33333333-3333-3333-3333-333333333333"))
         let inRangeEntry = try AllergySymptomEntry(
@@ -60,13 +64,8 @@ struct LocalSymptomEntryRepositoryTests {
             symptoms: [.sneezing],
             severity: .severe
         )
-        let store = FakeSymptomEntryStore(
-            entries: [
-                StoredSymptomEntry(entry: laterEntry),
-                StoredSymptomEntry(entry: inRangeEntry)
-            ]
-        )
-        let repository = LocalSymptomEntryRepository(store: store)
+        try insertSymptomEntries([laterEntry, inRangeEntry], into: modelContainer)
+        let repository = LocalSymptomEntryRepository(modelContainer: modelContainer)
 
         let entries = try await repository.symptomEntries(
             from: Date(timeIntervalSince1970: 500),
@@ -77,8 +76,8 @@ struct LocalSymptomEntryRepositoryTests {
     }
 
     @Test func saveAndLoadPreservesMultipleSymptomsInOneCheckIn() async throws {
-        let store = FakeSymptomEntryStore()
-        let repository = LocalSymptomEntryRepository(store: store)
+        let modelContainer = try CujanaPersistence.makeInMemoryModelContainer()
+        let repository = LocalSymptomEntryRepository(modelContainer: modelContainer)
         let entry = try AllergySymptomEntry(
             date: Date(timeIntervalSince1970: 1_000),
             symptoms: [.blockedNose, .coughing, .headache],
@@ -93,7 +92,7 @@ struct LocalSymptomEntryRepositoryTests {
         )
 
         #expect(entries == [entry])
-        #expect((await store.entries()).first?.symptomTypeRawValues == [
+        #expect(try fetchSymptomEntryRecords(from: modelContainer).first?.symptomTypeRawValues == [
             SymptomType.blockedNose.rawValue,
             SymptomType.coughing.rawValue,
             SymptomType.headache.rawValue
@@ -101,6 +100,7 @@ struct LocalSymptomEntryRepositoryTests {
     }
 
     @Test func saveReplacesExistingEntryWithSameID() async throws {
+        let modelContainer = try CujanaPersistence.makeInMemoryModelContainer()
         let entryID = try #require(UUID(uuidString: "44444444-4444-4444-4444-444444444444"))
         let original = try AllergySymptomEntry(
             id: entryID,
@@ -116,8 +116,8 @@ struct LocalSymptomEntryRepositoryTests {
             severity: .severe,
             note: "Nachher"
         )
-        let store = FakeSymptomEntryStore(entries: [StoredSymptomEntry(entry: original)])
-        let repository = LocalSymptomEntryRepository(store: store)
+        try insertSymptomEntries([original], into: modelContainer)
+        let repository = LocalSymptomEntryRepository(modelContainer: modelContainer)
 
         try await repository.save(edited)
 
@@ -126,10 +126,11 @@ struct LocalSymptomEntryRepositoryTests {
             to: Date(timeIntervalSince1970: 2_000)
         )
         #expect(entries == [edited])
-        #expect(await store.entries().count == 1)
+        #expect(try fetchSymptomEntryRecords(from: modelContainer).count == 1)
     }
 
     @Test func deleteRemovesOnlyMatchingEntry() async throws {
+        let modelContainer = try CujanaPersistence.makeInMemoryModelContainer()
         let deletedEntry = try AllergySymptomEntry(
             id: #require(UUID(uuidString: "55555555-5555-5555-5555-555555555555")),
             date: Date(timeIntervalSince1970: 1_000),
@@ -142,13 +143,8 @@ struct LocalSymptomEntryRepositoryTests {
             symptoms: [.sneezing],
             severity: .moderate
         )
-        let store = FakeSymptomEntryStore(
-            entries: [
-                StoredSymptomEntry(entry: deletedEntry),
-                StoredSymptomEntry(entry: remainingEntry)
-            ]
-        )
-        let repository = LocalSymptomEntryRepository(store: store)
+        try insertSymptomEntries([deletedEntry, remainingEntry], into: modelContainer)
+        let repository = LocalSymptomEntryRepository(modelContainer: modelContainer)
 
         try await repository.delete(id: deletedEntry.id)
 
@@ -159,31 +155,26 @@ struct LocalSymptomEntryRepositoryTests {
         #expect(entries == [remainingEntry])
     }
 
-    @Test func loadMapsStoreFailuresToSymptomEntryError() async {
-        let repository = LocalSymptomEntryRepository(
-            store: FakeSymptomEntryStore(loadError: SymptomEntryError.storageUnavailable)
+    @Test func loadMapsInvalidStoredValuesToSymptomEntryError() async throws {
+        let modelContainer = try CujanaPersistence.makeInMemoryModelContainer()
+        let context = ModelContext(modelContainer)
+        let entry = try AllergySymptomEntry(
+            date: Date(timeIntervalSince1970: 0),
+            symptoms: [.fatigue],
+            severity: .moderate
         )
+        let record = CujanaSchemaV1.SymptomEntryRecord(entry: entry)
+        record.symptomTypeRawValues = ["unknown-symptom"]
+        context.insert(record)
+        try context.save()
+
+        let repository = LocalSymptomEntryRepository(modelContainer: modelContainer)
 
         await #expect(throws: SymptomEntryError.storageUnavailable) {
             _ = try await repository.symptomEntries(
                 from: Date(timeIntervalSince1970: 0),
                 to: Date(timeIntervalSince1970: 1_000)
             )
-        }
-    }
-
-    @Test func saveMapsStoreFailuresToSymptomEntryError() async throws {
-        let repository = LocalSymptomEntryRepository(
-            store: FakeSymptomEntryStore(saveError: SymptomEntryError.storageUnavailable)
-        )
-        let entry = try AllergySymptomEntry(
-            date: Date(timeIntervalSince1970: 0),
-            symptoms: [.fatigue],
-            severity: .moderate
-        )
-
-        await #expect(throws: SymptomEntryError.storageUnavailable) {
-            try await repository.save(entry)
         }
     }
 
@@ -214,40 +205,22 @@ struct LocalSymptomEntryRepositoryTests {
 
         #expect(entries == [startEntry, endEntry])
     }
-}
 
-private actor FakeSymptomEntryStore: SymptomEntryStore {
-    private var storedEntries: [StoredSymptomEntry]
-    private let loadError: Error?
-    private let saveError: Error?
-
-    init(
-        entries: [StoredSymptomEntry] = [],
-        loadError: Error? = nil,
-        saveError: Error? = nil
-    ) {
-        storedEntries = entries
-        self.loadError = loadError
-        self.saveError = saveError
-    }
-
-    func loadEntries() async throws -> [StoredSymptomEntry] {
-        if let loadError {
-            throw loadError
+    private func insertSymptomEntries(
+        _ entries: [AllergySymptomEntry],
+        into modelContainer: ModelContainer
+    ) throws {
+        let context = ModelContext(modelContainer)
+        for entry in entries {
+            context.insert(CujanaSchemaV1.SymptomEntryRecord(entry: entry))
         }
-
-        return storedEntries
+        try context.save()
     }
 
-    func saveEntries(_ entries: [StoredSymptomEntry]) async throws {
-        if let saveError {
-            throw saveError
-        }
-
-        storedEntries = entries
-    }
-
-    func entries() -> [StoredSymptomEntry] {
-        storedEntries
+    private func fetchSymptomEntryRecords(
+        from modelContainer: ModelContainer
+    ) throws -> [CujanaSchemaV1.SymptomEntryRecord] {
+        let context = ModelContext(modelContainer)
+        return try context.fetch(FetchDescriptor<CujanaSchemaV1.SymptomEntryRecord>())
     }
 }

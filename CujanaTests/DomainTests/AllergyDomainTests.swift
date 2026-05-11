@@ -279,56 +279,6 @@ struct AllergyDomainTests {
         }
     }
 
-    @Test func refreshEnvironmentalDataSavesWeatherAndPollenWithoutSymptoms() async throws {
-        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
-        let currentDate = Date(timeIntervalSince1970: 7_200)
-        let pollenForecast = try sampleForecast(coordinate: coordinate)
-        let weatherForecast = WeatherForecast(
-            coordinate: coordinate,
-            generatedAt: currentDate,
-            dailyConditions: [],
-            hourlyConditions: [
-                WeatherForecast.HourlyCondition(date: currentDate, temperature: 18.4, conditionCode: 2)
-            ]
-        )
-        let environmentalRepository = StubEnvironmentalDataRepository()
-        let useCase = RefreshEnvironmentalDataUseCase(
-            pollenRepository: StubPollenRepository(forecasts: [pollenForecast]),
-            weatherRepository: StubWeatherRepository(forecasts: [weatherForecast]),
-            environmentalDataRepository: environmentalRepository
-        )
-
-        let snapshot = try await useCase.execute(for: coordinate, currentDate: currentDate)
-
-        #expect(snapshot?.coordinate == coordinate)
-        #expect(snapshot?.pollenForecasts == [pollenForecast])
-        #expect(snapshot?.weatherForecasts == [weatherForecast])
-        #expect(try await environmentalRepository.latestSnapshot() == snapshot)
-    }
-
-    @Test func refreshEnvironmentalDataSkipsWhenLastSnapshotIsLessThanSixHoursOld() async throws {
-        let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
-        let previousDate = Date(timeIntervalSince1970: 1_000)
-        let currentDate = previousDate.addingTimeInterval(RefreshEnvironmentalDataUseCase.minimumRefreshInterval - 60)
-        let previousSnapshot = EnvironmentalDataSnapshot(
-            coordinate: coordinate,
-            collectedAt: previousDate,
-            pollenForecasts: [],
-            weatherForecasts: []
-        )
-        let environmentalRepository = StubEnvironmentalDataRepository(snapshot: previousSnapshot)
-        let useCase = RefreshEnvironmentalDataUseCase(
-            pollenRepository: StubPollenRepository(forecasts: []),
-            weatherRepository: StubWeatherRepository(forecasts: []),
-            environmentalDataRepository: environmentalRepository
-        )
-
-        let snapshot = try await useCase.execute(for: coordinate, currentDate: currentDate)
-
-        #expect(snapshot == nil)
-        #expect(try await environmentalRepository.latestSnapshot() == previousSnapshot)
-    }
-
     private func sampleForecast(coordinate: LocationCoordinate) throws -> PollenForecast {
         let validFrom = Date(timeIntervalSince1970: 0)
         let validUntil = Date(timeIntervalSince1970: 86_400)
@@ -377,22 +327,6 @@ private struct StubWeatherRepository: WeatherRepository {
         forecasts.filter { forecast in
             forecast.coordinate == coordinate
         }
-    }
-}
-
-private actor StubEnvironmentalDataRepository: EnvironmentalDataRepository {
-    private var snapshot: EnvironmentalDataSnapshot?
-
-    init(snapshot: EnvironmentalDataSnapshot? = nil) {
-        self.snapshot = snapshot
-    }
-
-    func latestSnapshot() async throws -> EnvironmentalDataSnapshot? {
-        snapshot
-    }
-
-    func save(_ snapshot: EnvironmentalDataSnapshot) async throws {
-        self.snapshot = snapshot
     }
 }
 
