@@ -1,6 +1,6 @@
 # ADR-0011: Open-Meteo Wetterdaten für die Home-Prognose
 
-Status: Akzeptiert
+Status: Ersetzt durch [ADR-0012](0012-weatherkit-and-polleninformation-sources.md)
 Datum: 2026-05-09
 
 ## Kontext

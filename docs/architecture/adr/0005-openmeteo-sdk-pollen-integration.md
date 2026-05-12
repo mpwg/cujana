@@ -1,6 +1,6 @@
 # ADR-0005: OpenMeteo SDK für Pollendaten
 
-Status: Akzeptiert
+Status: Ersetzt durch [ADR-0012](0012-weatherkit-and-polleninformation-sources.md)
 Datum: 2026-05-07
 
 ## Kontext

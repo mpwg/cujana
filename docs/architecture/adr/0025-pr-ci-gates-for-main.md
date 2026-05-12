@@ -1,4 +1,4 @@
-# ADR-0018: PR-CI-Gates für main
+# ADR-0025: PR-CI-Gates für main
 
 Status: Akzeptiert
 Datum: 2026-05-11

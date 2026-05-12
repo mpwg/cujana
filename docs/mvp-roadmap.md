@@ -1,8 +1,10 @@
 # Weg zum MVP: Allergie, Pollendaten und Symptomerfassung
 
-Status: **Vorgeschlagen**  
+Status: **Historischer MVP-Plan, durch ADR-0012 bei Datenquellen aktualisiert**  
 Ziel: **GitHub EPIC + Sub-Issues als umsetzbarer MVP-Plan**  
 Scope: **iOS-only App, Allergie-MVP**
+
+> Hinweis: Dieser Plan enthält noch historische OpenMeteo-Aufgaben. Für neue Umsetzung gilt [ADR-0012](architecture/adr/0012-weatherkit-and-polleninformation-sources.md): Wetterdaten kommen aus WeatherKit, Pollendaten und Allergierisiken aus Polleninformation.
 
 ## 1. Ziel
 
@@ -10,7 +12,8 @@ Der MVP von Cujana soll Nutzer:innen ermöglichen, aktuelle Pollendaten zu sehen
 
 Der erste Scope bleibt bewusst klein:
 
-- Pollendaten von OpenMeteo abrufen.
+- Pollendaten über Polleninformation abrufen.
+- Wetterdaten über WeatherKit abrufen.
 - Symptome eingeben.
 - Aktuell nur Allergie-Symptome unterstützen.
 - Pollendaten und Symptomdaten anzeigen.
@@ -27,7 +30,7 @@ Wichtige Leitplanken:
 - Der Code wächst als modularer Monolith mit klaren Feature-Slices.
 - Business-Logik liegt in `Cujana/Domain` und ist unabhängig von SwiftUI, UIKit, Netzwerk und Persistenz.
 - Repository-Protokolle liegen in `Domain`.
-- OpenMeteo-API-Client, DTOs, Mapper und Repository-Implementierungen liegen in `Infrastructure`.
+- WeatherKit- und Polleninformation-API-Clients, DTOs, Mapper und Repository-Implementierungen liegen in `Infrastructure`.
 - Features dürfen keine konkrete Infrastruktur verwenden.
 - Dependency Wiring passiert explizit in `App/Composition`.
 - Keine globalen Singletons.

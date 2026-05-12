@@ -1,4 +1,4 @@
-# 0010 Opt-in-Telemetrie und Crash-Reporting
+# ADR-0010: Opt-in-Telemetrie und Crash-Reporting
 
 ## Status
 

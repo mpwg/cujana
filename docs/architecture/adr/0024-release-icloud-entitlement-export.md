@@ -1,4 +1,4 @@
-# ADR-0010: Ungenutzte iCloud-Entitlements aus Release-Builds entfernen
+# ADR-0024: Ungenutzte iCloud-Entitlements aus Release-Builds entfernen
 
 Status: Akzeptiert
 Datum: 2026-05-10

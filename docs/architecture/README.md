@@ -523,7 +523,39 @@ Die Architektur wird durch mehrere Ebenen geschützt:
 
 Details stehen in [enforcement.md](enforcement.md).
 
-## 18. Wann wird modularisiert?
+## 18. ADR-Register
+
+Architecture Decision Records liegen unter [`adr/`](adr/) und verwenden eindeutige vierstellige Nummern. Ersetzte Entscheidungen bleiben historisch erhalten, verweisen aber auf die aktuell gültige Nachfolgeentscheidung.
+
+| ADR | Titel | Status |
+| --- | --- | --- |
+| [0001](adr/0001-ios-only-modular-monolith.md) | iOS-fokussierter SwiftUI-first modularer Monolith | Akzeptiert |
+| [0002](adr/0002-architecture-enforcement.md) | Architektur wird durch Guardrails enforced | Akzeptiert |
+| [0003](adr/0003-ci-runner-and-simulator.md) | CI nutzt macOS 26 und iOS 26.4 | Akzeptiert |
+| [0004](adr/0004-design-token-enforcement.md) | Design Token Enforcement | Akzeptiert |
+| [0005](adr/0005-openmeteo-sdk-pollen-integration.md) | OpenMeteo SDK für Pollendaten | Ersetzt durch ADR-0012 |
+| [0006](adr/0006-swiftlint-analyzer-rule-placement.md) | SwiftLint Analyzer Rule Placement | Akzeptiert |
+| [0007](adr/0007-ci-workflow-acceleration.md) | CI-Jobs laufen getrennt und bevorzugt auf Ubuntu | Akzeptiert |
+| [0008](adr/0008-debug-only-screenshot-demo-data.md) | Screenshot-Demo-Daten nur im Debug-Build | Akzeptiert |
+| [0009](adr/0009-symi-workflow-alignment.md) | GitHub-Workflows an Symi ausrichten | Akzeptiert |
+| [0010](adr/0010-opt-in-telemetry-and-crash-reporting.md) | Opt-in-Telemetrie und Crash-Reporting | Akzeptiert |
+| [0011](adr/0011-openmeteo-weather-home-summary.md) | Open-Meteo Wetterdaten für die Home-Prognose | Ersetzt durch ADR-0012 |
+| [0012](adr/0012-weatherkit-and-polleninformation-sources.md) | WeatherKit und Polleninformation als externe Datenquellen | Akzeptiert |
+| [0013](adr/0013-local-secrets-build-configuration.md) | Lokale Secrets als Build-Konfiguration | Akzeptiert |
+| [0014](adr/0014-semantic-ui-token-enforcement.md) | Semantische UI-Tokens werden enforced | Akzeptiert |
+| [0015](adr/0015-font-size-token-enforcement.md) | Schriftgrößen werden über UI-Tokens geführt | Akzeptiert |
+| [0016](adr/0016-structured-swiftdata-v1-persistence.md) | Flat SwiftData V1 Persistence | Akzeptiert |
+| [0017](adr/0017-secret-leak-guardrails.md) | Secret-Leak-Guardrails für Build Settings | Akzeptiert |
+| [0018](adr/0018-background-refresh-location-authorization.md) | Background-Refresh mit Always-Location-Gate | Akzeptiert |
+| [0019](adr/0019-ios-catalyst-build-matrix.md) | iOS-Produktmatrix mit Mac Catalyst | Akzeptiert |
+| [0020](adr/0020-swiftdata-persistence-boundary.md) | SwiftData Persistence Boundary | Akzeptiert |
+| [0021](adr/0021-ban-unsafe-swift-escape-hatches.md) | Unsichere Swift-Escape-Hatches verbieten | Akzeptiert |
+| [0022](adr/0022-userdefaults-persistence-boundary.md) | UserDefaults-Persistenzgrenze | Akzeptiert |
+| [0023](adr/0023-accessibility-first-ui-enforcement.md) | Accessibility-first UI-Regeln werden statisch abgesichert | Akzeptiert |
+| [0024](adr/0024-release-icloud-entitlement-export.md) | Ungenutzte iCloud-Entitlements aus Release-Builds entfernen | Akzeptiert |
+| [0025](adr/0025-pr-ci-gates-for-main.md) | PR-CI-Gates für main | Akzeptiert |
+
+## 19. Wann wird modularisiert?
 
 Swift Packages oder getrennte Targets werden erst eingeführt, wenn mindestens zwei Bedingungen erfüllt sind:
 
@@ -534,7 +566,7 @@ Swift Packages oder getrennte Targets werden erst eingeführt, wenn mindestens z
 
 Vorher reichen Ordnergrenzen plus CI-Regeln.
 
-## 19. Definition of Done für neue Features
+## 20. Definition of Done für neue Features
 
 Ein Feature ist fertig, wenn:
 
@@ -546,7 +578,7 @@ Ein Feature ist fertig, wenn:
 - `make architecture-check` grün ist.
 - Architekturabweichungen per ADR begründet sind.
 
-## 20. Entscheidungsregel bei Unsicherheit
+## 21. Entscheidungsregel bei Unsicherheit
 
 Wenn unklar ist, wo Code hingehört:
 
