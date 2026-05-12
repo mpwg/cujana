@@ -332,7 +332,7 @@ end
 def app_store_version_exists?(api_key:, version:)
   require "spaceship"
 
-  Spaceship::ConnectAPI.token = api_key
+  Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(**api_key)
   app = Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
   UI.user_error!("App '#{APP_IDENTIFIER}' wurde in App Store Connect nicht gefunden.") unless app
 
