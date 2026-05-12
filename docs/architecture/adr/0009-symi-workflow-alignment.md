@@ -17,7 +17,7 @@ Ein neuer `ios-ci`-Workflow übernimmt SwiftLint, Catalyst-Unit-Tests, optionale
 
 Ein neuer CodeQL-Workflow baut die `Cujana`-App manuell mit dem bestehenden App-Scheme und analysiert Swift-Code auf Release-Branches oder per manuellem Start.
 
-Die neuen TestFlight- und App-Store-Workflows verwenden die vorhandenen fastlane-Lanes `beta`, `verify_release`, `ensure_version_not_released` und `release`. Sie laufen nur manuell und validieren Release-Branches sowie die Secrets, die der Cujana-Fastfile tatsächlich benötigt. Symis Sentry- und Telemetrie-Secrets werden nicht übernommen, weil Cujana sie nicht verwendet.
+Die neuen TestFlight- und App-Store-Workflows verwenden die vorhandenen fastlane-Lanes `beta`, `verify_release`, `ensure_version_not_released` und `release`. Sie laufen nur manuell. TestFlight validiert `main` oder Release-Branches, App-Store-Uploads validieren Release-Branches sowie die Secrets, die der Cujana-Fastfile tatsächlich benötigt. Symis Sentry- und Telemetrie-Secrets werden nicht übernommen, weil Cujana sie nicht verwendet.
 
 ## Erforderliche GitHub-Secrets
 
@@ -39,6 +39,6 @@ Diese Secrets werden zusätzlich von den Workflows referenziert und sind je nach
 
 Architekturverstöße bleiben ein schneller Ubuntu-Check. iOS-Build- und Testverantwortung liegt im `ios-ci`-Workflow, der näher an Symis Struktur liegt und zusätzliche Simulator-Abdeckung gezielt einschaltet.
 
-Release-Uploads sind weiterhin explizite manuelle Aktionen von `release/*`-Branches. Fehlende Metadaten, Screenshots, Secrets oder falsche Versionsformate schlagen vor dem teuren Build fehl.
+Release-Uploads sind weiterhin explizite manuelle Aktionen. TestFlight kann von `main` oder `release/*` laufen; App-Store-Uploads bleiben auf `release/*` beschränkt. Fehlende Metadaten, Screenshots, Secrets oder falsche Versionsformate schlagen vor dem teuren Build fehl.
 
 Die Workflow-Pfade müssen bei neuen Schemes, Testtargets oder Fastlane-Lanes mitgepflegt werden, sonst können relevante Änderungen zu wenig oder zu viel CI auslösen.

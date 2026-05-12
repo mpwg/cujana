@@ -6,7 +6,8 @@ Dieser Prozess ist von Symi übernommen und auf Cujana angepasst. Releases sind 
 
 - `main` ist der Produktionsstand und wird über einen PR ohne App-Store-Screenshots aktualisiert.
 - `develop` ist optional für laufende Entwicklung.
-- `release/*` ist für Release-Vorbereitung, TestFlight und App-Store-Upload. App-Store-Screenshots werden nur auf diesem Branch eingecheckt.
+- TestFlight kann manuell von `main` oder `release/*` gestartet werden.
+- `release/*` ist für Release-Vorbereitung und App-Store-Upload. App-Store-Screenshots werden nur auf diesem Branch eingecheckt.
 - Release-Branch-Namen enthalten keine Versionsnummer. Die Version kommt aus der `MARKETING_VERSION` im Xcode-Projekt und aus dem manuellen Workflow-Input.
 - Git-Tags dokumentieren nur ausgelieferte Stände. Sie lösen keinen Release-Workflow aus.
 
@@ -98,11 +99,11 @@ Manuell entspricht das diesen Schritten:
 
 - Datei: `.github/workflows/testflight.yml`
 - Start: ausschließlich manuell
-- Branch: nur `release/*`
+- Branch: `main` oder `release/*`
 - Pflicht-Input: `changelog`
 - Fastlane-Lane: `bundle exec fastlane ios beta`
 
-Der Workflow bricht ab, wenn er nicht auf einem `release/*` Branch gestartet wird, der Changelog leer ist oder erforderliche Release-Secrets fehlen.
+Der Workflow bricht ab, wenn er nicht auf `main` oder einem `release/*` Branch gestartet wird, der Changelog leer ist oder erforderliche Release-Secrets fehlen.
 
 ### App Store Release
 
@@ -133,7 +134,7 @@ Die App wird nach App Store Connect hochgeladen, aber nicht automatisch zur Prü
 
 1. In GitHub Actions den Workflow `TestFlight` öffnen.
 2. `Run workflow` wählen.
-3. Branch `release/next` auswählen.
+3. Branch `main` oder `release/next` auswählen.
 4. `changelog` ausfüllen.
 5. Workflow starten.
 6. Build in TestFlight prüfen:

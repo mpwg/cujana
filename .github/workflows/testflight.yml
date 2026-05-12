@@ -41,10 +41,10 @@ jobs:
           echo "Branch: ${GITHUB_REF_NAME}"
           echo "Actor: ${GITHUB_ACTOR}"
 
-      - name: Release-Branch validieren
+      - name: TestFlight-Branch validieren
         run: |
-          if [[ "${GITHUB_REF_NAME}" != release/* ]]; then
-            echo "FEHLER: Dieser Workflow darf nur auf release/* Branches laufen."
+          if [[ "${GITHUB_REF_NAME}" != "main" && "${GITHUB_REF_NAME}" != release/* ]]; then
+            echo "FEHLER: Dieser Workflow darf nur auf main oder release/* Branches laufen."
             echo "Aktueller Branch: ${GITHUB_REF_NAME}"
             exit 1
           fi
