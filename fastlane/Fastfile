@@ -332,7 +332,7 @@ end
 def app_store_version_exists?(api_key:, version:)
   require "spaceship"
 
-  Spaceship::ConnectAPI.token = api_key
+  Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(**api_key)
   app = Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
   UI.user_error!("App '#{APP_IDENTIFIER}' wurde in App Store Connect nicht gefunden.") unless app
 
@@ -507,16 +507,22 @@ def validate_screenshot_seed!
   locale = language_config.fetch(:locale)
   device_name = IOS_SCREENSHOT_DEVICES.first
   device = resolve_simulator_for_capture(device_name)
+  output_directory = File.join(SCREENSHOT_ROOT, "seed-check")
+  pages = "dashboard"
 
   FileUtils.mkdir_p(SCREENSHOT_ROOT)
-  write_snapshot_configuration_files!(language: language, locale: locale)
+  FileUtils.rm_rf(output_directory)
+  clear_screenshot_cache!
+  write_snapshot_configuration_files!(language: language, locale: locale, pages: pages)
   prepare_ios_simulator!(device, override_status_bar: false)
-  run_ui_test!(
+  UI.message("Validiere Screenshot-Seed '#{SCREENSHOT_SEED}' mit Seite '#{pages}' für #{language} auf #{device_name}.")
+  run_screenshot_test!(
     destination: "platform=iOS Simulator,id=#{device.udid}",
-    result_bundle_path: screenshot_result_bundle_path(File.join(SCREENSHOT_ROOT, "seed-check"), device_name, language: language),
+    result_bundle_path: screenshot_result_bundle_path(output_directory, device_name, language: language),
     language: language,
-    test_identifier: SCREENSHOT_SEED_TEST_IDENTIFIER
+    pages: pages
   )
+  copy_device_screenshots!(device_name: device_name, output_directory: output_directory, language: language)
 end
 
 def upload_screenshot_sets!(api_key:, version:)
@@ -580,7 +586,7 @@ platform :ios do
     capture_all_screenshots!(pages: screenshot_page_selection(options))
   end
 
-  desc "Validiert den Screenshot-Seed ohne vollständige Screenshot-Erzeugung"
+  desc "Validiert den Screenshot-Seed mit einem einzelnen lokalen Kontroll-Screenshot"
   lane :validate_screenshot_seed do
     validate_screenshot_seed!
   end
