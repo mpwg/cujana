@@ -14,7 +14,7 @@ Xcode-Projekt, prüft Release-Artefakte und führt die lokalen Release-Gates aus
 
 Umgebung:
   SKIP_TESTS=1        make test überspringen.
-  SKIP_SCREENSHOTS=1  fastlane Screenshot-Seed-Validierung überspringen.
+  SKIP_SCREENSHOTS=1  App-Store-Screenshot-Erzeugung überspringen und vorhandene Screenshots prüfen.
 USAGE
 }
 
@@ -76,18 +76,8 @@ if [[ ! -d "fastlane/metadata" ]]; then
   exit 1
 fi
 
-if [[ ! -d "fastlane/screenshots/ios" ]]; then
-  echo "FEHLER: fastlane/screenshots/ios fehlt." >&2
-  exit 1
-fi
-
 if ! find fastlane/metadata -type f | grep -q .; then
   echo "FEHLER: fastlane/metadata enthält keine Dateien." >&2
-  exit 1
-fi
-
-if ! find fastlane/screenshots/ios -type f -name '*.png' | grep -q .; then
-  echo "FEHLER: fastlane/screenshots/ios enthält keine PNG-Screenshots." >&2
   exit 1
 fi
 
@@ -98,9 +88,19 @@ else
 fi
 
 if [[ "${SKIP_SCREENSHOTS:-0}" != "1" ]]; then
-  bundle exec fastlane ios validate_screenshot_seed
+  bundle exec fastlane ios sync_screenshots pages:all
 else
-  echo "Überspringe Screenshot-Seed-Validierung wegen SKIP_SCREENSHOTS=1."
+  echo "Überspringe App-Store-Screenshot-Erzeugung wegen SKIP_SCREENSHOTS=1."
+fi
+
+if [[ ! -d "fastlane/screenshots/ios" ]]; then
+  echo "FEHLER: fastlane/screenshots/ios fehlt. Erzeuge Screenshots mit: bundle exec fastlane ios sync_screenshots pages:all" >&2
+  exit 1
+fi
+
+if ! find fastlane/screenshots/ios -type f -name '*.png' | grep -q .; then
+  echo "FEHLER: fastlane/screenshots/ios enthält keine PNG-Screenshots. Erzeuge Screenshots mit: bundle exec fastlane ios sync_screenshots pages:all" >&2
+  exit 1
 fi
 
 bundle exec fastlane ios verify_release version:"$version"
@@ -111,9 +111,9 @@ Release-Vorbereitung abgeschlossen.
 
 Nächste Schritte:
   git status
-  git add Cujana.xcodeproj fastlane docs README.md
-  git commit -m "Release $version vorbereiten"
+  scripts/commit_release_artifacts.sh $version $release_branch
   git push -u origin $release_branch
+  scripts/create_main_release_pr.sh $version $release_branch
 
 Danach in GitHub Actions den Workflow "TestFlight" auf $release_branch starten.
 EOF
