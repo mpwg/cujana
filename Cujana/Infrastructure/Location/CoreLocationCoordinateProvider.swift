@@ -1,5 +1,8 @@
 import CoreLocation
 import Foundation
+#if os(iOS)
+import UIKit
+#endif
 
 @MainActor
 protocol CoreLocationManaging: AnyObject {
@@ -28,6 +31,7 @@ final class CoreLocationCoordinateProvider: NSObject, LocationCoordinateProvidin
     }
 
     private let manager: any CoreLocationManaging
+    private let authorizationTimeout: Duration
     private var authorizationRequests: [UUID: AuthorizationRequest] = [:]
     private var activeAuthorizationKind: AuthorizationKind?
     private var locationContinuations: [UUID: CheckedContinuation<LocationCoordinate?, Never>] = [:]
@@ -37,8 +41,12 @@ final class CoreLocationCoordinateProvider: NSObject, LocationCoordinateProvidin
         self.init(manager: CLLocationManager())
     }
 
-    init(manager: any CoreLocationManaging) {
+    init(
+        manager: any CoreLocationManaging,
+        authorizationTimeout: Duration = .seconds(30)
+    ) {
         self.manager = manager
+        self.authorizationTimeout = authorizationTimeout
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyThreeKilometers
@@ -46,6 +54,31 @@ final class CoreLocationCoordinateProvider: NSObject, LocationCoordinateProvidin
 
     var allowsBackgroundLocationRefresh: Bool {
         manager.authorizationStatus == .authorizedAlways
+    }
+
+    var backgroundLocationAuthorizationState: BackgroundLocationAuthorizationState {
+        switch manager.authorizationStatus {
+        case .authorizedAlways:
+            return .always
+        case .authorizedWhenInUse:
+            return .whenInUse
+        case .notDetermined:
+            return .notDetermined
+        case .denied:
+            return .denied
+        case .restricted:
+            return .restricted
+        @unknown default:
+            return .unknown
+        }
+    }
+
+    var backgroundLocationSettingsURL: URL? {
+#if os(iOS)
+        URL(string: UIApplication.openSettingsURLString)
+#else
+        nil
+#endif
     }
 
     var backgroundLocationStatusText: String {
@@ -116,6 +149,20 @@ final class CoreLocationCoordinateProvider: NSObject, LocationCoordinateProvidin
         }
 
         let requestID = UUID()
+        let timeoutTask = Task { [weak self, authorizationTimeout] in
+            do {
+                try await Task.sleep(for: authorizationTimeout)
+            } catch {
+                return
+            }
+
+            self?.cancelAuthorizationRequest(id: requestID)
+        }
+
+        defer {
+            timeoutTask.cancel()
+        }
+
         return await withTaskCancellationHandler {
             await withCheckedContinuation { continuation in
                 guard Task.isCancelled == false else {

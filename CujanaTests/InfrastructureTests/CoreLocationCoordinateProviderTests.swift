@@ -107,6 +107,19 @@ struct CoreLocationCoordinateProviderTests {
         #expect(manager.requestAlwaysAuthorizationCallCount == 1)
     }
 
+    @Test func backgroundAuthorizationReturnsFalseWhenCoreLocationDoesNotCallback() async throws {
+        let manager = FakeCoreLocationAdapter(authorizationStatus: .authorizedWhenInUse)
+        let provider = CoreLocationCoordinateProvider(
+            manager: manager,
+            authorizationTimeout: .milliseconds(20)
+        )
+
+        let isAuthorized = await provider.requestBackgroundLocationRefreshAuthorization()
+
+        #expect(isAuthorized == false)
+        #expect(manager.requestAlwaysAuthorizationCallCount == 1)
+    }
+
     private func waitUntil(
         timeout: Duration = .seconds(1),
         condition: @escaping @MainActor () -> Bool

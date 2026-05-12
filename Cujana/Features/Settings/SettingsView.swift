@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
     @Bindable var telemetryService: AppTelemetryService
     let backgroundLocationAuthorizer: (any BackgroundLocationAuthorizing)?
     @State private var locationStatusText: String
@@ -38,6 +40,13 @@ struct SettingsView: View {
                         .font(TypographyToken.headline)
                         .foregroundStyle(ColorToken.textPrimary)
                 }
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                guard newPhase == .active else {
+                    return
+                }
+
+                updateLocationStatusText()
             }
         }
     }
@@ -171,7 +180,40 @@ struct SettingsView: View {
             return
         }
 
-        _ = await backgroundLocationAuthorizer.requestBackgroundLocationRefreshAuthorization()
-        locationStatusText = backgroundLocationAuthorizer.backgroundLocationStatusText
+        switch backgroundLocationAuthorizer.backgroundLocationAuthorizationState {
+        case .always:
+            updateLocationStatusText()
+            return
+        case .whenInUse, .denied, .restricted:
+            openAppSettings()
+            return
+        case .notDetermined, .unknown:
+            break
+        }
+
+        let isAuthorized = await backgroundLocationAuthorizer.requestBackgroundLocationRefreshAuthorization()
+        updateLocationStatusText()
+
+        guard isAuthorized == false,
+              backgroundLocationAuthorizer.allowsBackgroundLocationRefresh == false else {
+            return
+        }
+
+        openAppSettings()
+    }
+
+    @MainActor
+    private func updateLocationStatusText() {
+        locationStatusText = backgroundLocationAuthorizer?.backgroundLocationStatusText
+            ?? "Nicht verfügbar"
+    }
+
+    @MainActor
+    private func openAppSettings() {
+        guard let settingsURL = backgroundLocationAuthorizer?.backgroundLocationSettingsURL else {
+            return
+        }
+
+        openURL(settingsURL)
     }
 }

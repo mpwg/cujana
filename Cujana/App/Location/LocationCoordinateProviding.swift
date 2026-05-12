@@ -8,9 +8,20 @@ protocol LocationCoordinateProviding: AnyObject {
 @MainActor
 protocol BackgroundLocationAuthorizing: AnyObject {
     var allowsBackgroundLocationRefresh: Bool { get }
+    var backgroundLocationAuthorizationState: BackgroundLocationAuthorizationState { get }
+    var backgroundLocationSettingsURL: URL? { get }
     var backgroundLocationStatusText: String { get }
 
     func requestBackgroundLocationRefreshAuthorization() async -> Bool
+}
+
+enum BackgroundLocationAuthorizationState {
+    case always
+    case whenInUse
+    case notDetermined
+    case denied
+    case restricted
+    case unknown
 }
 
 @MainActor
@@ -23,6 +34,14 @@ final class FixedLocationCoordinateProvider: LocationCoordinateProviding, Backgr
 
     var allowsBackgroundLocationRefresh: Bool {
         true
+    }
+
+    var backgroundLocationAuthorizationState: BackgroundLocationAuthorizationState {
+        .always
+    }
+
+    var backgroundLocationSettingsURL: URL? {
+        nil
     }
 
     var backgroundLocationStatusText: String {

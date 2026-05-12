@@ -78,6 +78,14 @@ private final class StubBackgroundLocationAuthorizer: BackgroundLocationAuthoriz
         grantsAuthorization
     }
 
+    var backgroundLocationAuthorizationState: BackgroundLocationAuthorizationState {
+        grantsAuthorization ? .always : .denied
+    }
+
+    var backgroundLocationSettingsURL: URL? {
+        nil
+    }
+
     var backgroundLocationStatusText: String {
         grantsAuthorization ? "Immer erlaubt" : "Nicht erlaubt"
     }
