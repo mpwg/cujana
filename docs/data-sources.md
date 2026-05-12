@@ -1,12 +1,12 @@
-# Datenquellen für AllergieManagement
+# Datenquellen für Cujana
 
-Diese Datei sammelt mögliche Datenquellen für eine selbst hostbare Allergie-Management-Web-App. Ziel ist, Symptome, mögliche Auslöser und Umweltdaten zusammenzuführen, ohne die App unnötig abhängig von proprietären Diensten zu machen.
+Diese Datei dokumentiert die aktuell gültigen Datenquellen für die iOS-App Cujana und bewahrt frühere Rechercheentscheidungen nachvollziehbar auf. Ziel ist, Symptome, mögliche Auslöser und Umweltdaten lokal in der App zusammenzuführen, ohne die Domain an konkrete Anbieter zu koppeln.
 
-> Stand: 2026-05-04. Vor der Implementierung sollten Verfügbarkeit, Lizenzbedingungen, Rate Limits und regionale Abdeckung nochmals geprüft werden.
+> Stand: 2026-05-12. Verbindlich ist [ADR-0012](architecture/adr/0012-weatherkit-and-polleninformation-sources.md): WeatherKit ersetzt Open-Meteo für Wetterdaten, Polleninformation ersetzt Open-Meteo für Pollendaten und Allergierisiken.
 
 ## Anforderungen an Datenquellen
 
-- **Selbst hostbar kompatibel:** Die App muss ohne proprietäre Backend-Pflicht laufen. Externe APIs dürfen optional angebunden werden.
+- **Backendlos kompatibel:** Die App muss ohne eigenes Backend laufen. Externe APIs dürfen nur gekapselt über Infrastructure angebunden werden.
 - **EU/AT-tauglich:** Österreich und Deutschland sollten gut abgedeckt sein; idealerweise auch Schweiz/EU.
 - **Historisierung:** Werte sollten lokal gespeichert werden können, damit später Zusammenhänge zwischen Symptomen und Umweltfaktoren analysiert werden können.
 - **Datenschutz:** Standortdaten nur grob speichern, wenn möglich. Exakte GPS-Daten nur mit expliziter Zustimmung.
@@ -14,19 +14,23 @@ Diese Datei sammelt mögliche Datenquellen für eine selbst hostbare Allergie-Ma
 
 ## Kurzempfehlung
 
-Für eine erste Version bietet sich eine modulare Quellenstrategie an:
+Für die aktuelle iOS-Version gilt:
 
-1. **Open-Meteo** für Wetter, Luftqualität und teils Pollen-/Aeroallergen-Daten, weil es ohne API-Key nutzbar ist und gut zu Self-Hosting passt.
-2. **Meteostat** oder nationale Wetterdienste als optionale historische Wetterquelle.
-3. **Umweltbundesamt / EEA / OpenAQ** für Luftqualität, Ozon, Feinstaub und NO₂.
-4. **Pollenwarndienst Österreich / nationale Pollenservices** als manuelle oder halbautomatische Referenz, falls keine stabile offene API verfügbar ist.
-5. Eine interne **Provider-Abstraktion**, damit Quellen austauschbar bleiben.
+1. **WeatherKit** für Wetterdaten.
+2. **Polleninformation** für Pollendaten und Allergierisiken inklusive verpflichtender Attribution.
+3. **Lokale Persistenz und Cache** für abgerufene Umweltkontexte.
+4. **Manuelle Auslöser** als primäre Eingabe für individuelle Trigger.
+5. Eine interne **Repository-Abstraktion**, damit Quellen austauschbar bleiben.
+
+Open-Meteo war Teil früherer Recherche und der ersetzten ADRs 0005 und 0011. Es ist nicht mehr MVP-Empfehlung und soll nicht parallel zu WeatherKit/Polleninformation reaktiviert werden, solange keine neue ADR dies begründet.
 
 ## Pollen- und Allergendaten
 
 ### Open-Meteo Air Quality / Pollen
 
-**Eignung:** Sehr guter Startpunkt für MVP und Self-Hosting-nahe Architektur.
+**Status:** Historische Recherche, ersetzt durch ADR-0012.
+
+**Ehemalige Eignung:** Guter Startpunkt für eine self-hosting-nahe Web-App-Variante, aber nicht mehr die gültige Cujana-MVP-Quelle.
 
 Open-Meteo bietet APIs ohne API-Key und mit freier Nutzung für nicht-kommerzielle bzw. faire Nutzung. Neben Wetterdaten gibt es auch Air-Quality-Daten. Je nach Region/Modell können Pollenparameter verfügbar sein, z. B. Birke, Gräser, Beifuß, Ambrosia/Weed-Pollen oder ähnliche Kategorien.
 
@@ -169,7 +173,9 @@ Für langfristige EU-Abdeckung kann die EEA als Datenquelle oder Referenz dienen
 
 ### Open-Meteo Weather Forecast & Archive
 
-**Eignung:** Sehr gut für MVP.
+**Status:** Historische Recherche, ersetzt durch WeatherKit gemäß ADR-0012.
+
+**Ehemalige Eignung:** Gut für eine offene Web-App-Variante, aber nicht mehr die gültige Cujana-MVP-Quelle.
 
 Open-Meteo liefert Wettervorhersage und historische Wetterdaten per HTTP/JSON. Für Symptomkorrelationen sind vor allem Temperatur, Luftfeuchtigkeit, Luftdruck, Niederschlag, Wind und Wetterwechsel interessant.
 
@@ -251,18 +257,17 @@ Nicht API-basiert, aber wichtig für die App:
 
 ## Architekturvorschlag für Datenquellen
 
-### Provider-Interface
+### Repository-Interface
 
-Alle Quellen sollten über ein gemeinsames Interface eingebunden werden:
+Alle Quellen werden über Domain-Repository-Protokolle eingebunden. Die konkrete Implementierung bleibt in `Infrastructure`, zum Beispiel `WeatherKitWeatherRepository` oder `PolleninformationPollenRepository`.
 
-```ts
-interface EnvironmentalDataProvider {
-  id: string;
-  displayName: string;
-  supportsForecast: boolean;
-  supportsHistory: boolean;
-  getCurrent(input: EnvironmentalQuery): Promise<EnvironmentalSnapshot>;
-  getHistory(input: EnvironmentalHistoryQuery): Promise<EnvironmentalSnapshot[]>;
+```swift
+protocol WeatherRepository {
+    func loadWeatherForecast(for coordinate: LocationCoordinate) async throws -> WeatherForecast
+}
+
+protocol PollenRepository {
+    func loadPollenForecast(for coordinate: LocationCoordinate) async throws -> PollenForecast
 }
 ```
 
@@ -321,12 +326,11 @@ type EnvironmentalSnapshot = {
 
 Für die erste Version:
 
-- Open-Meteo Weather Forecast
-- Open-Meteo Archive für nachträgliche Einträge
-- Open-Meteo Air Quality für Ozon/Feinstaub/NO₂/UV
-- Pollenwerte über Open-Meteo testen und feature-flaggen
+- WeatherKit für Wetterdaten
+- Polleninformation für Pollendaten und Allergierisiken
+- vierstündiger Cache für Polleninformation-Antworten
 - Manuelle Auslöser als Hauptfunktion
-- Datenquellen-Status in Admin/Settings anzeigen
+- Datenquellen-Status in den Einstellungen anzeigen
 
 Nicht im MVP erzwingen:
 
@@ -334,14 +338,14 @@ Nicht im MVP erzwingen:
 - Medizinische Interpretation
 - Länderübergreifende Spezialprovider
 - Exakte Standorthistorie
+- Reaktivierung von Open-Meteo ohne neue ADR
 
 ## Offene Prüfaufgaben
 
-- [ ] Prüfen, welche Pollenparameter Open-Meteo aktuell für Wien/Österreich liefert.
-- [ ] Lizenz/Fair-Use für Open-Meteo im geplanten Nutzungsmodell prüfen.
-- [ ] Pollenwarndienst Österreich kontaktieren oder Nutzungsbedingungen/API-Verfügbarkeit prüfen.
+- [x] Open-Meteo als MVP-Quelle durch WeatherKit und Polleninformation ersetzen.
+- [x] Polleninformation-Attribution und Fair-Use-Verhalten dokumentieren.
 - [ ] Offizielle österreichische Luftqualitätsdaten-Schnittstellen evaluieren.
-- [ ] Datenmodell für EnvironmentalSnapshot finalisieren.
+- [ ] Luftqualitätsdaten als separate spätere Datenquelle bewerten.
 - [ ] Cache-/Retry-Strategie definieren.
 - [ ] UI-Copy: Umweltwerte als „mögliche Hinweise“, nicht als Ursachenbeweis formulieren.
 

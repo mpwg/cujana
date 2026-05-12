@@ -2,9 +2,9 @@
 
 ## 1. Zielbild
 
-Die Web App soll Menschen mit Allergien dabei unterstützen, akute Symptome, mögliche Auslöser und relevante Umweltfaktoren zusammenzuführen. Ziel ist kein medizinisches Diagnosesystem, sondern ein persönliches Tagebuch mit Kontextdaten, das Muster sichtbar macht und Gespräche mit Ärztinnen, Ärzten oder Allergologinnen erleichtert.
+Die iOS-App soll Menschen mit Allergien dabei unterstützen, akute Symptome, mögliche Auslöser und relevante Umweltfaktoren zusammenzuführen. Ziel ist kein medizinisches Diagnosesystem, sondern ein persönliches Tagebuch mit Kontextdaten, das Muster sichtbar macht und Gespräche mit Ärztinnen, Ärzten oder Allergologinnen erleichtert.
 
-Die Anwendung muss vollständig selbst hostbar sein und per Docker betrieben werden können. Sie soll bewusst unabhängig von proprietären Cloud-Diensten funktionieren, aber optionale Integrationen unterstützen.
+Die Anwendung muss ohne eigenes Backend funktionieren. Sie soll persönliche Gesundheitsdaten lokal speichern und externe Datenquellen nur gekapselt über die Infrastruktur-Schicht anbinden.
 
 ## 2. Kernidee
 
@@ -121,7 +121,7 @@ Die Anwendung soll mehrere Standortmodi unterstützen:
 
 - manuelle Stadt/Region
 - gespeicherte Lieblingsorte, z. B. Zuhause, Arbeit, Schule
-- optional Browser-Geolocation
+- optional grobe Standorterfassung über Core Location
 - optional grobe Standorterfassung ohne exakte Adresse
 
 Privacy-by-default:
@@ -205,20 +205,20 @@ Pflicht:
 
 ## 7. Datenquellen
 
-Die Anwendung soll Datenquellen modular anbinden.
+Die Anwendung soll Datenquellen modular anbinden. Verbindlich für den aktuellen MVP sind WeatherKit für Wetterdaten und Polleninformation für Pollendaten gemäß [ADR-0012](architecture/adr/0012-weatherkit-and-polleninformation-sources.md).
 
 Mögliche Quellen:
 
-- Open-Meteo für Wetter und Luftqualität
+- WeatherKit für Wetter
+- Polleninformation für Pollendaten und Allergierisiken
 - nationale Umweltagenturen
-- lokale Pollenwarndienste
 - Copernicus Atmosphere Monitoring Service
 - eigene CSV/API-Importer
 - manuelle Pollenbelastung, falls keine Quelle verfügbar ist
 
 Architekturanforderung:
 
-- Provider Interface für externe Daten
+- Domain-Repository-Protokolle für externe Daten
 - Caching, damit APIs nicht unnötig belastet werden
 - Fallback, wenn ein Provider ausfällt
 - Quellen-Metadaten pro gespeicherter Messung
@@ -230,7 +230,7 @@ Die App soll ruhig, vertrauenswürdig und nicht medizinisch-kalt wirken.
 Prinzipien:
 
 - schneller Akuteintrag prominent erreichbar
-- mobile-first, aber Desktop gut nutzbar
+- iPhone- und iPad-first, Mac Catalyst unterstützt
 - klare Sprache ohne medizinischen Jargon
 - verständliche Trends statt komplexer Statistik
 - keine Angstmacherei
