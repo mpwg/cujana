@@ -9,10 +9,12 @@ Verwendung:
 Beispiel:
   scripts/finalize_release.sh 1.0.0 release/next
 
-Merged den Release-Branch in main, pusht main, erstellt und pusht das
-Release-Tag und löscht den lokalen und entfernten Release-Branch.
+Erstellt und pusht das Release-Tag auf dem Release-Branch und löscht danach den
+lokalen und entfernten Release-Branch.
 
 Nur ausführen, nachdem der App-Store-Upload für dieselbe Version erfolgreich war.
+main wird nicht direkt gemerged. Änderungen für main laufen über
+scripts/create_main_release_pr.sh, damit Screenshots nicht nach main kommen.
 USAGE
 }
 
@@ -76,13 +78,16 @@ if [[ "$project_version" != "$version" ]]; then
   exit 1
 fi
 
-git checkout main
-git pull --ff-only
-git merge --no-ff "$release_branch" -m "Release $version"
-git push origin main
+if ! git ls-tree -r --name-only HEAD -- fastlane/screenshots/ios | grep -q '\.png$'; then
+  echo "FEHLER: Release-Branch enthält keine eingecheckten PNG-Screenshots unter fastlane/screenshots/ios." >&2
+  exit 1
+fi
+
 git tag "$tag"
 git push origin "$tag"
+git checkout main
+git pull --ff-only
 git push origin --delete "$release_branch"
-git branch -d "$release_branch"
+git branch -D "$release_branch"
 
-echo "Release $version abgeschlossen und als $tag getaggt."
+echo "Release $version abgeschlossen und als $tag getaggt. main bleibt unverändert."
