@@ -75,7 +75,7 @@ for file in "${tracked_files[@]}"; do
   esac
 
   while IFS= read -r line; do
-    if [[ "$line" =~ ^([0-9]+):[[:space:]]*(APPLE_DEVELOPER_TEAM_ID|APP_STORE_CONNECT_KEY_ID|APP_STORE_CONNECT_ISSUER_ID|APP_STORE_CONNECT_PRIVATE_KEY|CUJANA_SENTRY_DSN|CUJANA_TELEMETRY_APP_ID|POLLENINFORMATION_API_KEY|MATCH_PASSWORD|MATCH_GIT_BASIC_AUTHORIZATION)[[:space:]]*[:=][[:space:]]*(.+)$ ]]; then
+    if [[ "$line" =~ ^([0-9]+):[[:space:]]*(APPLE_DEVELOPER_TEAM_ID|APP_STORE_CONNECT_KEY_ID|APP_STORE_CONNECT_ISSUER_ID|APP_STORE_CONNECT_PRIVATE_KEY|CUJANA_APP_REVIEW_FIRST_NAME|CUJANA_APP_REVIEW_LAST_NAME|CUJANA_APP_REVIEW_EMAIL|CUJANA_APP_REVIEW_PHONE|CUJANA_SENTRY_DSN|CUJANA_TELEMETRY_APP_ID|POLLENINFORMATION_API_KEY|MATCH_PASSWORD|MATCH_GIT_BASIC_AUTHORIZATION)[[:space:]]*[:=][[:space:]]*(.+)$ ]]; then
       line_number="${BASH_REMATCH[1]}"
       setting_name="${BASH_REMATCH[2]}"
       setting_value="${BASH_REMATCH[3]}"
@@ -84,7 +84,7 @@ for file in "${tracked_files[@]}"; do
           "${setting_name} appears to contain a literal secret value. Reference CI secrets or environment variables instead."
       fi
     fi
-  done < <(grep -nE '^[[:space:]]*(APPLE_DEVELOPER_TEAM_ID|APP_STORE_CONNECT_KEY_ID|APP_STORE_CONNECT_ISSUER_ID|APP_STORE_CONNECT_PRIVATE_KEY|CUJANA_SENTRY_DSN|CUJANA_TELEMETRY_APP_ID|POLLENINFORMATION_API_KEY|MATCH_PASSWORD|MATCH_GIT_BASIC_AUTHORIZATION)[[:space:]]*[:=][[:space:]]*.+' "$file" || true)
+  done < <(grep -nE '^[[:space:]]*(APPLE_DEVELOPER_TEAM_ID|APP_STORE_CONNECT_KEY_ID|APP_STORE_CONNECT_ISSUER_ID|APP_STORE_CONNECT_PRIVATE_KEY|CUJANA_APP_REVIEW_FIRST_NAME|CUJANA_APP_REVIEW_LAST_NAME|CUJANA_APP_REVIEW_EMAIL|CUJANA_APP_REVIEW_PHONE|CUJANA_SENTRY_DSN|CUJANA_TELEMETRY_APP_ID|POLLENINFORMATION_API_KEY|MATCH_PASSWORD|MATCH_GIT_BASIC_AUTHORIZATION)[[:space:]]*[:=][[:space:]]*.+' "$file" || true)
 done
 
 if grep -RInE '(^|[[:space:]])set[[:space:]]+(-x|-o[[:space:]]+xtrace)([[:space:]]|$)' scripts fastlane .github/workflows >/dev/null 2>&1; then
