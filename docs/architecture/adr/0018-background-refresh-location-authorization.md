@@ -1,7 +1,11 @@
 # ADR-0018: Background-Refresh mit Always-Location-Gate
 
-Status: Akzeptiert
+Status: Ersetzt durch [ADR-0026](0026-remove-persistent-background-location.md)
 Datum: 2026-05-11
+
+> Historischer Stand vor App-Review 1.0.0. Die gültige Entscheidung entfernt
+> den persistenten Location-Background-Mode und fordert keine
+> Always-Location-Berechtigung mehr an.
 
 ## Kontext
 

@@ -45,7 +45,7 @@ final class FixedLocationCoordinateProvider: LocationCoordinateProviding, Backgr
     }
 
     var backgroundLocationStatusText: String {
-        "Immer erlaubt"
+        "Beim Verwenden erlaubt"
     }
 
     func currentCoordinate() async -> LocationCoordinate? {

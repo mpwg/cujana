@@ -10,7 +10,6 @@ protocol CoreLocationManaging: AnyObject {
     var delegate: CLLocationManagerDelegate? { get set }
     var desiredAccuracy: CLLocationAccuracy { get set }
 
-    func requestAlwaysAuthorization()
     func requestLocation()
     func requestWhenInUseAuthorization()
 }
@@ -20,7 +19,6 @@ extension CLLocationManager: CoreLocationManaging {}
 @MainActor
 final class CoreLocationCoordinateProvider: NSObject, LocationCoordinateProviding, BackgroundLocationAuthorizing {
     private enum AuthorizationKind {
-        case always
         case whenInUse
     }
 
@@ -54,6 +52,7 @@ final class CoreLocationCoordinateProvider: NSObject, LocationCoordinateProvidin
 
     var allowsBackgroundLocationRefresh: Bool {
         manager.authorizationStatus == .authorizedAlways
+            || manager.authorizationStatus == .authorizedWhenInUse
     }
 
     var backgroundLocationAuthorizationState: BackgroundLocationAuthorizationState {
@@ -84,7 +83,7 @@ final class CoreLocationCoordinateProvider: NSObject, LocationCoordinateProvidin
     var backgroundLocationStatusText: String {
         switch manager.authorizationStatus {
         case .authorizedAlways:
-            return "Immer erlaubt"
+            return "Standortzugriff erlaubt"
         case .authorizedWhenInUse:
             return "Nur beim Verwenden erlaubt"
         case .notDetermined:
@@ -106,15 +105,10 @@ final class CoreLocationCoordinateProvider: NSObject, LocationCoordinateProvidin
 
     func requestBackgroundLocationRefreshAuthorization() async -> Bool {
         switch manager.authorizationStatus {
-        case .authorizedAlways:
+        case .authorizedAlways, .authorizedWhenInUse:
             return true
         case .notDetermined:
-            guard await requestWhenInUseAuthorization() else {
-                return false
-            }
-            return await requestAlwaysAuthorization()
-        case .authorizedWhenInUse:
-            return await requestAlwaysAuthorization()
+            return await requestWhenInUseAuthorization()
         case .denied, .restricted:
             return false
         @unknown default:
@@ -137,10 +131,6 @@ final class CoreLocationCoordinateProvider: NSObject, LocationCoordinateProvidin
 
     private func requestWhenInUseAuthorization() async -> Bool {
         await requestAuthorization(.whenInUse)
-    }
-
-    private func requestAlwaysAuthorization() async -> Bool {
-        await requestAuthorization(.always)
     }
 
     private func requestAuthorization(_ kind: AuthorizationKind) async -> Bool {
@@ -306,8 +296,6 @@ final class CoreLocationCoordinateProvider: NSObject, LocationCoordinateProvidin
         activeAuthorizationKind = kind
 
         switch kind {
-        case .always:
-            manager.requestAlwaysAuthorization()
         case .whenInUse:
             manager.requestWhenInUseAuthorization()
         }
@@ -320,14 +308,9 @@ extension CoreLocationCoordinateProvider: CLLocationManagerDelegate {
         case .authorizedAlways:
             finishAuthorization { _ in true }
         case .authorizedWhenInUse:
-            let activeKind = activeAuthorizationKind
             finishAuthorization { request in
                 if request.kind == .whenInUse {
                     return true
-                }
-
-                if activeKind == .always {
-                    return false
                 }
 
                 return nil

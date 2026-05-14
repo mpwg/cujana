@@ -68,7 +68,7 @@ struct SettingsView: View {
                     await requestBackgroundLocationAuthorization()
                 }
             } label: {
-                Label("Immer-Standort erlauben", systemImage: "location")
+                Label("Standortzugriff erlauben", systemImage: "location")
                     .font(TypographyToken.bodyEmphasized)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -77,9 +77,9 @@ struct SettingsView: View {
             .disabled(backgroundLocationAuthorizer == nil)
 
             VStack(alignment: .leading, spacing: SpacingToken.sm) {
-                Label("Cujana speichert Wetter- und Pollendaten höchstens viermal pro Tag.", systemImage: "clock")
+                Label("Cujana lädt Wetter- und Pollendaten für deine Umgebung beim Öffnen der App.", systemImage: "clock")
                 Label(
-                    "Ohne Immer-Zugriff werden diese Daten nur beim Starten der App geladen.",
+                    "Die App nutzt keinen dauerhaften Standortzugriff im Hintergrund.",
                     systemImage: "arrow.clockwise"
                 )
             }
@@ -181,10 +181,10 @@ struct SettingsView: View {
         }
 
         switch backgroundLocationAuthorizer.backgroundLocationAuthorizationState {
-        case .always:
+        case .always, .whenInUse:
             updateLocationStatusText()
             return
-        case .whenInUse, .denied, .restricted:
+        case .denied, .restricted:
             openAppSettings()
             return
         case .notDetermined, .unknown:
