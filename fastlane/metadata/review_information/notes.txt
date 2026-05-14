@@ -2,8 +2,10 @@ Cujana ist ein lokal-first Allergie-Tagebuch. Die App stellt keine Diagnose, gib
 
 Gesundheitsbezogene Beobachtungen bleiben lokal auf dem Gerät. Für den Review sind kein Account und keine Zugangsdaten erforderlich.
 
-Die App kann Standort- und Umweltkontext nutzen, um Pollen-, Allergierisiko- und Wetterdaten einzuordnen. Der Standortzugriff ist optional und dient nur dazu, relevante Kontextdaten für die Umgebung zu laden. Wetterdaten kommen über Apple Weather, Pollendaten über den Österreichischen Polleninformationsdienst.
+Die App kann Standort- und Umweltkontext nutzen, um Pollen-, Allergierisiko- und Wetterdaten einzuordnen. Der Standortzugriff ist optional und dient nur dazu, relevante Kontextdaten für die Umgebung zu laden. Die App fordert keinen dauerhaften Standortzugriff an und deklariert keinen Location-Background-Mode. Wetterdaten kommen über Apple Weather/WeatherKit, Pollendaten über den Österreichischen Polleninformationsdienst.
 
 Die aktuelle UI wurde accessibility-first überarbeitet. Relevante Screens unterstützen VoiceOver, Dynamic Type, Dark Mode, hohen Kontrast, Reduce Motion sowie Tastatur-/Switch-Control-Navigation. Zusätzlich gibt es einen UI-Test mit `performAccessibilityAudit`.
 
-Background Modes sind auf `fetch` und `location` beschränkt: `fetch` plant kurze opportunistische Aktualisierungen per BGAppRefreshTask, `location` erlaubt nach ausdrücklicher Immer-Standort-Freigabe den dafür nötigen groben Standortabruf. Remote Notifications/Push werden nicht verwendet.
+Background Modes sind auf `fetch` beschränkt: `fetch` plant kurze opportunistische Aktualisierungen per BGAppRefreshTask. Remote Notifications/Push und persistente Standortaktualisierungen im Hintergrund werden nicht verwendet.
+
+WeatherKit-Navigation für den Review: App öffnen, optional Standortzugriff erlauben, dann im Tab „Heute“ die Wetterzeile in der Allergie-Übersicht ansehen. Diese Wetterdaten werden über WeatherKit geladen.

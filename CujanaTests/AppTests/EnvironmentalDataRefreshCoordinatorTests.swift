@@ -5,7 +5,7 @@ import Testing
 @MainActor
 struct EnvironmentalDataRefreshCoordinatorTests {
 
-    @Test func backgroundRefreshRequestsAlwaysAuthorizationBeforeLoadingCoordinate() async throws {
+    @Test func backgroundRefreshRequestsLocationAuthorizationBeforeLoadingCoordinate() async throws {
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let locationProvider = StubBackgroundRefreshLocationProvider(coordinate: coordinate)
         let authorizer = StubBackgroundLocationAuthorizer(grantsAuthorization: true)
@@ -23,7 +23,7 @@ struct EnvironmentalDataRefreshCoordinatorTests {
         #expect(locationProvider.currentCoordinateCallCount == 1)
     }
 
-    @Test func backgroundRefreshSkipsCoordinateWhenAlwaysAuthorizationIsDenied() async throws {
+    @Test func backgroundRefreshSkipsCoordinateWhenLocationAuthorizationIsDenied() async throws {
         let coordinate = try LocationCoordinate(latitude: 48.2082, longitude: 16.3738)
         let locationProvider = StubBackgroundRefreshLocationProvider(coordinate: coordinate)
         let authorizer = StubBackgroundLocationAuthorizer(grantsAuthorization: false)
@@ -79,7 +79,7 @@ private final class StubBackgroundLocationAuthorizer: BackgroundLocationAuthoriz
     }
 
     var backgroundLocationAuthorizationState: BackgroundLocationAuthorizationState {
-        grantsAuthorization ? .always : .denied
+        grantsAuthorization ? .whenInUse : .denied
     }
 
     var backgroundLocationSettingsURL: URL? {
@@ -87,7 +87,7 @@ private final class StubBackgroundLocationAuthorizer: BackgroundLocationAuthoriz
     }
 
     var backgroundLocationStatusText: String {
-        grantsAuthorization ? "Immer erlaubt" : "Nicht erlaubt"
+        grantsAuthorization ? "Beim Verwenden erlaubt" : "Nicht erlaubt"
     }
 
     func requestBackgroundLocationRefreshAuthorization() async -> Bool {

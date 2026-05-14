@@ -91,7 +91,7 @@ struct CoreLocationCoordinateProviderTests {
     }
 
     @Test func cancelledBackgroundAuthorizationReturnsFalse() async throws {
-        let manager = FakeCoreLocationAdapter(authorizationStatus: .authorizedWhenInUse)
+        let manager = FakeCoreLocationAdapter(authorizationStatus: .notDetermined)
         let provider = CoreLocationCoordinateProvider(manager: manager)
 
         let task = Task { @MainActor in
@@ -99,16 +99,16 @@ struct CoreLocationCoordinateProviderTests {
         }
 
         try await waitUntil {
-            manager.requestAlwaysAuthorizationCallCount == 1
+            manager.requestWhenInUseAuthorizationCallCount == 1
         }
         task.cancel()
 
         #expect(await task.value == false)
-        #expect(manager.requestAlwaysAuthorizationCallCount == 1)
+        #expect(manager.requestWhenInUseAuthorizationCallCount == 1)
     }
 
     @Test func backgroundAuthorizationReturnsFalseWhenCoreLocationDoesNotCallback() async throws {
-        let manager = FakeCoreLocationAdapter(authorizationStatus: .authorizedWhenInUse)
+        let manager = FakeCoreLocationAdapter(authorizationStatus: .notDetermined)
         let provider = CoreLocationCoordinateProvider(
             manager: manager,
             authorizationTimeout: .milliseconds(20)
@@ -117,7 +117,7 @@ struct CoreLocationCoordinateProviderTests {
         let isAuthorized = await provider.requestBackgroundLocationRefreshAuthorization()
 
         #expect(isAuthorized == false)
-        #expect(manager.requestAlwaysAuthorizationCallCount == 1)
+        #expect(manager.requestWhenInUseAuthorizationCallCount == 1)
     }
 
     private func waitUntil(
@@ -142,16 +142,11 @@ private final class FakeCoreLocationAdapter: CoreLocationManaging {
     var authorizationStatus: CLAuthorizationStatus
     var delegate: CLLocationManagerDelegate?
     var desiredAccuracy: CLLocationAccuracy = kCLLocationAccuracyBest
-    private(set) var requestAlwaysAuthorizationCallCount = 0
     private(set) var requestLocationCallCount = 0
     private(set) var requestWhenInUseAuthorizationCallCount = 0
 
     init(authorizationStatus: CLAuthorizationStatus) {
         self.authorizationStatus = authorizationStatus
-    }
-
-    func requestAlwaysAuthorization() {
-        requestAlwaysAuthorizationCallCount += 1
     }
 
     func requestLocation() {

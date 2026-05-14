@@ -329,20 +329,57 @@ def validate_release_artifacts!
   end
 end
 
-def app_store_version_exists?(api_key:, version:)
+def app_review_information
+  require_env_vars!(
+    "CUJANA_APP_REVIEW_FIRST_NAME",
+    "CUJANA_APP_REVIEW_LAST_NAME",
+    "CUJANA_APP_REVIEW_EMAIL",
+    "CUJANA_APP_REVIEW_PHONE"
+  )
+
+  {
+    first_name: ENV["CUJANA_APP_REVIEW_FIRST_NAME"],
+    last_name: ENV["CUJANA_APP_REVIEW_LAST_NAME"],
+    email_address: ENV["CUJANA_APP_REVIEW_EMAIL"],
+    phone_number: ENV["CUJANA_APP_REVIEW_PHONE"]
+  }
+end
+
+def with_release_metadata_path
+  Dir.mktmpdir("cujana-release-metadata") do |metadata_path|
+    FileUtils.cp_r(File.join(REPO_ROOT, "fastlane", "metadata", "."), metadata_path)
+
+    review_information_path = File.join(metadata_path, "review_information")
+    FileUtils.mkdir_p(review_information_path)
+    app_review_information.each do |key, value|
+      File.write(File.join(review_information_path, "#{key}.txt"), "#{value}\n")
+    end
+
+    yield metadata_path
+  end
+end
+
+def app_store_version_for(api_key:, version:)
   require "spaceship"
 
   Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(**api_key)
   app = Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
   UI.user_error!("App '#{APP_IDENTIFIER}' wurde in App Store Connect nicht gefunden.") unless app
 
-  app.get_app_store_versions(platform: "IOS").any? { |app_store_version| app_store_version.version_string == version }
+  app.get_app_store_versions(filter: { platform: "IOS" }).find { |app_store_version| app_store_version.version_string == version }
 end
 
 def ensure_version_not_released!(api_key:, version:)
-  return unless app_store_version_exists?(api_key: api_key, version: version)
+  app_store_version = app_store_version_for(api_key: api_key, version: version)
+  return unless app_store_version
 
-  UI.user_error!("Version #{version} existiert bereits in App Store Connect.")
+  editable_states = [
+    Spaceship::ConnectAPI::AppStoreVersion::AppVersionState::PREPARE_FOR_SUBMISSION
+  ]
+  state = app_store_version.app_version_state
+  return if editable_states.include?(state)
+
+  UI.user_error!("Version #{version} existiert bereits in App Store Connect mit Status #{state}.")
 end
 
 def current_release_tag
@@ -665,22 +702,25 @@ platform :ios do
     ipa_path = build_release_ipa!(build_number: build_number, profile_mapping: profile_mapping)
     validate_release_ipa_entitlements!(ipa_path)
 
-    deliver(
-      api_key: api_key,
-      app_identifier: APP_IDENTIFIER,
-      app_version: version,
-      ipa: ipa_path,
-      metadata_path: File.join(REPO_ROOT, "fastlane", "metadata"),
-      screenshots_path: IOS_SCREENSHOT_OUTPUT,
-      submit_for_review: false,
-      automatic_release: false,
-      force: false,
-      skip_metadata: false,
-      skip_screenshots: false,
-      platform: "ios",
-      precheck_default_rule_level: :warn,
-      run_precheck_before_submit: true
-    )
+    with_release_metadata_path do |metadata_path|
+      deliver(
+        api_key: api_key,
+        app_identifier: APP_IDENTIFIER,
+        app_version: version,
+        ipa: ipa_path,
+        metadata_path: metadata_path,
+        screenshots_path: IOS_SCREENSHOT_OUTPUT,
+        submit_for_review: false,
+        automatic_release: false,
+        force: true,
+        skip_metadata: false,
+        skip_screenshots: false,
+        platform: "ios",
+        precheck_default_rule_level: :warn,
+        precheck_include_in_app_purchases: false,
+        run_precheck_before_submit: true
+      )
+    end
   end
 
 end

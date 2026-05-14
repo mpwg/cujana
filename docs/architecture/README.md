@@ -546,7 +546,7 @@ Architecture Decision Records liegen unter [`adr/`](adr/) und verwenden eindeuti
 | [0015](adr/0015-font-size-token-enforcement.md) | Schriftgrößen werden über UI-Tokens geführt | Akzeptiert |
 | [0016](adr/0016-structured-swiftdata-v1-persistence.md) | Flat SwiftData V1 Persistence | Akzeptiert |
 | [0017](adr/0017-secret-leak-guardrails.md) | Secret-Leak-Guardrails für Build Settings | Akzeptiert |
-| [0018](adr/0018-background-refresh-location-authorization.md) | Background-Refresh mit Always-Location-Gate | Akzeptiert |
+| [0018](adr/0018-background-refresh-location-authorization.md) | Background-Refresh mit Always-Location-Gate | Ersetzt durch ADR-0026 |
 | [0019](adr/0019-ios-catalyst-build-matrix.md) | iOS-Produktmatrix mit Mac Catalyst | Akzeptiert |
 | [0020](adr/0020-swiftdata-persistence-boundary.md) | SwiftData Persistence Boundary | Akzeptiert |
 | [0021](adr/0021-ban-unsafe-swift-escape-hatches.md) | Unsichere Swift-Escape-Hatches verbieten | Akzeptiert |
@@ -554,6 +554,7 @@ Architecture Decision Records liegen unter [`adr/`](adr/) und verwenden eindeuti
 | [0023](adr/0023-accessibility-first-ui-enforcement.md) | Accessibility-first UI-Regeln werden statisch abgesichert | Akzeptiert |
 | [0024](adr/0024-release-icloud-entitlement-export.md) | Ungenutzte iCloud-Entitlements aus Release-Builds entfernen | Akzeptiert |
 | [0025](adr/0025-pr-ci-gates-for-main.md) | PR-CI-Gates für main | Akzeptiert |
+| [0026](adr/0026-remove-persistent-background-location.md) | Persistenten Background-Standort entfernen | Akzeptiert |
 
 ## 19. Wann wird modularisiert?
 
